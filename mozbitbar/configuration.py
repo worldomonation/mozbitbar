@@ -2,9 +2,9 @@ from __future__ import absolute_import
 
 import os
 import requests
-import sys
 
 from time import time
+
 
 class Configuration(object):
     def __init__(self, **kwargs):
@@ -19,6 +19,7 @@ class Configuration(object):
 
         if None in (self.user_name, self.user_password):
             raise EnvironmentError()
+
 
 class Auth(Configuration):
     def __init__(self, config):

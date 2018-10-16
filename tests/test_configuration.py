@@ -2,9 +2,8 @@ from __future__ import absolute_import
 
 from time import time
 
-import pytest
-
 from mozbitbar.configuration import Configuration, Auth
+
 
 def test_configuration_initialize():
     config = Configuration()
@@ -18,9 +17,10 @@ def test_auth_initialize():
 
     auth_obj = Auth(config)
 
-    assert auth_obj.access_token != None
-    assert auth_obj.refresh_token != None
+    assert auth_obj.access_token is not None
+    assert auth_obj.refresh_token is not None
     assert auth_obj.access_token_expire_ts >= time()
+
 
 def test_auth_refresh_token():
     config = Configuration()
