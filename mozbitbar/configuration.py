@@ -61,6 +61,7 @@ class Auth(Configuration):
         )
         self.decode_response(response)
 
+
 def setup_configuration(**kwargs):
     config = Configuration(**kwargs)
     auth_obj = Auth(config)
