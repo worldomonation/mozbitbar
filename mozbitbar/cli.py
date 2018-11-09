@@ -9,8 +9,6 @@ import testdroid
 
 def parser_arguments(args):
     parser = ArgumentParser('Runs Testdroid tasks.')
-    parser.add_argument('-a', '--action')
-    parser.add_argument('-s', '--script')
     parser.add_argument('-r', '--recipe')
 
     args, remainder = parser.parse_known_args()
@@ -23,11 +21,5 @@ def cli(args):
 
     if args.recipe:
         return args.recipe
-
-    if args.action:
-        return args.action
-
-    if args.script:
-        return args.script
 
     return None

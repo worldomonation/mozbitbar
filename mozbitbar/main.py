@@ -12,8 +12,11 @@ from mozbitbar.recipe_handler import run_recipes
 
 
 def main():
-    cli_argument = cli(sys.argv[1:])
-    run_recipes(cli_argument)
+    recipe_name = cli(sys.argv[1:])
+    if recipe_name:
+        run_recipes(recipe_name)
+    else:
+        sys.exit(1)
 
 
 if __name__ == '__main__':

@@ -23,13 +23,19 @@ def parse_stored_recipe(recipe_name):
 
 
 def run_single_recipe(recipe):
+    # get name of the testdroid method call
     action = recipe.pop('action')
-    func = getattr(client, action)
+    # confirm that testdroid client has the named call
+    func = getattr(client, action, None)
     if func:
-        return func(**recipe['arguments'])
+        try:
+            return func(**recipe['arguments'])
+        except KeyError:
+            return func()
 
 
 def run_recipes(recipe_name):
+    # recipes are stored in YAML format.
     recipes = parse_stored_recipe(recipe_name)
 
     for index in range(len(recipes)):
