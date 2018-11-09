@@ -1,0 +1,11 @@
+- action: create_project
+  arguments:
+    project_name: test_project_1
+    project_type: ANDROID
+- action: upload_test_file
+  arguments:
+    project_id: "{{ variable }}"
+    filename: test.zip
+- action: start_test_run
+  arguments:
+    project_id: "{{ variable }}"

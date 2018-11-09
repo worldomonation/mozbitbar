@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import print_function, absolute_import
 
 import os
 import requests
@@ -60,3 +60,9 @@ class Auth(Configuration):
             headers={"Accept": "application/json"}
         )
         self.decode_response(response)
+
+def setup_configuration(**kwargs):
+    config = Configuration(**kwargs)
+    auth_obj = Auth(config)
+
+    return auth_obj

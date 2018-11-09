@@ -1,0 +1,3 @@
+- action: get_projects
+  arguments:
+    limit: 1
