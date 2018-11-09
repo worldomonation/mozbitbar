@@ -1,11 +1,6 @@
 from __future__ import print_function, absolute_import
 
-import os
 import sys
-
-import yaml
-
-from testdroid import Testdroid
 
 from mozbitbar.cli import cli
 from mozbitbar.recipe_handler import run_recipes
@@ -13,6 +8,7 @@ from mozbitbar.recipe_handler import run_recipes
 
 def main():
     recipe_name = cli(sys.argv[1:])
+
     if recipe_name:
         run_recipes(recipe_name)
     else:
