@@ -7,4 +7,4 @@
     filename: /Users/egao/workspace/mozbitbar/mozbitbar/recipes/files.zip
 - action: start_test_run
   arguments:
-    additional_params: {"test"}
+    additional_params: {"TASKCLUSTER_CLIENT_ID="}

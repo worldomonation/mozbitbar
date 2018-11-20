@@ -10,7 +10,7 @@ class BitbarProject(Bitbar):
     """BitbarProject is a class which represents an instance of a project on Bitbar,
     as well as associated actions that require a project id.
     """
-    def __init__(self, project_id=None, **kwargs):
+    def __init__(self, **kwargs):
         """Initializes the BitbarProject class instance.
 
         Two methods are currently supported:
@@ -21,20 +21,32 @@ class BitbarProject(Bitbar):
 
         if kwargs.get('project_name'):
             self.create_project(**kwargs)
-        elif project_id:
-            self.use_existing_project(project_id)
+        elif kwargs.get('project_id'):
+            self.use_existing_project(kwargs.get('project_id'))
         else:
             raise NotImplementedError()
 
     def create_project(self, project_name, project_type='ANDROID'):
         """Creates a new Bitbar project using provided parameters.
         """
+        # mozilla does not permit creation of project with same names.
+        try:
+            existing_projects = self.client.get_projects()
+            for project in existing_projects['data']:
+                if project_name == project['name']:
+                    raise EnvironmentError
+        except RequestResponseError:
+            raise EnvironmentError('Testdroid responded with error.')
+        except EnvironmentError:
+            raise EnvironmentError('Project with same name exists!')
+
+        # send create project call.
         try:
             output = self.client.create_project(project_name, project_type)
         except RequestResponseError:
             raise EnvironmentError('Testdroid responded with error.')
 
-        # ensure project is created
+        # ensure project is created.
         assert output['id']
 
         # if project creation is confirmed, store project related parameters.

@@ -59,7 +59,7 @@ def run_recipe(recipe_name):
     if recipe.new_project_arguments:
         bitbar_project = BitbarProject(**recipe.new_project_arguments)
     else:
-        bitbar_project = BitbarProject(recipe.project_id)
+        bitbar_project = BitbarProject(**dict(project_id=recipe.project_id))
 
     for task in recipe.get_task_list():
         testdroid_action = task.pop('action')
