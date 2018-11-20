@@ -23,6 +23,8 @@ class BitbarProject(Bitbar):
             self.create_project(**kwargs)
         elif kwargs.get('project_id'):
             self.use_existing_project(kwargs.get('project_id'))
+        elif kwargs.get('project_name'):
+            self.use_existing_project(kwargs.get('project_name'))
         else:
             raise NotImplementedError()
 
@@ -50,32 +52,58 @@ class BitbarProject(Bitbar):
         assert output['id']
 
         # if project creation is confirmed, store project related parameters.
-        self.project_name = project_name
-        self.project_type = project_type
-        self.project_id = output['id']
+        self._set_project_parameters(output)
 
-    def use_existing_project(self, project_id):
-        """Use existing Bitbar project.
+    def _set_project_parameters(self, data):
+        """Sets necessary project parameters given a dictionary.
 
-        This method is simply a wrapper around the set_project_id method,
-        which can be used for non-initialization situations.
+        The following values are set:
+            - project_id
+            - project_name
+            - project_type
         """
-        self.set_project_id(project_id)
+        self.project_id = data['id']
+        self.project_name = data['name']
+        self.project_type = data['type']
+
+    def use_existing_project(self, identifier):
+        """Use existing Bitbar project to set project parameters.
+
+        This method is a wrapper that calls the appropriate methods depending on
+        provided parameters.
+        """
+        if type(identifier) == int:
+            self.set_project_id(identifier)
+        if type(identifier) == str:
+            self.set_project_name(identifier)
 
     def set_project_id(self, project_id):
-        """Overwrites the self.project_id value with provided project_id.
-
-        Basic checks are performed prior to the overwrite. If any checks
-        fail, the task is aborted.
+        """Sets the project parameters using project_id.
         """
         try:
             output = self.client.get_project(project_id)
         except RequestResponseError:
             raise EnvironmentError('Testdroid responded with error.')
 
-        assert output['id']
+        assert output
 
-        self.project_id = project_id
+        self._set_project_parameters(output)
+
+    def set_project_name(self, project_name):
+        """Sets the project parameters using project_name.
+        """
+        try:
+            output = self.client.get_projects()
+        except RequestResponseError:
+            raise EnvironmentError('Testdroid responded with error.')
+
+        for project in output['data']:
+            if project_name == project['name']:
+                self._set_project_parameters(project)
+
+        if not self.project_id:
+            raise EnvironmentError('Project with name {} not found.'.format(project_name))
+
 
     def get_project_id(self):
         """Returns the currently assigned project_id value.

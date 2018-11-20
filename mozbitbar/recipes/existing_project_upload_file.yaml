@@ -1,7 +1,0 @@
-- project_id: 231942
-- action: upload_data_file
-  arguments:
-    filename: /Users/egao/workspace/mozbitbar/mozbitbar/recipes/files.zip
-- action: start_test_run
-  arguments:
-    additional_params: {"test"}
