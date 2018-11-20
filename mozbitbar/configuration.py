@@ -5,65 +5,41 @@ import requests
 
 from time import time
 
+from testdroid import Testdroid, RequestResponseError
 
 class Configuration(object):
+    client = None
+
     def __init__(self, **kwargs):
+        # set up necessary parameters with provided values.
         if kwargs:
             self.user_name = kwargs.get('TESTDROID_USERNAME')
             self.user_password = kwargs.get('TESTDROID_PASSWORD')
+            self.api_key = kwargs.get('TESTDROID_APIKEY')
             self.url = kwargs.get('TESTDROID_URL')
         else:
             self.user_name = os.getenv('TESTDROID_USERNAME')
             self.user_password = os.getenv('TESTDROID_PASSWORD')
-            self.url = os.getenv('TESTDROID_URL', '')
+            self.api_key = os.getenv('TESTDROID_APIKEY')
+            self.url = os.getenv('TESTDROID_URL')
 
-        if None in (self.user_name, self.user_password):
+        # ensure minimal viable set of parameters are set.
+        try:
+            assert (self.user_name and self.user_password) or self.api_key
+            assert self.url
+        except AssertionError:
             raise EnvironmentError()
 
+        # instantiate client.
+        self.client = Testdroid(username=self.user_name,
+                                password=self.user_password,
+                                apikey=self.api_key,
+                                url=self.url)
 
-class Auth(Configuration):
-    def __init__(self, config):
-        self.access_token = ''
-        self.refresh_token = ''
-        self.access_token_expire_ts = 0
-        self.auth_url = '{}/oauth/token'.format(config.url)
-
-        self.authenticate(config)
-
-    def decode_response(self, response):
-        assert response.status_code in list(range(200, 300))
-
-        self.access_token = response.json()['access_token']
-        self.refresh_token = response.json()['refresh_token']
-        self.access_token_expire_ts = time() + response.json()['expires_in']
-
-    def token_expired(self):
-        return time() > self.access_token_expire_ts
-
-    def authenticate(self, config):
-        if not self.access_token:
-            payload = {
-                "client_id": "testdroid-cloud-api",
-                "grant_type": "password",
-                "username": config.user_name,
-                "password": config.user_password,
-            }
-        elif self.access_token and self.token_expired():
-            payload = {
-                "client_id": "testdroid-cloud-api",
-                "grant_type": "refresh_token",
-                "refresh_token": self.refresh_token
-            }
-        response = requests.post(
-            url=self.auth_url,
-            data=payload,
-            headers={"Accept": "application/json"}
-        )
-        self.decode_response(response)
-
-
-def setup_configuration(**kwargs):
-    config = Configuration(**kwargs)
-    auth_obj = Auth(config)
-
-    return auth_obj
+        # verify parameters are valid.
+        try:
+            self.client.get_token()
+        except RequestResponseError:
+            print('Incorrect values provided to Testdroid.\nPlease ensure' +
+                  'username, password and/or API key as well as Bitbar URL is set.')
+            raise EnvironmentError()
