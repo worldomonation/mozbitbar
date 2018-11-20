@@ -1,7 +1,4 @@
-- project_id: None
-  arguments:
-    project_name: test_project_1
-    project_type: ANDROID
+- project_id: 231941
 - action: upload_data_file
   arguments:
     filename: /Users/egao/workspace/mozbitbar/mozbitbar/recipes/files.zip
