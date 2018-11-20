@@ -8,10 +8,11 @@ from time import time
 from testdroid import Testdroid, RequestResponseError
 
 class Configuration(object):
-    client = None
-
     def __init__(self, **kwargs):
-        # set up necessary parameters with provided values.
+        """Initializes the Configuration class, in one of two ways:
+            - via kwargs: user-provided dictionary of required parameters.
+            - via envvar: parses the environment variables set on host machine.
+        """
         if kwargs:
             self.user_name = kwargs.get('TESTDROID_USERNAME')
             self.user_password = kwargs.get('TESTDROID_PASSWORD')
@@ -36,7 +37,7 @@ class Configuration(object):
                                 apikey=self.api_key,
                                 url=self.url)
 
-        # verify parameters are valid.
+        # make a simple call to verify parameters are valid.
         try:
             self.client.get_token()
         except RequestResponseError:

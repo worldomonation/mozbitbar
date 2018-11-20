@@ -5,5 +5,12 @@ from testdroid import Testdroid
 from testdroid import RequestResponseError
 
 class Bitbar(Configuration):
+    """Bitbar is a class which represents an instance of Bitbar.
+
+    In a distinction from BitbarProject, methods implemented in
+    Bitbar can be called without requiring a project id.
+    """
     def __init__(self):
+        """Initializes the Bitbar class.
+        """
         super(Bitbar, self).__init__()
