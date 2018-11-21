@@ -10,4 +10,12 @@ class NotInitializedException(Exception):
 
 class InvalidRecipeException(Exception):
     def __init__(self, message):
-            super(NotInitializedException, self).__init__(message)
+            super(InvalidRecipeException, self).__init__(message)
+
+class FileException(Exception):
+    def __init__(self, message):
+            super(FileException, self).__init__(message)
+
+class DataFileException(FileException):
+    def __init__(self, message):
+            super(DataFileException, self).__init__(message)
