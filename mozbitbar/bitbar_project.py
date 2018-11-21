@@ -10,7 +10,7 @@ class BitbarProject(Bitbar):
     """BitbarProject is a class which represents an instance of a project on Bitbar,
     as well as associated actions that require a project id.
     """
-    def __init__(self, project, **kwargs):
+    def __init__(self, project_status, **kwargs):
         """Initializes the BitbarProject class instance.
 
         Two methods are currently supported:
@@ -19,9 +19,9 @@ class BitbarProject(Bitbar):
         """
         super(BitbarProject, self).__init__()
 
-        if 'new' in project:
+        if 'new' in project_status:
             self.create_project(**kwargs)
-        elif 'existing' in project:
+        elif 'existing' in project_status:
             self.use_existing_project(**kwargs)
         else:
             raise NotImplementedError()
