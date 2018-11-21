@@ -4,7 +4,7 @@
     project_type: ANDROID
 - action: upload_data_file
   arguments:
-    filename: /Users/egao/workspace/mozbitbar/mozbitbar/recipes/files.zip
+    filename: /Users/egao/Downloads/files.zip
 - action: start_test_run
   arguments:
     additional_params: {"TASKCLUSTER_CLIENT_ID="}
