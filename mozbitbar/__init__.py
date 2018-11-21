@@ -7,3 +7,7 @@ from __future__ import print_function, absolute_import
 class NotInitializedException(Exception):
       def __init__(self, message):
           super(NotInitializedException, self).__init__(message)
+
+class InvalidRecipeException(Exception):
+    def __init__(self, message):
+            super(NotInitializedException, self).__init__(message)
