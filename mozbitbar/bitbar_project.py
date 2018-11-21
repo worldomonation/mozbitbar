@@ -10,7 +10,7 @@ class BitbarProject(Bitbar):
     """BitbarProject is a class which represents an instance of a project on Bitbar,
     as well as associated actions that require a project id.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, project_status, **kwargs):
         """Initializes the BitbarProject class instance.
 
         Two methods are currently supported:
@@ -19,10 +19,10 @@ class BitbarProject(Bitbar):
         """
         super(BitbarProject, self).__init__()
 
-        if kwargs.get('project_name'):
+        if 'new' in project_status:
             self.create_project(**kwargs)
-        elif kwargs.get('project_id'):
-            self.use_existing_project(kwargs.get('project_id'))
+        elif 'existing' in project_status:
+            self.use_existing_project(**kwargs)
         else:
             raise NotImplementedError()
 
@@ -50,32 +50,59 @@ class BitbarProject(Bitbar):
         assert output['id']
 
         # if project creation is confirmed, store project related parameters.
-        self.project_name = project_name
-        self.project_type = project_type
-        self.project_id = output['id']
+        self._set_project_parameters_from_response(output)
 
-    def use_existing_project(self, project_id):
-        """Use existing Bitbar project.
+    def _set_project_parameters_from_response(self, response):
+        """Sets necessary project parameters given a dictionary.
 
-        This method is simply a wrapper around the set_project_id method,
-        which can be used for non-initialization situations.
+        The following values are set:
+            - project_id
+            - project_name
+            - project_type
         """
-        self.set_project_id(project_id)
+        self.project_id = response['id']
+        self.project_name = response['name']
+        self.project_type = response['type']
+
+    def use_existing_project(self, **kwargs):
+        """Use existing Bitbar project to set project parameters.
+
+        This method is a wrapper that calls the appropriate methods depending on
+        provided parameters.
+        """
+        print(kwargs.get('project_id'))
+        if kwargs.get('project_id'):
+            self.set_project_id(kwargs.get('project_id'))
+        if kwargs.get('project_name'):
+            self.set_project_name(kwargs.get('project_name'))
 
     def set_project_id(self, project_id):
-        """Overwrites the self.project_id value with provided project_id.
-
-        Basic checks are performed prior to the overwrite. If any checks
-        fail, the task is aborted.
+        """Retrieves project parameters from Bitbar using project_id.
         """
         try:
             output = self.client.get_project(project_id)
         except RequestResponseError:
             raise EnvironmentError('Testdroid responded with error.')
 
-        assert output['id']
+        assert output
 
-        self.project_id = project_id
+        self._set_project_parameters_from_response(output)
+
+    def set_project_name(self, project_name):
+        """Retrieves project parameters from Bitbar using project_name.
+        """
+        try:
+            output = self.client.get_projects()
+        except RequestResponseError:
+            raise EnvironmentError('Testdroid responded with error.')
+
+        for project in output['data']:
+            if project_name == project['name']:
+                self._set_project_parameters_from_response(project)
+
+        if not self.project_id:
+            raise EnvironmentError('Project with name {} not found.'.format(project_name))
+
 
     def get_project_id(self):
         """Returns the currently assigned project_id value.
@@ -88,7 +115,7 @@ class BitbarProject(Bitbar):
         This method is a wrapper around the Testdroid implementation.
         """
         if os.path.exists(filename):
-            return self.client.upload_test_file(self.project_id, filename)
+            return self.client.upload_data_file(self.project_id, filename)
         else:
             # submit fix to Testdroid to do error handling in upload()
             raise EnvironmentError()

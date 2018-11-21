@@ -1,4 +1,6 @@
-- project_id: 231942
+- project: existing
+  arguments:
+    project_id: 231942
 - action: upload_data_file
   arguments:
     filename: /Users/egao/workspace/mozbitbar/mozbitbar/recipes/files.zip
