@@ -4,6 +4,7 @@ import os
 import yaml
 
 from mozbitbar.bitbar_project import BitbarProject
+from mozbitbar import InvalidRecipeException
 
 
 class Recipe(object):
@@ -17,7 +18,7 @@ class Recipe(object):
         self.recipe_name = recipe_name
         # parse recipe and perform sanitizing operations
         self.load_recipe_from_yaml()
-        self.split_project_id_from_recipe()
+        self.split_project_parameters()
 
     def load_recipe_from_yaml(self):
         """Parses a recipe from a YAML file stored locally.
@@ -29,7 +30,7 @@ class Recipe(object):
         with open(path, 'r') as f:
             self.task_list = yaml.load(f)
 
-    def split_project_id_from_recipe(self):
+    def split_project_parameters(self):
         """Separates project identifier from stored recipe from rest of recipe.
 
         This step is necessary as all recipes should define either:
@@ -37,10 +38,15 @@ class Recipe(object):
             - new project
         """
         for index, task in enumerate(self.task_list):
-            if task.get('project_id'):
-                self.project_id = task.get('project_id')
-                self.new_project_arguments = task.get('arguments')
-                self.task_list.pop(index)
+            # project parameters defined in recipe
+            if task.get('project'):
+                self.project = task.get('project')
+            self.project_arguments = task.get('arguments')
+            self.task_list.pop(index)
+            return
+
+        # project parameters not found in recipe
+        raise InvalidRecipeException('Project parameters not found in recipe: {}.'.format(self.recipe_name))
 
     def get_task_list(self):
         """Returns the list of tasks that make up the recipe.
@@ -56,10 +62,7 @@ def run_recipe(recipe_name):
     name of action and any required parameters exactly.
     """
     recipe = Recipe(recipe_name)
-    if recipe.new_project_arguments:
-        bitbar_project = BitbarProject(**recipe.new_project_arguments)
-    else:
-        bitbar_project = BitbarProject(**dict(project_id=recipe.project_id))
+    bitbar_project = BitbarProject(recipe.project, **recipe.project_arguments)
 
     for task in recipe.get_task_list():
         testdroid_action = task.pop('action')

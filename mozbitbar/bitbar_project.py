@@ -10,7 +10,7 @@ class BitbarProject(Bitbar):
     """BitbarProject is a class which represents an instance of a project on Bitbar,
     as well as associated actions that require a project id.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, project, **kwargs):
         """Initializes the BitbarProject class instance.
 
         Two methods are currently supported:
@@ -19,12 +19,10 @@ class BitbarProject(Bitbar):
         """
         super(BitbarProject, self).__init__()
 
-        if kwargs.get('project_name'):
+        if 'new' in project:
             self.create_project(**kwargs)
-        elif kwargs.get('project_id'):
-            self.use_existing_project(kwargs.get('project_id'))
-        elif kwargs.get('project_name'):
-            self.use_existing_project(kwargs.get('project_name'))
+        elif 'existing' in project:
+            self.use_existing_project(**kwargs)
         else:
             raise NotImplementedError()
 
@@ -52,9 +50,9 @@ class BitbarProject(Bitbar):
         assert output['id']
 
         # if project creation is confirmed, store project related parameters.
-        self._set_project_parameters(output)
+        self._set_project_parameters_from_response(output)
 
-    def _set_project_parameters(self, data):
+    def _set_project_parameters_from_response(self, response):
         """Sets necessary project parameters given a dictionary.
 
         The following values are set:
@@ -62,23 +60,24 @@ class BitbarProject(Bitbar):
             - project_name
             - project_type
         """
-        self.project_id = data['id']
-        self.project_name = data['name']
-        self.project_type = data['type']
+        self.project_id = response['id']
+        self.project_name = response['name']
+        self.project_type = response['type']
 
-    def use_existing_project(self, identifier):
+    def use_existing_project(self, **kwargs):
         """Use existing Bitbar project to set project parameters.
 
         This method is a wrapper that calls the appropriate methods depending on
         provided parameters.
         """
-        if type(identifier) == int:
-            self.set_project_id(identifier)
-        if type(identifier) == str:
-            self.set_project_name(identifier)
+        print(kwargs.get('project_id'))
+        if kwargs.get('project_id'):
+            self.set_project_id(kwargs.get('project_id'))
+        if kwargs.get('project_name'):
+            self.set_project_name(kwargs.get('project_name'))
 
     def set_project_id(self, project_id):
-        """Sets the project parameters using project_id.
+        """Retrieves project parameters from Bitbar using project_id.
         """
         try:
             output = self.client.get_project(project_id)
@@ -87,10 +86,10 @@ class BitbarProject(Bitbar):
 
         assert output
 
-        self._set_project_parameters(output)
+        self._set_project_parameters_from_response(output)
 
     def set_project_name(self, project_name):
-        """Sets the project parameters using project_name.
+        """Retrieves project parameters from Bitbar using project_name.
         """
         try:
             output = self.client.get_projects()
@@ -99,7 +98,7 @@ class BitbarProject(Bitbar):
 
         for project in output['data']:
             if project_name == project['name']:
-                self._set_project_parameters(project)
+                self._set_project_parameters_from_response(project)
 
         if not self.project_id:
             raise EnvironmentError('Project with name {} not found.'.format(project_name))
@@ -116,7 +115,7 @@ class BitbarProject(Bitbar):
         This method is a wrapper around the Testdroid implementation.
         """
         if os.path.exists(filename):
-            return self.client.upload_test_file(self.project_id, filename)
+            return self.client.upload_data_file(self.project_id, filename)
         else:
             # submit fix to Testdroid to do error handling in upload()
             raise EnvironmentError()
