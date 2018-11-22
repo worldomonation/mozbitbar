@@ -1,10 +1,21 @@
 - project: existing
   arguments:
     project_id: 231942
-- action: upload_data_file
+- action: set_project_framework
   arguments:
-    filename: /Users/egao/Downloads/files.zip
+    framework_name: Mozilla test
+# - action: upload_file
+#   arguments:
+#     test_filename: /Users/egao/Downloads/dummy-test.zip
+#     data_filename: /Users/egao/Downloads/files.zip
+#     application_filename: /Users/egao/Downloads/ignore.apk
+# - action: upload_data_file
+#   arguments:
+#     filename: /Users/egao/Downloads/files.zip
+# - action: upload_application_file
+#   arguments:
+#     filename: /Users/egao/Downloads/ignore.apk
 - action: start_test_run
   arguments:
-    device_group: 32
+    device_group_id: 32
     additional_params: {}

@@ -1,10 +1,13 @@
 from __future__ import print_function, absolute_import
 
+import logging
 import os
 
 from testdroid import RequestResponseError
-from mozbitbar import NotInitializedException, DataFileException, FrameworkException
+from mozbitbar import NotInitializedException, DataFileException, FrameworkException, MissingArgumentException
 from mozbitbar.bitbar import Bitbar
+
+log = logging.getLogger('mozbitbar')
 
 class BitbarProject(Bitbar):
     """BitbarProject is a class which represents an instance of a project on Bitbar,
@@ -26,31 +29,36 @@ class BitbarProject(Bitbar):
         else:
             raise NotImplementedError()
 
-    def create_project(self, project_name, project_type='ANDROID'):
-        """Creates a new Bitbar project using provided parameters.
+    @property
+    def project_id(self):
+        return self.__project_id
+
+    @project_id.setter
+    def project_id(self, project_id):
+        self.__project_id = project_id
+
+    @property
+    def device_group_id(self):
+        return self.__device_group_id
+
+    @device_group_id.setter
+    def device_group_id(self, device_group_id):
+        if self.device_group_id:
+            print('Updating device_group_id: current: {}, new: {}'.format(self.device_group_id, device_group_id))
+        self.__device_group_id = device_group_id
+
+    def get_user_id(self):
+        """Retrieves the user id for the currently authenticated user.
+
+        This method is a wrapper around the Testdroid implementation.
+
+        Returns:
+            int: currently authenticated user id.
+
+        Raises:
+            RequestResponseError
         """
-        # mozilla does not permit creation of project with same names.
-        try:
-            existing_projects = self.client.get_projects()
-            for project in existing_projects['data']:
-                if project_name == project['name']:
-                    raise EnvironmentError
-        except RequestResponseError:
-            raise EnvironmentError('Testdroid responded with error.')
-        except EnvironmentError:
-            raise EnvironmentError('Project with same name exists!')
-
-        # send create project call.
-        try:
-            output = self.client.create_project(project_name, project_type)
-        except RequestResponseError:
-            raise EnvironmentError('Testdroid responded with error.')
-
-        # ensure project is created.
-        assert output['id']
-
-        # if project creation is confirmed, store project related parameters.
-        self._set_project_parameters_from_response(output)
+        return self.client.get_me()['id']
 
     def _set_project_parameters_from_response(self, response):
         """Sets necessary project parameters given a dictionary.
@@ -64,19 +72,44 @@ class BitbarProject(Bitbar):
         self.project_name = response['name']
         self.project_type = response['type']
 
+    def create_project(self, **kwargs):
+        """Creates a new Bitbar project using provided parameters.
+        """
+        project_name = kwargs.get('project_name')
+        project_type = kwargs.get('project_type')
+
+        # mozilla does not permit creation of project with same names.
+        try:
+            existing_projects = self.client.get_projects()
+            for project in existing_projects['data']:
+                if project_name == project['name']:
+                    raise EnvironmentError
+        except RequestResponseError:
+            raise EnvironmentError('Testdroid responded with error.')
+        except EnvironmentError:
+            raise EnvironmentError('Project with same name exists!')
+
+        # send create project call.
+        output = self.client.create_project(project_name, project_type)
+
+        # ensure project is created.
+        assert output['id']
+
+        # if project creation is confirmed, store project related parameters.
+        self._set_project_parameters_from_response(output)
+
     def use_existing_project(self, **kwargs):
         """Use existing Bitbar project to set project parameters.
 
         This method is a wrapper that calls the appropriate methods depending on
         provided parameters.
         """
-        print(kwargs.get('project_id'))
         if kwargs.get('project_id'):
-            self.set_project_id(kwargs.get('project_id'))
+            self.set_project_by_id(kwargs.get('project_id'))
         if kwargs.get('project_name'):
-            self.set_project_name(kwargs.get('project_name'))
+            self.set_project_by_name(kwargs.get('project_name'))
 
-    def set_project_id(self, project_id):
+    def set_project_by_id(self, project_id):
         """Retrieves project parameters from Bitbar using project_id.
         """
         try:
@@ -88,7 +121,7 @@ class BitbarProject(Bitbar):
 
         self._set_project_parameters_from_response(output)
 
-    def set_project_name(self, project_name):
+    def set_project_by_name(self, project_name):
         """Retrieves project parameters from Bitbar using project_name.
         """
         try:
@@ -133,13 +166,8 @@ class BitbarProject(Bitbar):
         except RequestResponseError:
             raise EnvironmentError('Testdroid responded with error.')
 
-    def get_project_id(self):
-        """Returns the currently assigned project_id value.
-        """
-        return self.project_id
-
     def _is_file_on_bitbar(self, filename):
-        """Checks if the file is already uploaded to Bitbar.
+        """Checks if file with same name has been uploaded to Bitbar for the user.
         """
         # sanitize the provided path to just the file name itself.
         filename = os.path.basename(filename)
@@ -150,35 +178,49 @@ class BitbarProject(Bitbar):
         except RequestResponseError as rre:
             raise rre
 
-        if filename in file_names:
-            return True
-        return False
+        return filename in file_names
 
-    def upload_data_file(self, filename):
-        """Uploads data file specified using filename parameter.
+    def upload_file(self, **kwargs):
+        """Uploads file(s) to Bitbar.
 
-        This method is a wrapper around the Testdroid implementation, with additional
-        checks performed.
+        Supports upload of multiple files, of all types supported by Bitbar.
         """
-        if not self._is_file_on_bitbar(filename):
-            if os.path.exists(filename):
-                try:
-                    self.client.upload_data_file(self.project_id, filename)
-                except RequestResponseError as e:
-                    raise e
+        for key, filename in kwargs.iteritems():
+            file_type, _ = key.split('_')
+            path = "users/{user_id}/projects/{project_id}/files/{file_type}".format(user_id=self.get_user_id(), project_id=self.project_id, file_type=file_type)
+            output = self.client.upload(path=path, filename=filename)
+            assert output
 
-                try:
-                    assert self._is_file_on_bitbar(filename)
-                except AssertionError:
-                    raise DataFileException("Data file {} could not be uploaded to Bitbar.".format(filename))
-            else:
-                # submit fix to Testdroid to do error handling in upload(), so we don't need to handle that scenario here.
-                raise EnvironmentError()
-        raise DataFileException("Data file with same name '{}' is already on Bitbar.".format(filename))
+            try:
+                assert self._is_file_on_bitbar(filename)
+            except AssertionError:
+                raise DataFileException("Data file {} could not be uploaded to Bitbar.".format(filename))
+
+    def set_device_group(self, specified_device_group):
+        """Sets the project's device group to be used for test runs.
+        """
+        if not specified_device_group:
+            raise MissingArgumentException('{}: missing parameter.'.format(__name__))
+
+        device_groups = [(device_group['id'], device_group['name'])
+                         for device_group in self.client.get_device_groups()['data']]
+
+        # if device_group_name is provided, the device_group_id must be retrieved using the name.
+        if type(specified_device_group) is str:
+            for device_group in device_groups:
+                if specified_device_group in device_group:
+                    device_group_id = device_group[1]
+
+        self.device_group_id = device_group_id
+
 
     def start_test_run(self, **kwargs):
-        """Starts a test run against a project.
+        """Starts a test run with parameters based on recipe definition.
 
-        This method is a wrapper around the Testdroid implementation.
+        This method is a wrapper around the Testdroid implementation with
+        additional operations.
         """
-        self.client.start_test_run(self.project_id, **kwargs)
+        if kwargs.get('device_group_id') or kwargs.get('device_group_name'):
+            self.set_device_group(kwargs.pop('device_group_id') or kwargs.pop('device_group_name'))
+
+        self.client.start_test_run(self.project_id, device_group_id=self.device_group_id, **kwargs)
