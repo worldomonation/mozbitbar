@@ -6,4 +6,5 @@
     filename: /Users/egao/Downloads/files.zip
 - action: start_test_run
   arguments:
-    additional_params: {"test"}
+    device_group: 32
+    additional_params: {}
