@@ -3,7 +3,7 @@ from __future__ import print_function, absolute_import
 import os
 
 from testdroid import RequestResponseError
-from mozbitbar import NotInitializedException
+from mozbitbar import NotInitializedException, DataFileException, FrameworkException
 from mozbitbar.bitbar import Bitbar
 
 class BitbarProject(Bitbar):
@@ -103,22 +103,78 @@ class BitbarProject(Bitbar):
         if not self.project_id:
             raise EnvironmentError('Project with name {} not found.'.format(project_name))
 
+    def set_project_framework(self, **kwargs):
+        """Sets the project framework using either integer id or name.
+
+        This method prioritizes framework name if both are provided.
+        """
+        framework_list = self.get_project_frameworks()
+        framework_to_use = kwargs.get('framework_name') or kwargs.get('frameworkId')
+
+        for framework in framework_list:
+            if framework_to_use in framework:
+                framework_id = framework[1]
+
+        if not framework_id:
+            raise NotImplementedError(
+                'Invalid framework identifer provided: {}'.format(kwargs.values()))
+
+        try:
+            self.client.set_project_framework(self.project_id, framework_id)
+        except RequestResponseError:
+            raise EnvironmentError('Testdroid responded with error.')
+
+    def get_project_frameworks(self):
+        """Returns list of project frameworks available to the user.
+        """
+        try:
+            output = self.client.get_frameworks()
+            return [(framework['name'], framework['id']) for framework in output['data']]
+        except RequestResponseError:
+            raise EnvironmentError('Testdroid responded with error.')
 
     def get_project_id(self):
         """Returns the currently assigned project_id value.
         """
         return self.project_id
 
+    def _is_file_on_bitbar(self, filename):
+        """Checks if the file is already uploaded to Bitbar.
+        """
+        # sanitize the provided path to just the file name itself.
+        filename = os.path.basename(filename)
+
+        try:
+            output = self.client.get_input_files()
+            file_names = [file_list['name'] for file_list in output['data']]
+        except RequestResponseError as rre:
+            raise rre
+
+        if filename in file_names:
+            return True
+        return False
+
     def upload_data_file(self, filename):
         """Uploads data file specified using filename parameter.
 
-        This method is a wrapper around the Testdroid implementation.
+        This method is a wrapper around the Testdroid implementation, with additional
+        checks performed.
         """
-        if os.path.exists(filename):
-            return self.client.upload_data_file(self.project_id, filename)
-        else:
-            # submit fix to Testdroid to do error handling in upload()
-            raise EnvironmentError()
+        if not self._is_file_on_bitbar(filename):
+            if os.path.exists(filename):
+                try:
+                    self.client.upload_data_file(self.project_id, filename)
+                except RequestResponseError as e:
+                    raise e
+
+                try:
+                    assert self._is_file_on_bitbar(filename)
+                except AssertionError:
+                    raise DataFileException("Data file {} could not be uploaded to Bitbar.".format(filename))
+            else:
+                # submit fix to Testdroid to do error handling in upload(), so we don't need to handle that scenario here.
+                raise EnvironmentError()
+        raise DataFileException("Data file with same name '{}' is already on Bitbar.".format(filename))
 
     def start_test_run(self, **kwargs):
         """Starts a test run against a project.
