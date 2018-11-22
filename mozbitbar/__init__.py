@@ -12,6 +12,10 @@ class InvalidRecipeException(Exception):
     def __init__(self, message):
             super(InvalidRecipeException, self).__init__(message)
 
+class FrameworkException(Exception):
+    def __init__(self, message):
+            super(FrameworkException, self).__init__(message)
+
 class FileException(Exception):
     def __init__(self, message):
             super(FileException, self).__init__(message)
