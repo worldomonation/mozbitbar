@@ -5,6 +5,7 @@ import yaml
 
 from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import InvalidRecipeException
+from testdroid import RequestResponseError
 
 
 class Recipe(object):
@@ -70,4 +71,9 @@ def run_recipe(recipe_name):
 
         func = getattr(bitbar_project, action, None)
         if func:
-            func(**arguments)
+            try:
+                func(**arguments)
+            except RequestResponseError as e:
+                print('Exception raised:')
+                print(e.status_code) + print(':\n')
+                print(e.message)
