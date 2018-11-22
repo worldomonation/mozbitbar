@@ -65,9 +65,9 @@ def run_recipe(recipe_name):
     bitbar_project = BitbarProject(recipe.project, **recipe.project_arguments)
 
     for task in recipe.get_task_list():
-        testdroid_action = task.pop('action')
-        testdroid_arguments = task.pop('arguments')
+        action = task.pop('action')
+        arguments = task.pop('arguments')
 
-        func = getattr(bitbar_project, testdroid_action, None)
+        func = getattr(bitbar_project, action, None)
         if func:
-            func(**testdroid_arguments)
+            func(**arguments)
