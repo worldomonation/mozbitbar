@@ -15,7 +15,11 @@
 # - action: upload_application_file
 #   arguments:
 #     filename: /Users/egao/Downloads/ignore.apk
+- action: set_project_parameters
+  arguments:
+    parameters: {data: [key: TASKCLUSTER_CLIENT_ID, value: 99999]}
 - action: start_test_run
   arguments:
     device_group_id: 32
-    additional_params: {}
+    additional_params:
+      { TASKCLUSTER_CLIENT_ID: 1000000 }
