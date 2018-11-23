@@ -4,14 +4,17 @@ import logging
 import os
 
 from testdroid import RequestResponseError
-from mozbitbar import NotInitializedException, DataFileException, FrameworkException, MissingArgumentException
+from mozbitbar import DataFileException, FrameworkException, ProjectException
 from mozbitbar.bitbar import Bitbar
 
 log = logging.getLogger('mozbitbar')
 
 class BitbarProject(Bitbar):
     """BitbarProject is a class which represents an instance of a project on Bitbar,
-    as well as associated actions that require a project id.
+    as well as associated actions that are intended to be run against a specific project.
+
+    This class holds attributes that are not tracked in the Testdroid implementation relating
+    to the project, device groups and/or test runs.
     """
     def __init__(self, project_status, **kwargs):
         """Initializes the BitbarProject class instance.
@@ -29,13 +32,34 @@ class BitbarProject(Bitbar):
         else:
             raise NotImplementedError()
 
+    # Class attributes #
+
     @property
     def project_id(self):
         return self.__project_id
 
     @project_id.setter
     def project_id(self, project_id):
+        if type(project_id) is not int:
+            raise ValueError('{}: invalid project_id type provided: expected int, received {}'.format(
+                __name__, type(project_id)))
         self.__project_id = project_id
+
+    @property
+    def project_name(self):
+        return self.__project_name
+
+    @project_name.setter
+    def project_name(self, project_name):
+        self.__project_name = project_name
+
+    @property
+    def project_type(self):
+        return self.__project_type
+
+    @project_type.setter
+    def project_type(self, project_type):
+        self.__project_type = project_type
 
     @property
     def device_group_id(self):
@@ -43,8 +67,9 @@ class BitbarProject(Bitbar):
 
     @device_group_id.setter
     def device_group_id(self, device_group_id):
-        if self.device_group_id:
-            print('Updating device_group_id: current: {}, new: {}'.format(self.device_group_id, device_group_id))
+        if type(device_group_id) is not int:
+            raise ValueError('{}: invalid device_group_id type provided: expected int, received {}'.format(
+                __name__, type(device_group_id)))
         self.__device_group_id = device_group_id
 
     def get_user_id(self):
@@ -60,8 +85,10 @@ class BitbarProject(Bitbar):
         """
         return self.client.get_me()['id']
 
-    def _set_project_parameters_from_response(self, response):
-        """Sets necessary project parameters given a dictionary.
+    # Additional methods #
+
+    def _set_project_attributes(self, response):
+        """Sets class attributes.
 
         The following values are set:
             - project_id
@@ -71,6 +98,22 @@ class BitbarProject(Bitbar):
         self.project_id = response['id']
         self.project_name = response['name']
         self.project_type = response['type']
+
+    def _is_file_on_bitbar(self, filename):
+        """Checks if file with same name has been uploaded to Bitbar for the user.
+        """
+        # sanitize the provided path to just the file name itself.
+        filename = os.path.basename(filename)
+
+        try:
+            output = self.client.get_input_files()
+            file_names = [file_list['name'] for file_list in output['data']]
+        except RequestResponseError as rre:
+            raise rre
+
+        return filename in file_names
+
+    # Project operations #
 
     def create_project(self, **kwargs):
         """Creates a new Bitbar project using provided parameters.
@@ -96,7 +139,7 @@ class BitbarProject(Bitbar):
         assert output['id']
 
         # if project creation is confirmed, store project related parameters.
-        self._set_project_parameters_from_response(output)
+        self._set_project_attributes(output)
 
     def use_existing_project(self, **kwargs):
         """Use existing Bitbar project to set project parameters.
@@ -112,14 +155,14 @@ class BitbarProject(Bitbar):
     def set_project_by_id(self, project_id):
         """Retrieves project parameters from Bitbar using project_id.
         """
+        output = self.client.get_project(project_id)
+
         try:
-            output = self.client.get_project(project_id)
-        except RequestResponseError:
-            raise EnvironmentError('Testdroid responded with error.')
+            assert project_id in output
+        except AssertionError:
+            raise ProjectException('Project with id: {} not found.'.format(project_id))
 
-        assert output
-
-        self._set_project_parameters_from_response(output)
+        self._set_project_attributes(output)
 
     def set_project_by_name(self, project_name):
         """Retrieves project parameters from Bitbar using project_name.
@@ -131,7 +174,7 @@ class BitbarProject(Bitbar):
 
         for project in output['data']:
             if project_name == project['name']:
-                self._set_project_parameters_from_response(project)
+                self._set_project_attributes(project)
 
         if not self.project_id:
             raise EnvironmentError('Project with name {} not found.'.format(project_name))
@@ -160,25 +203,20 @@ class BitbarProject(Bitbar):
     def get_project_frameworks(self):
         """Returns list of project frameworks available to the user.
         """
-        try:
-            output = self.client.get_frameworks()
-            return [(framework['name'], framework['id']) for framework in output['data']]
-        except RequestResponseError:
-            raise EnvironmentError('Testdroid responded with error.')
+        output = self.client.get_frameworks()
+        return [(framework['name'], framework['id']) for framework in output['data']]
 
-    def _is_file_on_bitbar(self, filename):
-        """Checks if file with same name has been uploaded to Bitbar for the user.
-        """
-        # sanitize the provided path to just the file name itself.
-        filename = os.path.basename(filename)
+    def set_project_config(self, config):
+        self.client.set_project_config(self.project_id, config)
+        pass
 
-        try:
-            output = self.client.get_input_files()
-            file_names = [file_list['name'] for file_list in output['data']]
-        except RequestResponseError as rre:
-            raise rre
+    def set_project_parameters(self, parameters):
+        assert type(parameters) is dict
 
-        return filename in file_names
+        self.client.set_project_parameters(self.project_id, parameters)
+        pass
+
+    # File operations #
 
     def upload_file(self, **kwargs):
         """Uploads file(s) to Bitbar.
@@ -196,12 +234,11 @@ class BitbarProject(Bitbar):
             except AssertionError:
                 raise DataFileException("Data file {} could not be uploaded to Bitbar.".format(filename))
 
+    # Device operations #
+
     def set_device_group(self, specified_device_group):
         """Sets the project's device group to be used for test runs.
         """
-        if not specified_device_group:
-            raise MissingArgumentException('{}: missing parameter.'.format(__name__))
-
         device_groups = [(device_group['id'], device_group['name'])
                          for device_group in self.client.get_device_groups()['data']]
 
@@ -209,10 +246,11 @@ class BitbarProject(Bitbar):
         if type(specified_device_group) is str:
             for device_group in device_groups:
                 if specified_device_group in device_group:
-                    device_group_id = device_group[1]
+                    specified_device_group = device_group[1]
 
-        self.device_group_id = device_group_id
+        self.device_group_id = specified_device_group
 
+    # Test Run operations #
 
     def start_test_run(self, **kwargs):
         """Starts a test run with parameters based on recipe definition.
@@ -223,4 +261,5 @@ class BitbarProject(Bitbar):
         if kwargs.get('device_group_id') or kwargs.get('device_group_name'):
             self.set_device_group(kwargs.pop('device_group_id') or kwargs.pop('device_group_name'))
 
-        self.client.start_test_run(self.project_id, device_group_id=self.device_group_id, **kwargs)
+        from datetime import datetime
+        self.client.start_test_run(self.project_id, device_group_id=self.device_group_id, name='yaml test', **kwargs)
