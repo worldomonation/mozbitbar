@@ -261,5 +261,4 @@ class BitbarProject(Bitbar):
         if kwargs.get('device_group_id') or kwargs.get('device_group_name'):
             self.set_device_group(kwargs.pop('device_group_id') or kwargs.pop('device_group_name'))
 
-        from datetime import datetime
         self.client.start_test_run(self.project_id, device_group_id=self.device_group_id, name='yaml test', **kwargs)
