@@ -19,7 +19,3 @@ class FrameworkException(Exception):
 class FileException(Exception):
     def __init__(self, message):
         super(FileException, self).__init__(message)
-
-class DataFileException(FileException):
-    def __init__(self, message):
-        super(DataFileException, self).__init__(message)
