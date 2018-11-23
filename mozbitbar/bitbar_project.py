@@ -4,7 +4,7 @@ import logging
 import os
 
 from testdroid import RequestResponseError
-from mozbitbar import DataFileException, FrameworkException, ProjectException
+from mozbitbar import FileException, FrameworkException, ProjectException
 from mozbitbar.bitbar import Bitbar
 
 log = logging.getLogger('mozbitbar')
@@ -158,7 +158,7 @@ class BitbarProject(Bitbar):
         output = self.client.get_project(project_id)
 
         try:
-            assert project_id in output
+            assert project_id in output.values()
         except AssertionError:
             raise ProjectException('Project with id: {} not found.'.format(project_id))
 
@@ -206,15 +206,64 @@ class BitbarProject(Bitbar):
         output = self.client.get_frameworks()
         return [(framework['name'], framework['id']) for framework in output['data']]
 
-    def set_project_config(self, config):
-        self.client.set_project_config(self.project_id, config)
-        pass
+    def set_project_parameters(self, parameters, force_overwrite=False):
+        """Sets project parameters.
 
-    def set_project_parameters(self, parameters):
-        assert type(parameters) is dict
+        Will accept any number of parameters in the form of a list.
+        """
+        if not parameters:
+            print('No project parameters supplied.')
+            return
 
-        self.client.set_project_parameters(self.project_id, parameters)
-        pass
+        if force_overwrite:
+            for parameter in parameters:
+                # delete existing project parameters that match the key values
+                # in 'parameters' argument.
+                self.delete_project_parameter(parameter['key'])
+
+        for parameter in parameters:
+            try:
+                output = self.client.set_project_parameters(self.project_id, parameter)
+                assert output['id']
+            except RequestResponseError as rre:
+                if rre.status_code is 409:
+                    print(rre.message, 'skipping..')
+
+    def delete_project_parameter(self, parameter_to_delete):
+        """Deletes a single project parameter from the project.
+
+        Given a single instance of a project parameter, this method will
+        attempt to delete the project parameter.
+        """
+        try:
+            sanitized_parameter_id = int(parameter_to_delete)
+        except ValueError:
+            sanitized_parameter_id = self.get_project_parameter_id_by_name(
+                parameter_to_delete)
+
+        if sanitized_parameter_id is None:
+            print('Parameter to delete {} not found, skipping..'.format(parameter_to_delete))
+            return
+
+        assert type(sanitized_parameter_id) is int
+
+        output = self.client.delete_project_parameters(self.project_id, sanitized_parameter_id)
+        assert output.status_code is 204
+
+    def get_project_parameter_id_by_name(self, parameter_name):
+        """Returns the parameter_id value represented by the string.
+
+        This method will convert the string representation of the project parameter name to
+        an integer id.
+        """
+        assert type(parameter_name) is str
+
+        output = self.client.get_project_parameters(self.project_id)
+        for parameter in output['data']:
+            if parameter_name == parameter['key']:
+                return parameter['id']
+
+        return None
 
     # File operations #
 
@@ -232,7 +281,7 @@ class BitbarProject(Bitbar):
             try:
                 assert self._is_file_on_bitbar(filename)
             except AssertionError:
-                raise DataFileException("Data file {} could not be uploaded to Bitbar.".format(filename))
+                raise FileException("Failed to upload file to Bitbar: file type: {}, file name: {}".format(file_type, filename))
 
     # Device operations #
 
@@ -261,5 +310,4 @@ class BitbarProject(Bitbar):
         if kwargs.get('device_group_id') or kwargs.get('device_group_name'):
             self.set_device_group(kwargs.pop('device_group_id') or kwargs.pop('device_group_name'))
 
-        from datetime import datetime
         self.client.start_test_run(self.project_id, device_group_id=self.device_group_id, name='yaml test', **kwargs)

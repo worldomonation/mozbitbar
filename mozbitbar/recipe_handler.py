@@ -74,6 +74,6 @@ def run_recipe(recipe_name):
             try:
                 func(**arguments)
             except RequestResponseError as e:
-                print('Exception raised:')
-                print(e.status_code) + print(':\n')
+                print('Exception raised.')
+                print('Status code: ', e.status_code)
                 print(e.message)
