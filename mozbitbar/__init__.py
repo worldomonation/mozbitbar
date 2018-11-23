@@ -4,17 +4,13 @@
 
 from __future__ import print_function, absolute_import
 
-class NotInitializedException(Exception):
+class ProjectException(Exception):
     def __init__(self, message):
-        super(NotInitializedException, self).__init__(message)
+        super(ProjectException, self).__init__(message)
 
 class InvalidRecipeException(Exception):
     def __init__(self, message):
         super(InvalidRecipeException, self).__init__(message)
-
-class MissingArgumentException(Exception):
-    def __init__(self, message):
-        super(MissingArgumentException, self).__init__(message)
 
 class FrameworkException(Exception):
     def __init__(self, message):
