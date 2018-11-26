@@ -147,9 +147,9 @@ class BitbarProject(Bitbar):
         This method is a wrapper that calls the appropriate methods depending on
         provided parameters.
         """
-        if kwargs.get('project_id'):
+        if 'project_id' in kwargs.keys():
             self.set_project_by_id(kwargs.get('project_id'))
-        if kwargs.get('project_name'):
+        if 'project_name' in kwargs.keys():
             self.set_project_by_name(kwargs.get('project_name'))
 
     def set_project_by_id(self, project_id):
@@ -167,17 +167,15 @@ class BitbarProject(Bitbar):
     def set_project_by_name(self, project_name):
         """Retrieves project parameters from Bitbar using project_name.
         """
-        try:
-            output = self.client.get_projects()
-        except RequestResponseError:
-            raise EnvironmentError('Testdroid responded with error.')
+        output = self.client.get_projects()
 
         for project in output['data']:
             if project_name == project['name']:
                 self._set_project_attributes(project)
 
         if not self.project_id:
-            raise EnvironmentError('Project with name {} not found.'.format(project_name))
+            raise ProjectException(
+                'Project with name {} not found.'.format(project_name))
 
     def set_project_framework(self, **kwargs):
         """Sets the project framework using either integer id or name.
