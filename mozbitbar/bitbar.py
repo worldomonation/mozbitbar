@@ -1,8 +1,7 @@
 from __future__ import print_function, absolute_import
 
 from mozbitbar.configuration import Configuration
-from testdroid import Testdroid
-from testdroid import RequestResponseError
+
 
 class Bitbar(Configuration):
     """Bitbar is a class which represents an instance of Bitbar.
