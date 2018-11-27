@@ -4,7 +4,7 @@ import os
 import yaml
 
 from mozbitbar.bitbar_project import BitbarProject
-from mozbitbar import InvalidRecipeException
+from mozbitbar import InvalidRecipeException, FileException, ProjectException, FrameworkException, CredentialException
 from testdroid import RequestResponseError
 
 
@@ -73,7 +73,15 @@ def run_recipe(recipe_name):
         if func:
             try:
                 func(**arguments)
-            except RequestResponseError as e:
-                print('Exception raised.')
-                print('Status code: ', e.status_code)
-                print(e.message)
+            except RequestResponseError as rre:
+                print('Testdroid raised an exception:')
+                print('Status code: ', rre.status_code)
+                print(rre.message)
+            except InvalidRecipeException as ire:
+                print(ire.message)
+            except ProjectException as pe:
+                print(pe.message)
+            except FrameworkException as fe:
+                print(fe.message)
+            except CredentialException as ce:
+                print(ce.message)

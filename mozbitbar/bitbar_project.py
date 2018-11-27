@@ -46,6 +46,16 @@ class BitbarProject(Bitbar):
 
     @property
     def project_id(self):
+        """Returns the project_id attribute.
+
+        When setting the project_id, checks are performed to ensure the value is an integer.
+
+        Args:
+            project_id (int): Value to set for the project_id attribute of this object.
+
+        Raises:
+            ValueError: If project_id is not of type int.
+        """
         return self.__project_id
 
     @project_id.setter
@@ -57,6 +67,11 @@ class BitbarProject(Bitbar):
 
     @property
     def project_name(self):
+        """Returns the project_name attribute.
+
+        Args:
+            project_name (str): Value to set for the project_name attribute of this object.
+        """
         return self.__project_name
 
     @project_name.setter
@@ -65,6 +80,11 @@ class BitbarProject(Bitbar):
 
     @property
     def project_type(self):
+        """Returns the project_type attribute.
+
+        Args:
+            project_type (str): Value to set for the project_type attribute of this object.
+        """
         return self.__project_type
 
     @project_type.setter
@@ -73,6 +93,14 @@ class BitbarProject(Bitbar):
 
     @property
     def device_group_id(self):
+        """Returns the device_group_id attribute.
+
+        Args:
+            device_group_id (int): Value to set for the device_group_id attribute of this object.
+
+        Raises:
+            ValueError: If device_group_id is not of type int.
+        """
         return self.__device_group_id
 
     @device_group_id.setter
@@ -84,6 +112,11 @@ class BitbarProject(Bitbar):
 
     @property
     def framework_id(self):
+        """Returns the framework_id attribute.
+
+        Args:
+            framework_id (int): Value to set for the framework_id attribute of this object.
+        """
         return self.__framework_id
 
     @framework_id.setter
@@ -99,9 +132,10 @@ class BitbarProject(Bitbar):
             int: currently authenticated user id.
 
         Raises:
-            RequestResponseError
+            RequestResponseError: If Testdroid is unable to make requests.
         """
         return self.client.get_me()['id']
+
 
     # Additional methods #
 
