@@ -6,10 +6,14 @@ from __future__ import print_function, absolute_import
 
 class ProjectException(Exception):
     def __init__(self, message):
+        """ProjectException will be raised if any exceptions occur relating to project attributes.
+        """
         super(ProjectException, self).__init__(message)
 
 class InvalidRecipeException(Exception):
     def __init__(self, message):
+        """InvalidRecipeException will be raised upon YAML recipe having any errors.
+        """
         super(InvalidRecipeException, self).__init__(message)
 
 class FrameworkException(Exception):
@@ -18,4 +22,6 @@ class FrameworkException(Exception):
 
 class FileException(Exception):
     def __init__(self, message):
+        """FileException will be raised if errors relating to file transactions occur.
+        """
         super(FileException, self).__init__(message)
