@@ -18,9 +18,20 @@ class BitbarProject(Bitbar):
     def __init__(self, project_status, **kwargs):
         """Initializes the BitbarProject class instance.
 
-        Two methods are currently supported:
-            - new project
-            - use existing project
+        Two methods of are currently supported:
+            - new project ('new')
+            - use of existing project ('existing')
+
+        If a new project is specified, project_type and project_name attributes must be provided.
+
+        If an existing project is specified, at minimum the project_name or project_id must be specified.
+
+        Args:
+            project_status (str): Expected to be 'new' or 'existing'. Raises an exception on any other input.
+            **kwargs: Arbitrary keyword arguments.
+
+        Raises:
+            ProjectException: If `project_status` has value other than 'new' or 'existing'.
         """
         super(BitbarProject, self).__init__()
 
