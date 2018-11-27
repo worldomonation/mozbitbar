@@ -6,10 +6,6 @@ import sys
 from mozbitbar import recipe_handler
 from mozbitbar.cli import cli
 
-log = logging.getLogger('mozbitbar')
-log.setLevel(logging.DEBUG)
-log.addHandler(logging.StreamHandler())
-
 def main():
     # example of how to call and use Bitbar with this harness.
     # in a taskcluster/treeherder environment, the script will

@@ -7,7 +7,6 @@ from testdroid import RequestResponseError
 from mozbitbar import FileException, FrameworkException, ProjectException
 from mozbitbar.bitbar import Bitbar
 
-log = logging.getLogger('mozbitbar')
 
 class BitbarProject(Bitbar):
     """BitbarProject is a class which represents an instance of a project on Bitbar,
@@ -30,7 +29,7 @@ class BitbarProject(Bitbar):
         elif 'existing' in project_status:
             self.use_existing_project(**kwargs)
         else:
-            raise NotImplementedError()
+            raise ProjectException('invalid project status specifier received, project cannot be set.' + '\nproject status: {}'.format(project_status))
 
     # Class attributes #
 
@@ -72,6 +71,14 @@ class BitbarProject(Bitbar):
                 __name__, type(device_group_id)))
         self.__device_group_id = device_group_id
 
+    @property
+    def framework_id(self):
+        return self.__framework_id
+
+    @framework_id.setter
+    def framework_id(self, framework_id):
+        self.__framework_id = framework_id
+
     def get_user_id(self):
         """Retrieves the user id for the currently authenticated user.
 
@@ -98,20 +105,6 @@ class BitbarProject(Bitbar):
         self.project_id = response['id']
         self.project_name = response['name']
         self.project_type = response['type']
-
-    def _is_file_on_bitbar(self, filename):
-        """Checks if file with same name has been uploaded to Bitbar for the user.
-        """
-        # sanitize the provided path to just the file name itself.
-        filename = os.path.basename(filename)
-
-        try:
-            output = self.client.get_input_files()
-            file_names = [file_list['name'] for file_list in output['data']]
-        except RequestResponseError as rre:
-            raise rre
-
-        return filename in file_names
 
     # Project operations #
 
@@ -265,6 +258,26 @@ class BitbarProject(Bitbar):
 
     # File operations #
 
+    def _file_on_local_disk(self, path):
+        """checks if specified path can be found on local disk.
+        """
+        assert type(path) == str
+
+        absolute_path = os.path.abspath(path)
+        return os.path.isfile(absolute_path)
+
+    def _file_on_bitbar(self, filename):
+        """Checks if file with same name has been uploaded to Bitbar for the user.
+        """
+        assert type(filename) == str
+        # sanitize the provided path to just the file name itself.
+        filename = os.path.basename(filename)
+
+        output = self.client.get_input_files()
+        file_names = [file_list['name'] for file_list in output['data']]
+
+        return filename in file_names
+
     def upload_file(self, **kwargs):
         """Uploads file(s) to Bitbar.
 
@@ -272,12 +285,24 @@ class BitbarProject(Bitbar):
         """
         for key, filename in kwargs.iteritems():
             file_type, _ = key.split('_')
-            path = "users/{user_id}/projects/{project_id}/files/{file_type}".format(user_id=self.get_user_id(), project_id=self.project_id, file_type=file_type)
-            output = self.client.upload(path=path, filename=filename)
+
+            if self._file_on_bitbar(filename):
+                print('File name: {} already exists on Bitbar, skipping.'.format(filename))
+                continue
+
+            try:
+                assert self._file_on_local_disk(filename)
+            except AssertionError:
+                raise FileException('Failed to locate file on disk: path: {}'.format(filename))
+
+            api_path = "users/{user_id}/projects/{project_id}/files/{file_type}".format(
+                user_id=self.get_user_id(), project_id=self.project_id, file_type=file_type)
+            output = self.client.upload(path=api_path, filename=filename)
+
             assert output
 
             try:
-                assert self._is_file_on_bitbar(filename)
+                assert self._file_on_bitbar(filename)
             except AssertionError:
                 raise FileException("Failed to upload file to Bitbar: file type: {}, file name: {}".format(file_type, filename))
 
