@@ -335,28 +335,62 @@ class BitbarProject(Bitbar):
         """Deletes a single project parameter from the project.
 
         Given a single instance of a project parameter, this method will
-        attempt to delete the project parameter.
+        attempt to delete the project parameter from the project.
+
+        Accepts both integer and string representation of the parameter id
+        and name, respectively.
+
+        If the parameter to delete is found, an attempt is made using
+        Testdroid to delete the said parameter.
+
+        Args:
+            parameter_to_delete (str, int): Project parameter to be deleted
+                from the project. Could be string (name) or integer (id).
+
+        Raises:
+            AssertionError: If HTTPS response of the deletion attempt is
+                anything other than 204.
+            RequestResponseError: If Testdroid responds with an error.
         """
         try:
+            # maybe user supplied a stringified integer value.
             sanitized_parameter_id = int(parameter_to_delete)
         except ValueError:
+            # if not, we have a parameter_name that needs conversion to id.
             sanitized_parameter_id = self.get_project_parameter_id_by_name(
                 parameter_to_delete)
 
         if sanitized_parameter_id is None:
-            print('Parameter to delete {} not found, skipping..'.format(parameter_to_delete))
+            # if user-supplied parameter name or id is not in fact set for the
+            # project on Bitbar, skip the deletion process.
+            print('Parameter ID for {} not found.'.format(parameter_to_delete),
+                  'skipping..')
             return
 
         assert type(sanitized_parameter_id) is int
 
-        output = self.client.delete_project_parameters(self.project_id, sanitized_parameter_id)
+        output = self.client.delete_project_parameters(
+            self.project_id,
+            sanitized_parameter_id
+        )
         assert output.status_code is 204
 
     def get_project_parameter_id_by_name(self, parameter_name):
         """Returns the parameter_id value represented by the string.
 
-        This method will convert the string representation of the project parameter name to
-        an integer id.
+        This method will convert the string representation of the
+        project parameter name to an integer id.
+
+        Args:
+            parameter_name (str): Parameter name in string format, to convert
+                to a numerical ID.
+
+        Returns:
+            int or None: Integer if parameter name maps to an existing project
+                parameter on Bitbar. None otherwise.
+
+        Raises:
+            RequestResponseError: If Testdroid responds with an error.
         """
         assert type(parameter_name) is str
 
@@ -370,15 +404,35 @@ class BitbarProject(Bitbar):
     # File operations #
 
     def _file_on_local_disk(self, path):
-        """checks if specified path can be found on local disk.
+        """Checks if specified path can be found on local disk.
+
+        Accepts a string representation of a local path. Firstly, the current
+        directory is checked. If path could not be found, the path is
+        converted to an absolute path.
+
+        Args:
+            path (str): String representation of a path on local disk.
+
+        Returns:
+            bool: True if path is found on local disk. False otherwise.
         """
         assert type(path) == str
+
+        if os.path.isfile(path):
+            return True
 
         absolute_path = os.path.abspath(path)
         return os.path.isfile(absolute_path)
 
     def _file_on_bitbar(self, filename):
-        """Checks if file with same name has been uploaded to Bitbar for the user.
+        """Checks if file with same name has been uploaded to Bitbar which
+        is available to the user.
+
+        Args:
+            filename (str): String representation of a filename.
+
+        Returns:
+            bool: True if filename is found on Bitbar. False otherwise.
         """
         assert type(filename) == str
         # sanitize the provided path to just the file name itself.
@@ -393,21 +447,35 @@ class BitbarProject(Bitbar):
         """Uploads file(s) to Bitbar.
 
         Supports upload of multiple files, of all types supported by Bitbar.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments.
+
+        Raises:
+            FileException: If file could not be uploaded to Bitbar.
         """
         for key, filename in kwargs.iteritems():
             file_type, _ = key.split('_')
 
             if self._file_on_bitbar(filename):
-                print('File name: {} already exists on Bitbar, skipping.'.format(filename))
+                # skip and go to the next item in the list of files.
+                print('File name: {} already exists on Bitbar,' +
+                      'skipping.'.format(filename))
                 continue
 
             try:
                 assert self._file_on_local_disk(filename)
             except AssertionError:
-                raise FileException('Failed to locate file on disk: path: {}'.format(filename))
+                raise FileException('Failed to locate file on disk: path: ' +
+                                    '{}'.format(filename))
 
-            api_path = "users/{user_id}/projects/{project_id}/files/{file_type}".format(
-                user_id=self.get_user_id(), project_id=self.project_id, file_type=file_type)
+            api_path_components = [
+                "users/{user_id}/".format(user_id=self.get_user_id()),
+                "projects/{project_id}/".format(project_id=self.project_id),
+                "files/{file_type}".format(file_type=file_type)
+            ]
+            api_path = ''.join([api_path_components])
+
             output = self.client.upload(path=api_path, filename=filename)
 
             assert output
@@ -415,33 +483,67 @@ class BitbarProject(Bitbar):
             try:
                 assert self._file_on_bitbar(filename)
             except AssertionError:
-                raise FileException("Failed to upload file to Bitbar: file type: {}, file name: {}".format(file_type, filename))
+                raise FileException('Failed to upload file to Bitbar: ' +
+                                    'file type: {}, '.format(file_type) +
+                                    'file name: {}'.format(filename))
 
     # Device operations #
 
-    def set_device_group(self, specified_device_group):
+    def get_device_groups(self):
+        """Returns the list of device groups available on Bitbar.
+
+        Returns:
+            :obj:`list` of :obj:`dict`: List of currently available device
+                groups.
+
+        Raises:
+            RequestResponseError: If Testdroid responds with an error.
+        """
+        return self.client.get_device_groups()['data']
+
+    def set_device_group(self, device_group_to_set):
         """Sets the project's device group to be used for test runs.
+
+        Args:
+            device_group_to_set (str, int): Device group specifier to be
+                used to set the device group. Could be string
+                (device group name) or integer (device group id).
         """
         device_groups = [(device_group['id'], device_group['name'])
-                         for device_group in self.client.get_device_groups()['data']]
+                         for device_group in self.get_device_groups()]
 
-        # if device_group_name is provided, the device_group_id must be retrieved using the name.
-        if type(specified_device_group) is str:
+        # if device_group_name is provided, the device_group_id must be
+        # retrieved using the name.
+        if type(device_group_to_set) is str:
             for device_group in device_groups:
-                if specified_device_group in device_group:
-                    specified_device_group = device_group[1]
+                if device_group_to_set in device_group:
+                    device_group_to_set = device_group[1]
 
-        self.device_group_id = specified_device_group
+        assert type(device_group_to_set) is int
+
+        self.device_group_id = device_group_to_set
 
     # Test Run operations #
 
     def start_test_run(self, **kwargs):
-        """Starts a test run with parameters based on recipe definition.
+        """Starts a test run with parameters provided from the recipe.
 
         This method is a wrapper around the Testdroid implementation with
         additional operations.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            int: Unique test run ID generated by Bitbar.
+
+        Raises:
+            RequestResponseError: If Testdroid responds with an error.
         """
         if kwargs.get('device_group_id') or kwargs.get('device_group_name'):
-            self.set_device_group(kwargs.pop('device_group_id') or kwargs.pop('device_group_name'))
+            self.set_device_group(kwargs.pop('device_group_id') or
+                                  kwargs.pop('device_group_name'))
 
-        self.client.start_test_run(self.project_id, device_group_id=self.device_group_id, name='yaml test', **kwargs)
+        self.client.start_test_run(self.project_id,
+                                   device_group_id=self.device_group_id,
+                                   name='yaml test', **kwargs)

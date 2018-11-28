@@ -31,3 +31,11 @@ class CredentialException(Exception):
         """CredentialException will be raised if credentials supplied to BitbarProject has issues.
         """
         super(CredentialException, self).__init__(message)
+
+class OperationNotImplementedException(Exception):
+    def __init__(self, message):
+        """OperationNotImplementedException will be raised if a recipe action
+        does not correspond to an implemented method in the BitbarProject
+        object.
+        """
+        super(OperationNotImplementedException, self).__init__(message)
