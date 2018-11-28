@@ -1,17 +1,27 @@
 from __future__ import print_function, absolute_import
 
 import os
-import requests
 
-from time import time
-
+from mozbitbar import CredentialException
 from testdroid import Testdroid, RequestResponseError
+
 
 class Configuration(object):
     def __init__(self, **kwargs):
         """Initializes the Configuration class, in one of two ways:
-            - via kwargs: user-provided dictionary of required parameters.
-            - via envvar: parses the environment variables set on host machine.
+            - using kwargs: user-provided dictionary of required parameters.
+            - using envvar: parses the environment variables set on
+            host machine.
+
+        Either methods are supported. By default, the environment variable
+        approach is preferred.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments.
+
+        Raises:
+            CredentialException: If minimum required credentials were not set,
+                or supplied credentials were invalid.
         """
         if kwargs:
             self.user_name = kwargs.get('TESTDROID_USERNAME')
@@ -29,7 +39,8 @@ class Configuration(object):
             assert (self.user_name and self.user_password) or self.api_key
             assert self.url
         except AssertionError:
-            raise EnvironmentError()
+            raise CredentialException('Was not able to set required' +
+                                      'credentials.')
 
         # instantiate client.
         self.client = Testdroid(username=self.user_name,
@@ -39,8 +50,6 @@ class Configuration(object):
 
         # make a simple call to verify parameters are valid.
         try:
-            self.client.get_token()
+            self.client.get_me()
         except RequestResponseError:
-            print('Incorrect values provided to Testdroid.\nPlease ensure' +
-                  'username, password and/or API key as well as Bitbar URL is set.')
-            raise EnvironmentError()
+            raise CredentialException('Invalid credentials supplied.')
