@@ -31,7 +31,7 @@ def test_bitbar_project(kwargs, expected):
 
 @pytest.mark.parametrize('project_status', ['present', 'exist', 'create'])
 def test_bitbar_project_invalid_status(project_status):
-    """Ensures BitbarProject only accepts 
+    """Ensures BitbarProject raises an exception on invalid project status.
     """
     with pytest.raises(ProjectException):
         BitbarProject(project_status)
