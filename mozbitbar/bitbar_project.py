@@ -626,9 +626,13 @@ class BitbarProject(Configuration):
         assert ('device_group_id' in kwargs or 'device_group_name' in kwargs or
             'device_id' in kwargs or 'device_name' in kwargs)
 
+        # ensure the run name is unique.
+        assert kwargs.get('name') not in [run['displayName']
+                                          for run in self.get_all_test_runs()]
+
         self.test_run_id = self.client.start_test_run(self.project_id, **kwargs)
 
-    def get_test_run(self, test_run_id):
+    def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.
 
         Provided with integer value for test_run_id, if the test_run exists
@@ -646,6 +650,14 @@ class BitbarProject(Configuration):
             RequestResponseError: If Testdroid responds with an error.
         """
         return self.client.get_test_run(self.project_id, test_run_id)
+
+    def get_all_test_runs(self):
+        """
+
+
+
+        """
+        return self.client.get_project_test_runs(self.project_id)['data']
 
     def notify_test_run_complete(self, interval=30, timeout=300):
         total_wait_time = 0
