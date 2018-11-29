@@ -10,7 +10,9 @@ from mozbitbar import (
     ProjectException,
     FrameworkException,
     CredentialException,
-    OperationNotImplementedException
+    OperationNotImplementedException,
+    DeviceException,
+    TestException
     )
 from testdroid import RequestResponseError
 from yaml.scanner import ScannerError
@@ -30,7 +32,6 @@ class Recipe(object):
         self.locate_recipe(recipe_name)
 
         self.load_recipe_from_yaml()
-        # self.split_project_parameters()
 
     @property
     def recipe_name(self):
@@ -81,6 +82,12 @@ class Recipe(object):
 
     @property
     def project_arguments(self):
+        """Returns the project_argument attribute.
+
+        Args:
+            project_arguments (:obj:`dict` of str): Arguments related to
+                the selection or creation of a project.
+        """
         return self.__project_arguments
 
     @project_arguments.setter
@@ -224,8 +231,13 @@ def run_recipe(recipe_name):
                 print(fe.message)
             except CredentialException as ce:
                 print(ce.message)
+            except DeviceException as de:
+                print(de.message)
+            except TestException as te:
+                print(te.message)
         else:
-            msg = '{name}: action {action} not found in BitbarProject.'.format(
-                name=__name__,
-                action=action)
+            msg = '{}: action: {} not found in BitbarProject.'.format(
+                __name__,
+                action
+            )
             raise OperationNotImplementedException(msg)

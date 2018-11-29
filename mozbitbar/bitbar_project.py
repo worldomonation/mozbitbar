@@ -1,16 +1,23 @@
 from __future__ import print_function, absolute_import
 
 import os
+import time
 
 from testdroid import RequestResponseError
-from mozbitbar import FileException, ProjectException, FrameworkException
-from mozbitbar.bitbar import Bitbar
+from mozbitbar import (
+    FileException,
+    ProjectException,
+    FrameworkException,
+    DeviceException,
+    TestException
+)
+from mozbitbar.configuration import Configuration
 
 
-class BitbarProject(Bitbar):
+class BitbarProject(Configuration):
     """BitbarProject is a class which represents an instance of a project on
     Bitbar, as well as associated actions that are intended to be run against
-    a specific project.
+    a specific project instance.
 
     This class holds attributes that are not tracked in the Testdroid
     implementation relating to the project, device groups and/or test runs.
@@ -60,7 +67,7 @@ class BitbarProject(Bitbar):
 
         Args:
             project_id (int): Value to set for the project_id attribute
-            of this object.
+                of this object.
 
         Raises:
             ValueError: If project_id is not of type int.
@@ -81,7 +88,7 @@ class BitbarProject(Bitbar):
 
         Args:
             project_name (str): Value to set for the project_name attribute
-            of this object.
+                of this object.
         """
         return self.__project_name
 
@@ -95,7 +102,7 @@ class BitbarProject(Bitbar):
 
         Args:
             project_type (str): Value to set for the project_type attribute
-            of this object.
+                of this object.
         """
         return self.__project_type
 
@@ -130,13 +137,45 @@ class BitbarProject(Bitbar):
 
         Args:
             framework_id (int): Value to set for the framework_id attribute
-            of this object.
+                of this object.
         """
         return self.__framework_id
 
     @framework_id.setter
     def framework_id(self, framework_id):
         self.__framework_id = framework_id
+
+    @property
+    def device_id(self):
+        """Returns the device_id attribute.
+
+        Args:
+            id (int): Value to set for the device_group_id attribute of this
+                object.
+
+        Raises:
+            AssertionError: If supplied id value is not integer.
+        """
+        return self.__device_id
+
+    @device_id.setter
+    def device_id(self, id):
+        assert type(id) is int
+        self.__device_id = id
+
+    # Additional Methods #
+
+    def _set_project_attributes(self, response):
+        """Sets class attributes.
+
+        The following values are set:
+            - project_id
+            - project_name
+            - project_type
+        """
+        self.project_id = response['id']
+        self.project_name = response['name']
+        self.project_type = response['type']
 
     def get_user_id(self):
         """Retrieves the user id for the currently authenticated user.
@@ -151,19 +190,7 @@ class BitbarProject(Bitbar):
         """
         return self.client.get_me()['id']
 
-    # Additional methods #
-
-    def _set_project_attributes(self, response):
-        """Sets class attributes.
-
-        The following values are set:
-            - project_id
-            - project_name
-            - project_type
-        """
-        self.project_id = response['id']
-        self.project_name = response['name']
-        self.project_type = response['type']
+    # Project operations #
 
     def get_projects(self):
         """Returns the list of projects.
@@ -173,8 +200,6 @@ class BitbarProject(Bitbar):
         """
         existing_projects = self.client.get_projects()
         return existing_projects['data']
-
-    # Project operations #
 
     def create_project(self, **kwargs):
         """Creates a new Bitbar project using provided parameters.
@@ -459,8 +484,11 @@ class BitbarProject(Bitbar):
 
             if self._file_on_bitbar(filename):
                 # skip and go to the next item in the list of files.
-                print('File name: {} already exists on Bitbar,' +
-                      'skipping.'.format(filename))
+                msg = '{}: {} already exists on Bitbar, skipping'.format(
+                    __name__,
+                    filename
+                )
+                print(msg)
                 continue
 
             try:
@@ -501,6 +529,17 @@ class BitbarProject(Bitbar):
         """
         return self.client.get_device_groups()['data']
 
+    def get_devices(self):
+        """Returns the list of devices available on Bitbar.
+
+        Returns:
+            :obj:`list` of :obj:`dict`: List of currently available devices.
+
+        Raises:
+            RequestResponseError: If Testdroid responds with an error.
+        """
+        return self.client.get_devices()['data']
+
     def set_device_group(self, device_group_to_set):
         """Sets the project's device group to be used for test runs.
 
@@ -508,8 +547,11 @@ class BitbarProject(Bitbar):
             device_group_to_set (str, int): Device group specifier to be
                 used to set the device group. Could be string
                 (device group name) or integer (device group id).
+
+        Raises:
+            AssertionError: If device_group_to_set is not an integer.
         """
-        device_groups = [(device_group['id'], device_group['name'])
+        device_groups = [(device_group['id'], device_group['displayName'])
                          for device_group in self.get_device_groups()]
 
         # if device_group_name is provided, the device_group_id must be
@@ -519,31 +561,146 @@ class BitbarProject(Bitbar):
                 if device_group_to_set in device_group:
                     device_group_to_set = device_group[1]
 
-        assert type(device_group_to_set) is int
+        try:
+            assert type(device_group_to_set) is int
+        except AssertionError:
+            msg = '{}: device group specifier {} not found on Bitbar.'.format(
+                __name__,
+                device_group_to_set
+            )
+            raise DeviceException(msg)
 
         self.device_group_id = device_group_to_set
 
+    def set_device(self, device_id):
+        """Sets the device using the device_id.
+
+        Accepts either a device name or device id.
+
+        Args:
+            device_id (int, str): Device specifier to be used to set the
+                device_id attribute. Could be the device name (str) or
+                device id (int).
+
+        Raises:
+            DeviceException: If device_id is not found in list of
+                available device on Bitbar.
+        """
+        devices_list = self.get_devices()
+
+        for device in devices_list:
+            if device['id'] == device_id:
+                self.device_id = device_id
+                self.device_name = device['displayName']
+                return
+            if device['displayName'] == device_id:
+                self.device_id = device['id']
+                self.device_name = device_id
+                return
+
+        msg = '{}: device specifier {} not found on Bitbar.'.format(
+            __name__,
+            device_id
+        )
+        raise DeviceException(msg)
+
     # Test Run operations #
+
+    def _is_test_name_unique(self, test_run_name):
+        """Cross-checks provided test_run_name against all test run names.
+
+        Args:
+            test_run_name (str): Test run name to be compared against all
+                previous test runs' names.
+
+        Returns:
+            boolean: True if test name is unique. False otherwise.
+            None: If test_run_name to be checked is None.
+        """
+        if test_run_name is not None:
+            return test_run_name not in [run['displayName']
+                                         for run in self.get_all_test_runs()]
+        return None
 
     def start_test_run(self, **kwargs):
         """Starts a test run with parameters provided from the recipe.
 
         This method is a wrapper around the Testdroid implementation with
-        additional operations.
+        additional operations. Parameters to this method should mirror that of
+        the Testdroid implementation.
 
         Args:
             **kwargs: Arbitrary keyword arguments.
 
+        Raises:
+            RequestResponseError: If Testdroid responds with an error.
+        """
+        # temporary while recipe standards are being worked on:
+        # check if kwargs contains at least one type of device specifier.
+        assert ('device_group_id' in kwargs or 'device_group_name' in kwargs or
+                'device_id' in kwargs or 'device_name' in kwargs)
+
+        try:
+            assert self._is_test_name_unique(kwargs.get('name'))
+        except AssertionError:
+            raise TestException('{}: name: {} is not unique'.format(
+                __name__,
+                kwargs.get('name')
+            ))
+
+        self.test_run_id = self.client.start_test_run(self.project_id,
+                                                      **kwargs)
+
+    def get_test_run(self, test_run_id=None, test_run_name=None):
+        """Returns the test run details.
+
+        Provided with integer value for test_run_id, if the test_run exists
+        details for the test run is returned, including the current state
+        and success status.
+
+        Args:
+            test_run_id (int): ID of the test run.
+
         Returns:
-            int: Unique test run ID generated by Bitbar.
+            :obj:`dict` of str: Dictionary of strings containing relevant
+                test run information.
 
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
-        if kwargs.get('device_group_id') or kwargs.get('device_group_name'):
-            self.set_device_group(kwargs.pop('device_group_id') or
-                                  kwargs.pop('device_group_name'))
+        return self.client.get_test_run(self.project_id, test_run_id)
 
-        self.client.start_test_run(self.project_id,
-                                   device_group_id=self.device_group_id,
-                                   name='yaml test', **kwargs)
+    def get_all_test_runs(self):
+        """Returns all tests for the project.
+
+        Returns:
+            :obj:`dict` of str: Dictionary of strings holding all test run
+                information for the project.
+        """
+        return self.client.get_project_test_runs(self.project_id)['data']
+
+    def notify_test_run_complete(self, interval=30, timeout=300):
+        """Waits for test run to complete and outputs status to the CLI.
+
+        Args:
+            interval (int, optional): Interval at which this method should
+                query Bitbar for status updates for the test run.
+            timeout (int, optional): Maximum time to wait before exiting the
+                method.
+        """
+        total_wait_time = 0
+
+        while (self.get_test_run(self.test_run_id)['state'] is not 'FINISHED'
+               and total_wait_time <= timeout):
+            time.sleep(interval)
+            total_wait_time += interval
+
+        test_run_details = self.get_test_run(self.test_run_id)
+
+        if total_wait_time >= timeout:
+            print('Test run did not complete prior to {}s timeout.'.format(
+                  timeout))
+        print('Project ID:', self.project_id)
+        print('Project Framework Name:', test_run_details['frameworkName'])
+        print('Test Run ID:', self.test_run_id)
+        print('Test Run State:', test_run_details['state'])

@@ -13,6 +13,14 @@ class ProjectException(Exception):
         super(ProjectException, self).__init__(message)
 
 
+class DeviceException(Exception):
+    def __init__(self, message):
+        """DeviceException will be raised if any exceptions occur relating to
+        device operations.
+        """
+        super(DeviceException, self).__init__(message)
+
+        
 class InvalidRecipeException(Exception):
     def __init__(self, message):
         """InvalidRecipeException will be raised upon YAML recipe having
@@ -49,3 +57,11 @@ class OperationNotImplementedException(Exception):
         object.
         """
         super(OperationNotImplementedException, self).__init__(message)
+
+
+class TestException(Exception):
+    def __init__(self, message):
+        """TestException will be raised if test runs experience any sort of
+        errors.
+        """
+        super(TestException, self).__init__(message)
