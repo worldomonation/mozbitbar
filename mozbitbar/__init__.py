@@ -13,6 +13,14 @@ class ProjectException(Exception):
         super(ProjectException, self).__init__(message)
 
 
+class DeviceException(Exception):
+    def __init__(self, message):
+        """DeviceException will be raised if any exceptions occur relating to
+        device operations.
+        """
+        super(DeviceException, self).__init__(message)
+
+
 class InvalidRecipeException(Exception):
     def __init__(self, message):
         """InvalidRecipeException will be raised upon YAML recipe having
