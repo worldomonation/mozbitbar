@@ -24,4 +24,9 @@
     force_overwrite: False
 - action: start_test_run
   arguments:
+    name: test_100
     device_group_id: 32
+- action: notify_test_run_complete
+  arguments:
+    interval: 15
+    timeout: 90
