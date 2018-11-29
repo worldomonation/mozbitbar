@@ -1,6 +1,7 @@
 from __future__ import print_function, absolute_import
 
 import os
+import time
 
 from testdroid import RequestResponseError
 from mozbitbar import (
@@ -9,13 +10,14 @@ from mozbitbar import (
     FrameworkException,
     DeviceException
 )
+from mozbitbar.configuration import Configuration
 from mozbitbar.bitbar import Bitbar
 
 
-class BitbarProject(Bitbar):
+class BitbarProject(Configuration):
     """BitbarProject is a class which represents an instance of a project on
     Bitbar, as well as associated actions that are intended to be run against
-    a specific project.
+    a specific project instance.
 
     This class holds attributes that are not tracked in the Testdroid
     implementation relating to the project, device groups and/or test runs.
@@ -527,6 +529,17 @@ class BitbarProject(Bitbar):
         """
         return self.client.get_device_groups()['data']
 
+    def get_devices(self):
+        """Returns the list of devices available on Bitbar.
+
+        Returns:
+            :obj:`list` of :obj:`dict`: List of currently available devices.
+
+        Raises:
+            RequestResponseError: If Testdroid responds with an error.
+        """
+        return self.client.get_devices()['data']
+
     def set_device_group(self, device_group_to_set):
         """Sets the project's device group to be used for test runs.
 
@@ -538,7 +551,7 @@ class BitbarProject(Bitbar):
         Raises:
             AssertionError: If device_group_to_set is not an integer.
         """
-        device_groups = [(device_group['id'], device_group['name'])
+        device_groups = [(device_group['id'], device_group['displayName'])
                          for device_group in self.get_device_groups()]
 
         # if device_group_name is provided, the device_group_id must be
@@ -559,35 +572,35 @@ class BitbarProject(Bitbar):
 
         self.device_group_id = device_group_to_set
 
-    def set_device(self, device_to_set):
-        """Sets the device using the device_to_set.
+    def set_device(self, device_id):
+        """Sets the device using the device_id.
 
-        Accepts either a device name or device identifier.
+        Accepts either a device name or device id.
 
         Args:
-            device_to_set (int, str): Device specifier to be used to set the
-                device_to_set attribute. Could be the device name (str) or
+            device_id (int, str): Device specifier to be used to set the
+                device_id attribute. Could be the device name (str) or
                 device id (int).
 
         Raises:
-            DeviceException: If device_to_set is not found in list of
+            DeviceException: If device_id is not found in list of
                 available device on Bitbar.
         """
-        devices_list = self.client.get_devices()
+        devices_list = self.get_devices()
 
         for device in devices_list:
-            if device['id'] == device_to_set:
-                self.device_id = device_to_set
+            if device['id'] == device_id:
+                self.device_id = device_id
                 self.device_name = device['displayName']
                 return
-            if device['displayName'] == device_to_set:
+            if device['displayName'] == device_id:
                 self.device_id = device['id']
-                self.device_name = device_to_set
+                self.device_name = device_id
                 return
 
         msg = '{}: device specifier {} not found on Bitbar.'.format(
             __name__,
-            device_to_set
+            device_id
         )
         raise DeviceException(msg)
 
@@ -608,8 +621,43 @@ class BitbarProject(Bitbar):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
-        if kwargs.get('device_group_id') or kwargs.get('device_group_name'):
-            self.set_device_group(kwargs.pop('device_group_id') or
-                                  kwargs.pop('device_group_name'))
+        # temporary while recipe standards are being worked on:
+        # check if kwargs contains at least one type of device specifier.
+        assert ('device_group_id' in kwargs or 'device_group_name' in kwargs or
+            'device_id' in kwargs or 'device_name' in kwargs)
 
-        self.client.start_test_run(self.project_id, **kwargs)
+        self.test_run_id = self.client.start_test_run(self.project_id, **kwargs)
+
+    def get_test_run(self, test_run_id):
+        """Returns the test run details.
+
+        Provided with integer value for test_run_id, if the test_run exists
+        details for the test run is returned, including the current state
+        and success status.
+
+        Args:
+            test_run_id (int): ID of the test run.
+
+        Returns:
+            :obj:`dict` of str: Dictionary of strings containing relevant
+                test run information.
+
+        Raises:
+            RequestResponseError: If Testdroid responds with an error.
+        """
+        return self.client.get_test_run(self.project_id, test_run_id)
+
+    def notify_test_run_complete(self, interval=30, timeout=300):
+        total_wait_time = 0
+
+        while (self.get_test_run(self.test_run_id)['state'] is not 'FINISHED'
+            and total_wait_time <= timeout):
+            time.sleep(interval)
+            total_wait_time += interval
+
+        test_run_details = self.get_test_run(self.test_run_id)
+
+        print('Project ID:', self.project_id)
+        print('Project Framework Name:', test_run_details['frameworkName'])
+        print('Test Run ID:', self.test_run_id)
+        print('Test Run State:', test_run_details['state'])
