@@ -8,7 +8,8 @@ from mozbitbar import (
     FileException,
     ProjectException,
     FrameworkException,
-    DeviceException
+    DeviceException,
+    TestException
 )
 from mozbitbar.configuration import Configuration
 
@@ -639,7 +640,13 @@ class BitbarProject(Configuration):
         assert ('device_group_id' in kwargs or 'device_group_name' in kwargs or
                 'device_id' in kwargs or 'device_name' in kwargs)
 
-        assert self._is_test_name_unique(kwargs.get('name'))
+        try:
+            assert self._is_test_name_unique(kwargs.get('name'))
+        except AssertionError:
+            raise TestException('{}: name: {} is not unique'.format(
+                __name__,
+                kwargs.get('name')
+            ))
 
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       **kwargs)
