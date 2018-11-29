@@ -163,20 +163,7 @@ class BitbarProject(Configuration):
         assert type(id) is int
         self.__device_id = id
 
-    def get_user_id(self):
-        """Retrieves the user id for the currently authenticated user.
-
-        This method is a wrapper around the Testdroid implementation.
-
-        Returns:
-            int: currently authenticated user id.
-
-        Raises:
-            RequestResponseError: If Testdroid responds with an error.
-        """
-        return self.client.get_me()['id']
-
-    # Additional methods #
+    # Additional Methods #
 
     def _set_project_attributes(self, response):
         """Sets class attributes.
@@ -190,6 +177,21 @@ class BitbarProject(Configuration):
         self.project_name = response['name']
         self.project_type = response['type']
 
+    def get_user_id(self):
+        """Retrieves the user id for the currently authenticated user.
+
+        This method is a wrapper around the Testdroid implementation.
+
+        Returns:
+            int: currently authenticated user id.
+
+        Raises:
+            RequestResponseError: If Testdroid responds with an error.
+        """
+        return self.client.get_me()['id']
+
+    # Project operations #
+
     def get_projects(self):
         """Returns the list of projects.
 
@@ -198,8 +200,6 @@ class BitbarProject(Configuration):
         """
         existing_projects = self.client.get_projects()
         return existing_projects['data']
-
-    # Project operations #
 
     def create_project(self, **kwargs):
         """Creates a new Bitbar project using provided parameters.
