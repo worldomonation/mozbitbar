@@ -1,6 +1,7 @@
 from __future__ import print_function, absolute_import
 
 import os
+import sys
 import yaml
 
 from mozbitbar.bitbar_project import BitbarProject
@@ -12,6 +13,7 @@ from mozbitbar import (
     OperationNotImplementedException
     )
 from testdroid import RequestResponseError
+from yaml.scanner import ScannerError
 
 
 class Recipe(object):
@@ -22,55 +24,147 @@ class Recipe(object):
         to a stored recipe is expected.
 
         Args:
-            recipe_name (str): Name of the recipe file to be parsed.
+            recipe_name (str): Base name or fully qualified path to the recipe
+                to be loaded.
         """
-        # store provided name
-        self.recipe_name = recipe_name
-        # parse recipe and perform sanitizing operations
+        self.locate_recipe(recipe_name)
+
         self.load_recipe_from_yaml()
-        self.split_project_parameters()
+        # self.split_project_parameters()
+
+    @property
+    def recipe_name(self):
+        """Returns the base name of the recipe.
+
+        Args:
+            recipe_name (str): Base name of the recipe.
+        """
+        return self.__recipe_name
+
+    @recipe_name.setter
+    def recipe_name(self, recipe_name):
+        self.__recipe_name = os.path.basename(recipe_name)
+
+    @property
+    def recipe_path(self):
+        """Returns the absolute path to the recipe.
+
+        Args:
+            path (str): Absolute path to the recipe.
+        """
+        return self.__recipe_path
+
+    @recipe_path.setter
+    def recipe_path(self, path):
+        self.__recipe_path = os.path.abspath(path)
+
+    @property
+    def task_list(self):
+        """Returns the task list for the loaded recipe.
+
+        Validation is performed when setting this value.
+
+        Args:
+            task_list (:obj:`list` of :obj:`dict`): List of tasks defined by
+                recipe.
+        """
+        return self.__task_list
+
+    @task_list.setter
+    def task_list(self, task_list):
+        assert type(task_list) is list
+        for action in task_list:
+            assert type(action) is dict
+            assert 'action' in action
+            assert 'arguments' in action
+        self.__task_list = task_list
+
+    @property
+    def project_arguments(self):
+        return self.__project_arguments
+
+    @project_arguments.setter
+    def project_arguments(self, project_arguments):
+        assert type(project_arguments) is dict
+
+        self.__project_arguments = project_arguments
+
+    def locate_recipe(self, path):
+        """Locates a recipe on the local disk.
+
+        Args:
+            path (str): Base filename or fully qualified path on local disk.
+
+        Raises:
+            IOError: If path is neither a file in current working directory nor
+                a fully qualified path on local disk.
+        """
+        if os.path.isfile(path):
+            self.recipe_name = path
+            self.recipe_path = path
+        else:
+            msg = '{name}: recipe not found at: {path}'.format(
+                name=__name__,
+                path=path
+            )
+            raise IOError(msg)
 
     def load_recipe_from_yaml(self):
         """Parses a recipe from a YAML file stored locally.
+
+        The loaded YAML-formatted recipe is put through validation prior to
+        being saved into this object.
+
+        Raises:
+            IOError: If recipe path does not map to a file on local disk.
+            InvalidRecipeException: If file specified by recipe path is not a
+                valid YAML file.
         """
-        # TODO: need to handle cases where recipe is not found.
-        path = os.path.normpath(
-            os.path.join(
-                os.path.dirname(
-                    os.path.abspath(__file__)), 'recipes', self.recipe_name))
+        try:
+            with open(self.recipe_path, 'r') as f:
+                self.validate_recipe(yaml.load(f))
+        except ScannerError:
+            msg = '{}: {} is not a valid YAML file.'.format(
+                __name__,
+                self.recipe_path
+            )
+            raise InvalidRecipeException(msg)
 
-        with open(path, 'r') as f:
-            self.task_list = yaml.load(f)
+    def validate_recipe(self, recipe):
+        """Validates the loaded recipe.
 
-    def split_project_parameters(self):
-        """Separates project identifier from stored recipe from rest of recipe.
-
-        This step is necessary as recipes need to specify one of:
+        In the first step, the presence of a project specifier in the recipe
+        is checked. This step is necessary as recipes need to specify one of:
             - existing project to be run against
             - creation of a new project
+
+        Once the project specifier is validated, rest of the recipe is saved
+        to the task_list attribute.
 
         Raises:
             InvalidRecipeException: If recipe does not contain a valid project
                 specifier.
         """
-        for index, task in enumerate(self.task_list):
-            # project parameters defined in recipe
+        for index, task in enumerate(recipe):
             if task.get('project'):
+                # project specifier found in recipe. Remove it from the recipe
+                # and store it in its own attributes.
                 self.project = task.get('project')
-            self.project_arguments = task.get('arguments')
-            self.task_list.pop(index)
-            return
+                self.project_arguments = task.get('arguments')
+                recipe.pop(index)
 
-        # project parameters not found in recipe
-        msg = '{name}: project specifier not found in recipe: {recipe}'.format(
-            name=__name__,
-            recipe=self.recipe_name)
-        raise InvalidRecipeException(msg)
+        try:
+            assert self.project
+            assert self.project_arguments
+        except AssertionError:
+            msg = '{}: project specifier not found in recipe: {}'.format(
+                __name__,
+                self.recipe_name
+            )
+            raise InvalidRecipeException(msg)
 
-    def get_task_list(self):
-        """Returns the list of tasks that make up the recipe.
-        """
-        return self.task_list
+        # remaining recipe object is the list of actions to run.
+        self.task_list = recipe
 
 
 def run_recipe(recipe_name):
@@ -83,6 +177,14 @@ def run_recipe(recipe_name):
 
     If both objects pass validation, the recipe is executed sequentially from
     beginning.
+
+    Args:
+        recipe_name (str): Either a fully qualified path, or base name of the
+            recipe to be run.
+
+    Raises:
+        OperationNotImplementedException: If recipe specified an action that
+            is not implemented in BitbarProject.
     """
     # example implementation showing how the process may look like.
     # using the recipe, this method will parse actions that need to be done,
@@ -90,10 +192,19 @@ def run_recipe(recipe_name):
     # object. As long as the recipe is defined with the action that matches
     # the method name, and the appropriate arguments are provided,
     # this method will execute each action automatically.
-    recipe = Recipe(recipe_name)
-    bitbar_project = BitbarProject(recipe.project, **recipe.project_arguments)
+    try:
+        recipe = Recipe(recipe_name)
+    except IOError as ie:
+        print(ie.message)
+        sys.exit(1)
+    try:
+        bitbar_project = BitbarProject(recipe.project,
+                                       **recipe.project_arguments)
+    except ProjectException as pe:
+        print(pe.message)
+        sys.exit(1)
 
-    for task in recipe.get_task_list():
+    for task in recipe.task_list:
         action = task.pop('action')
         arguments = task.pop('arguments')
 
