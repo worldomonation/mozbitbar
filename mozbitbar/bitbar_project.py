@@ -3,7 +3,12 @@ from __future__ import print_function, absolute_import
 import os
 
 from testdroid import RequestResponseError
-from mozbitbar import FileException, ProjectException, FrameworkException
+from mozbitbar import (
+    FileException,
+    ProjectException,
+    FrameworkException,
+    DeviceException
+)
 from mozbitbar.bitbar import Bitbar
 
 
@@ -60,7 +65,7 @@ class BitbarProject(Bitbar):
 
         Args:
             project_id (int): Value to set for the project_id attribute
-            of this object.
+                of this object.
 
         Raises:
             ValueError: If project_id is not of type int.
@@ -81,7 +86,7 @@ class BitbarProject(Bitbar):
 
         Args:
             project_name (str): Value to set for the project_name attribute
-            of this object.
+                of this object.
         """
         return self.__project_name
 
@@ -95,7 +100,7 @@ class BitbarProject(Bitbar):
 
         Args:
             project_type (str): Value to set for the project_type attribute
-            of this object.
+                of this object.
         """
         return self.__project_type
 
@@ -130,13 +135,31 @@ class BitbarProject(Bitbar):
 
         Args:
             framework_id (int): Value to set for the framework_id attribute
-            of this object.
+                of this object.
         """
         return self.__framework_id
 
     @framework_id.setter
     def framework_id(self, framework_id):
         self.__framework_id = framework_id
+
+    @property
+    def device_id(self):
+        """Returns the device_id attribute.
+
+        Args:
+            id (int): Value to set for the device_group_id attribute of this
+                object.
+
+        Raises:
+            AssertionError: If supplied id value is not integer.
+        """
+        return self.__device_id
+
+    @device_id.setter
+    def device_id(self, id):
+        assert type(id) is int
+        self.__device_id = id
 
     def get_user_id(self):
         """Retrieves the user id for the currently authenticated user.
@@ -459,8 +482,11 @@ class BitbarProject(Bitbar):
 
             if self._file_on_bitbar(filename):
                 # skip and go to the next item in the list of files.
-                print('File name: {} already exists on Bitbar,' +
-                      'skipping.'.format(filename))
+                msg = '{}: {} already exists on Bitbar, skipping'.format(
+                    __name__,
+                    filename
+                )
+                print(msg)
                 continue
 
             try:
@@ -508,6 +534,9 @@ class BitbarProject(Bitbar):
             device_group_to_set (str, int): Device group specifier to be
                 used to set the device group. Could be string
                 (device group name) or integer (device group id).
+
+        Raises:
+            AssertionError: If device_group_to_set is not an integer.
         """
         device_groups = [(device_group['id'], device_group['name'])
                          for device_group in self.get_device_groups()]
@@ -519,9 +548,48 @@ class BitbarProject(Bitbar):
                 if device_group_to_set in device_group:
                     device_group_to_set = device_group[1]
 
-        assert type(device_group_to_set) is int
+        try:
+            assert type(device_group_to_set) is int
+        except AssertionError:
+            msg = '{}: device group specifier {} not found on Bitbar.'.format(
+                __name__,
+                device_group_to_set
+            )
+            raise DeviceException(msg)
 
         self.device_group_id = device_group_to_set
+
+    def set_device(self, device_to_set):
+        """Sets the device using the device_to_set.
+
+        Accepts either a device name or device identifier.
+
+        Args:
+            device_to_set (int, str): Device specifier to be used to set the
+                device_to_set attribute. Could be the device name (str) or
+                device id (int).
+
+        Raises:
+            DeviceException: If device_to_set is not found in list of
+                available device on Bitbar.
+        """
+        devices_list = self.client.get_devices()
+
+        for device in devices_list:
+            if device['id'] == device_to_set:
+                self.device_id = device_to_set
+                self.device_name = device['displayName']
+                return
+            if device['displayName'] == device_to_set:
+                self.device_id = device['id']
+                self.device_name = device_to_set
+                return
+
+        msg = '{}: device specifier {} not found on Bitbar.'.format(
+            __name__,
+            device_to_set
+        )
+        raise DeviceException(msg)
 
     # Test Run operations #
 
@@ -544,6 +612,4 @@ class BitbarProject(Bitbar):
             self.set_device_group(kwargs.pop('device_group_id') or
                                   kwargs.pop('device_group_name'))
 
-        self.client.start_test_run(self.project_id,
-                                   device_group_id=self.device_group_id,
-                                   name='yaml test', **kwargs)
+        self.client.start_test_run(self.project_id, **kwargs)
