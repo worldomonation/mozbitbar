@@ -5,6 +5,7 @@ import pytest
 from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import ProjectException
 
+
 @pytest.mark.parametrize('kwargs,expected', [
         ({'project_id': 1}, 1),
         ({'project_id': 999}, 999),
