@@ -19,11 +19,23 @@
             value: 99999
         },
         {
+            key: TASKCLUSTER_ACCESS_TOKEN,
+            value: TASKCLUSTER_TOKEN
+        },
+        {
             key: TC_WORKER_TYPE,
-            value: RANDOM_WORKER
+            value: WORKER_TYPE
+        },
+        {
+            key: TC_WORKER_CONF,
+            value: WORKER_CONF
+        },
+        {
+            key: DOCKER_IMAGE_VERSION,
+            value: DOCKER_VERSION
         }
     ]
-    force_overwrite: False
+    force_overwrite: True
 - action: start_test_run
   arguments:
     name: test_100
