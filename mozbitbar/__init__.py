@@ -20,7 +20,7 @@ class DeviceException(Exception):
         """
         super(DeviceException, self).__init__(message)
 
-        
+
 class InvalidRecipeException(Exception):
     def __init__(self, message):
         """InvalidRecipeException will be raised upon YAML recipe having
