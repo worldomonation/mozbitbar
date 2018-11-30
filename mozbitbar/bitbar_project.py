@@ -204,14 +204,23 @@ class BitbarProject(Configuration):
     def create_project(self, project_name, project_type, permit_duplicate=False):
         """Creates a new Bitbar project using provided parameters.
 
+        By default, Mozilla does not permit multiple projects with same name
+        on Bitbar. This behavior can be overridden using the permit_duplicate
+        parameter.
+
+        If project creation is successful, relevant attributes of the new
+        project is stored as object attributes.
+
         Args:
             project_name (str): Project name to be assigned to new project.
             project_type (str): Project type to be assigned to new project
             permit_duplicate (bool, optional): Permit creation of project even
                 if existing project has same name.
+
+        Raises:
+            ProjectException: If permit_duplicate is False and project with
+                same name is already on Bitbar.
         """
-        # first, check if project with same name already exists.
-        # this is a constraint imposed by Mozilla.
         if not permit_duplicate:
             try:
                 existing_projects = self.get_projects()
