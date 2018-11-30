@@ -36,7 +36,7 @@
     force_overwrite: True
 - action: start_test_run
   arguments:
-    name: test_100
+    name: test_102
     device_group_id: 32
 - action: notify_test_run_complete
   arguments:

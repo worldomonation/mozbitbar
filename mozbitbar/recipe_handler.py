@@ -199,11 +199,13 @@ def run_recipe(recipe_name):
     # object. As long as the recipe is defined with the action that matches
     # the method name, and the appropriate arguments are provided,
     # this method will execute each action automatically.
+    print('Recipe tasks starting...')
     try:
         recipe = Recipe(recipe_name)
     except IOError as ie:
         print(ie.message)
         sys.exit(1)
+    print('Bitbar initialization...')
     try:
         bitbar_project = BitbarProject(recipe.project,
                                        **recipe.project_arguments)
@@ -211,6 +213,7 @@ def run_recipe(recipe_name):
         print(pe.message)
         sys.exit(1)
 
+    print('Bitbar tasks starting...')
     for task in recipe.task_list:
         action = task.pop('action')
         arguments = task.pop('arguments')
