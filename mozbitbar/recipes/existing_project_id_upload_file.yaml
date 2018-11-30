@@ -14,31 +14,31 @@
     parameters: [
         {
             key: TASKCLUSTER_CLIENT_ID,
-            value: 99999
+            value: project/autophone/bitbar-x-perf-g5
         },
         {
             key: TASKCLUSTER_ACCESS_TOKEN,
-            value: TASKCLUSTER_TOKEN
+            value: hidden_random_value
         },
         {
             key: TC_WORKER_TYPE,
-            value: WORKER_TYPE
+            value: gecko-t-ap-perf-g5
         },
         {
             key: TC_WORKER_CONF,
-            value: WORKER_CONF
+            value: gecko-t-ap
         },
         {
             key: DOCKER_IMAGE_VERSION,
-            value: DOCKER_VERSION
+            value: 20181101usb
         }
     ]
     force_overwrite: True
 - action: start_test_run
   arguments:
-    name: test_102
+    name: test_111
     device_group_id: 32
 - action: notify_test_run_complete
   arguments:
-    interval: 15
+    interval: 2
     timeout: 90
