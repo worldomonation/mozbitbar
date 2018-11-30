@@ -2,9 +2,33 @@
   arguments:
     project_name: test_project_1
     project_type: ANDROID
-- action: upload_data_file
+    permit_duplicate: True
+- action: set_project_framework
   arguments:
-    filename: /Users/egao/Downloads/files.zip
+    framework_name: Mozilla test
+- action: upload_file
+  arguments:
+    test_filename: /Users/egao/Downloads/dummy-test.zip
+    data_filename: /Users/egao/Downloads/files.zip
+    application_filename: /Users/egao/Downloads/ignore.apk
+- action: set_project_parameters
+  arguments:
+    parameters: [
+        {
+            key: TASKCLUSTER_CLIENT_ID,
+            value: 99999
+        },
+        {
+            key: TC_WORKER_TYPE,
+            value: RANDOM_WORKER
+        }
+    ]
+    force_overwrite: False
 - action: start_test_run
   arguments:
-    additional_params: {"TASKCLUSTER_CLIENT_ID="}
+    name: test_100
+    device_group_id: 32
+- action: notify_test_run_complete
+  arguments:
+    interval: 15
+    timeout: 90

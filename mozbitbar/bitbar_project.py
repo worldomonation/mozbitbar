@@ -201,27 +201,33 @@ class BitbarProject(Configuration):
         existing_projects = self.client.get_projects()
         return existing_projects['data']
 
-    def create_project(self, **kwargs):
+    def create_project(self, project_name, project_type, permit_duplicate=False):
         """Creates a new Bitbar project using provided parameters.
 
         Args:
-            **kwargs: Arbitrary keyword arguments.
+            project_name (str): Project name to be assigned to new project.
+            project_type (str): Project type to be assigned to new project
+            permit_duplicate (bool, optional): Permit creation of project even
+                if existing project has same name.
         """
-        project_name = kwargs.get('project_name')
-        project_type = kwargs.get('project_type')
-
         # first, check if project with same name already exists.
         # this is a constraint imposed by Mozilla.
-        try:
-            existing_projects = self.get_projects()
-            for project in existing_projects:
-                if project_name == project['name']:
-                    raise ProjectException
-        except ProjectException:
-            raise ProjectException('Project with same name exists.')
+        if not permit_duplicate:
+            try:
+                existing_projects = self.get_projects()
+                for project in existing_projects:
+                    if project_name == project['name']:
+                        raise ProjectException
+            except ProjectException:
+                msg = '{}: project_name: {} already exists'.format(
+                    __name__,
+                    project_name
+                )
+                raise ProjectException(msg)
 
         output = self.client.create_project(project_name, project_type)
-        assert output['id']
+        assert 'id' in output
+
         self._set_project_attributes(output)
 
     def use_existing_project(self, **kwargs):
@@ -614,7 +620,7 @@ class BitbarProject(Configuration):
                 previous test runs' names.
 
         Returns:
-            boolean: True if test name is unique. False otherwise.
+            bool: True if test name is unique. False otherwise.
             None: If test_run_name to be checked is None.
         """
         if test_run_name is not None:
