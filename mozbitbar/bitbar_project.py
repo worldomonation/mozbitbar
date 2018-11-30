@@ -404,7 +404,7 @@ class BitbarProject(Configuration):
             # if user-supplied parameter name or id is not in fact set for the
             # project on Bitbar, skip the deletion process.
             print('Parameter ID for {} not found.'.format(parameter_to_delete),
-                  'skipping..')
+                  'skipping deletion..')
             return
 
         assert type(sanitized_parameter_id) is int
