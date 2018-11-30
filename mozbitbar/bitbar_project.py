@@ -1,5 +1,6 @@
 from __future__ import print_function, absolute_import
 
+import json
 import os
 import time
 
@@ -11,6 +12,7 @@ from mozbitbar import (
     DeviceException,
     TestException
 )
+from mozbitbar.__root__ import path as root_path
 from mozbitbar.configuration import Configuration
 
 
@@ -55,6 +57,14 @@ class BitbarProject(Configuration):
                                    'received, project cannot be set.' +
                                    '\nproject status: {}'.format(
                                        project_status))
+
+        new_config = json.loads(
+            open(
+                os.path.normpath(
+                    os.path.join(
+                        root_path(),
+                        'project_config.json')), 'r').read())
+        self.set_project_configs(new_config)
 
     # Class attributes #
 
@@ -201,7 +211,8 @@ class BitbarProject(Configuration):
         existing_projects = self.client.get_projects()
         return existing_projects['data']
 
-    def create_project(self, project_name, project_type, permit_duplicate=False):
+    def create_project(self, project_name, project_type,
+                       permit_duplicate=False):
         """Creates a new Bitbar project using provided parameters.
 
         By default, Mozilla does not permit multiple projects with same name
@@ -287,6 +298,43 @@ class BitbarProject(Configuration):
         if not self.project_id:
             raise ProjectException(
                 'Project with name {} not found.'.format(project_name))
+
+    def get_project_configs(self):
+        return self.client.get_project_config(self.project_id)
+
+    def set_project_configs(self, new_config):
+        """Overwrites part or all of project configuration with new values.
+
+        Provided with a valid dictionary representation of configuration,
+        this method will attempt to set the configuration values on Bitbar.
+
+        Args:
+            new_config (:obj:`dict`): Project configuration represented
+                as dict.
+
+        Raises:
+            ProjectException: If new_config is not a valid dict.
+            RequestResponseError: If new_config was not accepted by Bitbar
+                due to type or value error.
+        """
+        try:
+            assert type(new_config) is dict
+        except AssertionError:
+            msg = '{}: config: not valid dict'.format(__name__)
+            raise ProjectException(msg)
+
+        existing_configs = self.get_project_configs()
+
+        # filter new_configuration if existing_configs already contain the
+        # same values, to avoid unnecessary operations to Bitbar.
+        for key in list(new_config.keys()):
+            if new_config.get(key) == existing_configs.get(key):
+                new_config.pop(key)
+
+        if len(new_config) is 0:
+            return
+
+        self.client.set_project_config(self.project_id, new_config)
 
     def set_project_framework(self, **kwargs):
         """Sets the project framework using either integer id or name.
