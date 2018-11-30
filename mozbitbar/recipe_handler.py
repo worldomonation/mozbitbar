@@ -235,6 +235,7 @@ def run_recipe(recipe_name):
                 print(de.message)
             except TestException as te:
                 print(te.message)
+                sys.exit(1)
         else:
             msg = '{}: action: {} not found in BitbarProject.'.format(
                 __name__,
