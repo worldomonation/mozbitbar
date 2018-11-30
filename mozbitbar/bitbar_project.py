@@ -705,10 +705,13 @@ class BitbarProject(Configuration):
         """
         total_wait_time = 0
 
-        while (self.get_test_run(self.test_run_id)['state'] is not 'FINISHED'
-               and total_wait_time <= timeout):
-            time.sleep(interval)
-            total_wait_time += interval
+        while (total_wait_time <= timeout):
+            state = str(self.get_test_run(self.test_run_id)['state'])
+            if state != 'FINISHED':
+                time.sleep(interval)
+                total_wait_time += interval
+            else:
+                break
 
         test_run_details = self.get_test_run(self.test_run_id)
 
