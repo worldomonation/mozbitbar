@@ -43,7 +43,7 @@ class BitbarProject(Configuration):
             **kwargs: Arbitrary keyword arguments.
 
         Raises:
-            ProjectException: If `project_status` has value other than 'new'
+            ProjectException: If project_status has value other than 'new'
                 or 'existing'.
         """
         super(BitbarProject, self).__init__()
@@ -57,14 +57,6 @@ class BitbarProject(Configuration):
                                    'received, project cannot be set.' +
                                    '\nproject status: {}'.format(
                                        project_status))
-
-        new_config = json.loads(
-            open(
-                os.path.normpath(
-                    os.path.join(
-                        root_path(),
-                        'project_config.json')), 'r').read())
-        self.set_project_configs(new_config)
 
     # Class attributes #
 
@@ -153,7 +145,23 @@ class BitbarProject(Configuration):
 
     @framework_id.setter
     def framework_id(self, framework_id):
+        assert type(framework_id) is int
         self.__framework_id = framework_id
+
+    @property
+    def framework_name(self):
+        """Returns the framework_name attribute.
+
+        Args:
+            framework_name (str): Value to set for the framework_name attribute
+                of this object.
+        """
+        return self.__framework_name
+
+    @framework_name.setter
+    def framework_name(self, framework_name):
+        assert type(framework_name) is str
+        self.__framework_name = framework_name
 
     @property
     def device_id(self):
@@ -302,11 +310,13 @@ class BitbarProject(Configuration):
     def get_project_configs(self):
         return self.client.get_project_config(self.project_id)
 
-    def set_project_configs(self, new_config):
+    def set_project_configs(self, new_config={}, path=None):
         """Overwrites part or all of project configuration with new values.
 
-        Provided with a valid dictionary representation of configuration,
-        this method will attempt to set the configuration values on Bitbar.
+        Provided with either a dict of config values or path to a json file
+        containing configs, this method will load the values, filter out
+        values that are identical then modify the Bitbar project config
+        with remaining values.
 
         Args:
             new_config (:obj:`dict`): Project configuration represented
@@ -317,6 +327,9 @@ class BitbarProject(Configuration):
             RequestResponseError: If new_config was not accepted by Bitbar
                 due to type or value error.
         """
+        if path:
+            new_config = self._load_project_config(path)
+
         try:
             assert type(new_config) is dict
         except AssertionError:
@@ -332,9 +345,21 @@ class BitbarProject(Configuration):
                 new_config.pop(key)
 
         if len(new_config) is 0:
+            msg = ''.join(['{}: no values to write '.format(__name__),
+                           'to project configuration on Bitbar'])
+            print(msg)
             return
 
         self.client.set_project_config(self.project_id, new_config)
+
+    def _load_project_config(self, path):
+        new_config = json.loads(
+            open(
+                os.path.normpath(
+                    os.path.join(
+                        root_path(),
+                        'project_config.json')), 'r').read())
+        return new_config
 
     def set_project_framework(self, **kwargs):
         """Sets the project framework using either integer id or name.
@@ -359,7 +384,9 @@ class BitbarProject(Configuration):
 
         for framework in available_frameworks:
             if framework_to_set in framework:
+                framework_name = framework[0]
                 framework_id = framework[1]
+                break
 
         if not framework_id:
             raise FrameworkException(
@@ -367,6 +394,8 @@ class BitbarProject(Configuration):
                     kwargs.values()))
 
         self.client.set_project_framework(self.project_id, framework_id)
+        self.framework_id = framework_id
+        self.framework_name = framework_name
 
     def get_project_frameworks(self):
         """Returns list of project frameworks available to the user.
@@ -713,6 +742,8 @@ class BitbarProject(Configuration):
 
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       **kwargs)
+        self.test_run_name = self.get_test_run(self.project_id,
+                                               self.test_run_id)
 
     def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.
@@ -768,5 +799,6 @@ class BitbarProject(Configuration):
                   timeout))
         print('Project ID:', self.project_id)
         print('Project Framework Name:', test_run_details['frameworkName'])
+        print('Test Run Name:', self.test_run_name)
         print('Test Run ID:', self.test_run_id)
         print('Test Run State:', test_run_details['state'])
