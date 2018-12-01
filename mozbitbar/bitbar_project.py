@@ -134,6 +134,27 @@ class BitbarProject(Configuration):
         self.__device_group_id = device_group_id
 
     @property
+    def device_group_name(self):
+        """Returns the device_group_name attribute.
+
+        Args:
+            device_group_name (str): Value to set for the device_group_name
+            attribute of this object.
+
+        Raises:
+            ValueError: If device_group_name is not of type str.
+        """
+        return self.__device_group_name
+
+    @device_group_name.setter
+    def device_group_name(self, device_group_name):
+        if type(device_group_name) is not str:
+            raise ValueError('invalid device_group_name type:' +
+                             'expected str, received {}'.format(
+                                 type(device_group_name)))
+        self.__device_group_name = device_group_name
+
+    @property
     def framework_id(self):
         """Returns the framework_id attribute.
 
@@ -345,8 +366,8 @@ class BitbarProject(Configuration):
                 new_config.pop(key)
 
         if len(new_config) is 0:
-            msg = ''.join(['{}: no values to write '.format(__name__),
-                           'to project configuration on Bitbar'])
+            msg = ''.join(['{}: no project configuration '.format(__name__),
+                           'values to update on Bitbar'])
             print(msg)
             return
 
@@ -384,8 +405,8 @@ class BitbarProject(Configuration):
 
         for framework in available_frameworks:
             if framework_to_set in framework:
-                framework_name = framework[0]
-                framework_id = framework[1]
+                framework_name = str(framework[0])
+                framework_id = int(framework[1])
                 break
 
         if not framework_id:
@@ -651,7 +672,7 @@ class BitbarProject(Configuration):
         if type(device_group_to_set) is str:
             for device_group in device_groups:
                 if device_group_to_set in device_group:
-                    device_group_to_set = device_group[1]
+                    device_group_to_set = device_group[0]
 
         try:
             assert type(device_group_to_set) is int
@@ -742,8 +763,7 @@ class BitbarProject(Configuration):
 
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       **kwargs)
-        self.test_run_name = self.get_test_run(self.project_id,
-                                               self.test_run_id)
+        self.test_run_name = self.get_test_run(self.test_run_id)
 
     def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.
@@ -797,8 +817,8 @@ class BitbarProject(Configuration):
         if total_wait_time >= timeout:
             print('Test run did not complete prior to {}s timeout.'.format(
                   timeout))
-        print('Project ID:', self.project_id)
-        print('Project Framework Name:', test_run_details['frameworkName'])
+        print('Project Name:', self.project_name)
+        print('Project Framework Name:', self.framework_name)
+        print('Device Group Name:', self.device_group_name)
         print('Test Run Name:', self.test_run_name)
-        print('Test Run ID:', self.test_run_id)
         print('Test Run State:', test_run_details['state'])
