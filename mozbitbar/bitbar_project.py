@@ -661,7 +661,7 @@ class BitbarProject(Configuration):
             id (int, optional): Device group id in integer.
 
         Raises:
-
+            DeviceException: If neither id nor name was supplied.
         """
         device_groups = [(device_group['id'], device_group['displayName'])
                          for device_group in self.get_device_groups()]
@@ -675,18 +675,10 @@ class BitbarProject(Configuration):
                 name = device_group[1]
                 break
             else:
-                msg = '{}: either device name or id must be specified'.format(
+                msg = '{}: use valid device group id or name'.format(
                     __name__
                 )
                 raise DeviceException(msg)
-
-        try:
-            assert id or name
-        except AssertionError:
-            msg = '{}: specify valid device group name or id'.format(
-                __name__
-            )
-            raise DeviceException(msg)
 
         self.device_group_id = id
         self.device_group_name = name
