@@ -827,6 +827,10 @@ class BitbarProject(Configuration):
             if state != 'FINISHED':
                 time.sleep(interval)
                 total_wait_time += interval
+                print('Checking test run state for {}...'.format(
+                    self.test_run_name)
+                )
+                print('Waited {}s...'.format(total_wait_time))
             else:
                 break
 
