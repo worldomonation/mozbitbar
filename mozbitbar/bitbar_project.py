@@ -777,8 +777,13 @@ class BitbarProject(Configuration):
         details for the test run is returned, including the current state
         and success status.
 
+        Same process is done if test_run_name is supplied, except that
+        a conversion from the test_run_name to test_run_id occurs as first
+        step.
+
         Args:
             test_run_id (int): ID of the test run.
+            test_run_name (str): Name of the test run.
 
         Returns:
             :obj:`dict` of str: Dictionary of strings containing relevant
@@ -787,6 +792,14 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
+        if test_run_name:
+            test_runs = self.client.get_project_test_runs(self.project_id)
+            for test_run in test_runs:
+                if test_run_name in test_run:
+                    test_run_id = test_run['id']
+
+        assert type(test_run_id) is int
+
         return self.client.get_test_run(self.project_id, test_run_id)
 
     def get_all_test_runs(self):
