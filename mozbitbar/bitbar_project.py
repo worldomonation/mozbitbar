@@ -373,13 +373,24 @@ class BitbarProject(Configuration):
 
         self.client.set_project_config(self.project_id, new_config)
 
-    def _load_project_config(self, path):
+    def _load_project_config(self, path='project_config.json'):
+        """Loads project config from the disk.
+
+        Args:
+            path (str): Path to the configuration file on local disk.
+
+        Returns:
+            dict: JSON-parsed configuration.
+
+        Raises:
+            IOError: If path to file is not found.
+        """
         new_config = json.loads(
             open(
                 os.path.normpath(
                     os.path.join(
                         root_path(),
-                        'project_config.json')), 'r').read())
+                        path)), 'r').read())
         return new_config
 
     def set_project_framework(self, **kwargs):
