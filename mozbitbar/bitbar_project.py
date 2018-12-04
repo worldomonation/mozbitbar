@@ -768,7 +768,7 @@ class BitbarProject(Configuration):
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       self.device_group_id,
                                                       **kwargs)
-        self.test_run_name = self.get_test_run(self.test_run_id)
+        self.test_run_name = self.get_test_run(self.test_run_id)['displayName']
 
     def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.
