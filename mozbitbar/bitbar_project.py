@@ -653,37 +653,43 @@ class BitbarProject(Configuration):
         """
         return self.client.get_devices()['data']
 
-    def set_device_group(self, device_group_to_set):
+    def set_device_group(self, name=None, id=None):
         """Sets the project's device group to be used for test runs.
 
         Args:
-            device_group_to_set (str, int): Device group specifier to be
-                used to set the device group. Could be string
-                (device group name) or integer (device group id).
+            name (str, optional): Device group name in string.
+            id (int, optional): Device group id in integer.
 
         Raises:
-            AssertionError: If device_group_to_set is not an integer.
+
         """
         device_groups = [(device_group['id'], device_group['displayName'])
                          for device_group in self.get_device_groups()]
 
-        # if device_group_name is provided, the device_group_id must be
-        # retrieved using the name.
-        if type(device_group_to_set) is str:
-            for device_group in device_groups:
-                if device_group_to_set in device_group:
-                    device_group_to_set = device_group[0]
+        for device_group in device_groups:
+            # fill out missing parameter so we have both id and name.
+            if name in device_group:
+                id = device_group[0]
+                break
+            if id in device_group:
+                name = device_group[1]
+                break
+            else:
+                msg = '{}: either device name or id must be specified'.format(
+                    __name__
+                )
+                raise DeviceException(msg)
 
         try:
-            assert type(device_group_to_set) is int
+            assert id or name
         except AssertionError:
-            msg = '{}: device group specifier {} not found on Bitbar.'.format(
-                __name__,
-                device_group_to_set
+            msg = '{}: specify valid device group name or id'.format(
+                __name__
             )
             raise DeviceException(msg)
 
-        self.device_group_id = device_group_to_set
+        self.device_group_id = id
+        self.device_group_name = name
 
     def set_device(self, device_id):
         """Sets the device using the device_id.
@@ -748,11 +754,6 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
-        # temporary while recipe standards are being worked on:
-        # check if kwargs contains at least one type of device specifier.
-        assert ('device_group_id' in kwargs or 'device_group_name' in kwargs or
-                'device_id' in kwargs or 'device_name' in kwargs)
-
         try:
             assert self._is_test_name_unique(kwargs.get('name'))
         except AssertionError:
@@ -762,6 +763,7 @@ class BitbarProject(Configuration):
             ))
 
         self.test_run_id = self.client.start_test_run(self.project_id,
+                                                      self.device_group_id,
                                                       **kwargs)
         self.test_run_name = self.get_test_run(self.test_run_id)
 
