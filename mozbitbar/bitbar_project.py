@@ -1,5 +1,6 @@
 from __future__ import print_function, absolute_import
 
+import json
 import os
 import time
 
@@ -11,6 +12,7 @@ from mozbitbar import (
     DeviceException,
     TestException
 )
+from mozbitbar.__root__ import path as root_path
 from mozbitbar.configuration import Configuration
 
 
@@ -41,7 +43,7 @@ class BitbarProject(Configuration):
             **kwargs: Arbitrary keyword arguments.
 
         Raises:
-            ProjectException: If `project_status` has value other than 'new'
+            ProjectException: If project_status has value other than 'new'
                 or 'existing'.
         """
         super(BitbarProject, self).__init__()
@@ -132,6 +134,27 @@ class BitbarProject(Configuration):
         self.__device_group_id = device_group_id
 
     @property
+    def device_group_name(self):
+        """Returns the device_group_name attribute.
+
+        Args:
+            device_group_name (str): Value to set for the device_group_name
+            attribute of this object.
+
+        Raises:
+            ValueError: If device_group_name is not of type str.
+        """
+        return self.__device_group_name
+
+    @device_group_name.setter
+    def device_group_name(self, device_group_name):
+        if type(device_group_name) is not str:
+            raise ValueError('invalid device_group_name type:' +
+                             'expected str, received {}'.format(
+                                 type(device_group_name)))
+        self.__device_group_name = device_group_name
+
+    @property
     def framework_id(self):
         """Returns the framework_id attribute.
 
@@ -143,7 +166,23 @@ class BitbarProject(Configuration):
 
     @framework_id.setter
     def framework_id(self, framework_id):
+        assert type(framework_id) is int
         self.__framework_id = framework_id
+
+    @property
+    def framework_name(self):
+        """Returns the framework_name attribute.
+
+        Args:
+            framework_name (str): Value to set for the framework_name attribute
+                of this object.
+        """
+        return self.__framework_name
+
+    @framework_name.setter
+    def framework_name(self, framework_name):
+        assert type(framework_name) is str
+        self.__framework_name = framework_name
 
     @property
     def device_id(self):
@@ -201,7 +240,8 @@ class BitbarProject(Configuration):
         existing_projects = self.client.get_projects()
         return existing_projects['data']
 
-    def create_project(self, project_name, project_type, permit_duplicate=False):
+    def create_project(self, project_name, project_type,
+                       permit_duplicate=False):
         """Creates a new Bitbar project using provided parameters.
 
         By default, Mozilla does not permit multiple projects with same name
@@ -288,6 +328,71 @@ class BitbarProject(Configuration):
             raise ProjectException(
                 'Project with name {} not found.'.format(project_name))
 
+    def get_project_configs(self):
+        return self.client.get_project_config(self.project_id)
+
+    def set_project_configs(self, new_config={}, path=None):
+        """Overwrites part or all of project configuration with new values.
+
+        Provided with either a dict of config values or path to a json file
+        containing configs, this method will load the values, filter out
+        values that are identical then modify the Bitbar project config
+        with remaining values.
+
+        Args:
+            new_config (:obj:`dict`): Project configuration represented
+                as dict.
+
+        Raises:
+            ProjectException: If new_config is not a valid dict.
+            RequestResponseError: If new_config was not accepted by Bitbar
+                due to type or value error.
+        """
+        if path:
+            new_config = self._load_project_config(path)
+
+        try:
+            assert type(new_config) is dict
+        except AssertionError:
+            msg = '{}: config: not valid dict'.format(__name__)
+            raise ProjectException(msg)
+
+        existing_configs = self.get_project_configs()
+
+        # filter new_configuration if existing_configs already contain the
+        # same values, to avoid unnecessary operations to Bitbar.
+        for key in list(new_config.keys()):
+            if new_config.get(key) == existing_configs.get(key):
+                new_config.pop(key)
+
+        if len(new_config) is 0:
+            msg = ''.join(['{}: no project configuration '.format(__name__),
+                           'values to update on Bitbar'])
+            print(msg)
+            return
+
+        self.client.set_project_config(self.project_id, new_config)
+
+    def _load_project_config(self, path='project_config.json'):
+        """Loads project config from the disk.
+
+        Args:
+            path (str): Path to the configuration file on local disk.
+
+        Returns:
+            dict: JSON-parsed configuration.
+
+        Raises:
+            IOError: If path to file is not found.
+        """
+        new_config = json.loads(
+            open(
+                os.path.normpath(
+                    os.path.join(
+                        root_path(),
+                        path)), 'r').read())
+        return new_config
+
     def set_project_framework(self, **kwargs):
         """Sets the project framework using either integer id or name.
 
@@ -311,7 +416,9 @@ class BitbarProject(Configuration):
 
         for framework in available_frameworks:
             if framework_to_set in framework:
-                framework_id = framework[1]
+                framework_name = str(framework[0])
+                framework_id = int(framework[1])
+                break
 
         if not framework_id:
             raise FrameworkException(
@@ -319,6 +426,8 @@ class BitbarProject(Configuration):
                     kwargs.values()))
 
         self.client.set_project_framework(self.project_id, framework_id)
+        self.framework_id = framework_id
+        self.framework_name = framework_name
 
     def get_project_frameworks(self):
         """Returns list of project frameworks available to the user.
@@ -555,37 +664,35 @@ class BitbarProject(Configuration):
         """
         return self.client.get_devices()['data']
 
-    def set_device_group(self, device_group_to_set):
+    def set_device_group(self, name=None, id=None):
         """Sets the project's device group to be used for test runs.
 
         Args:
-            device_group_to_set (str, int): Device group specifier to be
-                used to set the device group. Could be string
-                (device group name) or integer (device group id).
+            name (str, optional): Device group name in string.
+            id (int, optional): Device group id in integer.
 
         Raises:
-            AssertionError: If device_group_to_set is not an integer.
+            DeviceException: If neither id nor name was supplied.
         """
         device_groups = [(device_group['id'], device_group['displayName'])
                          for device_group in self.get_device_groups()]
 
-        # if device_group_name is provided, the device_group_id must be
-        # retrieved using the name.
-        if type(device_group_to_set) is str:
-            for device_group in device_groups:
-                if device_group_to_set in device_group:
-                    device_group_to_set = device_group[1]
+        for device_group in device_groups:
+            # fill out missing parameter so we have both id and name.
+            if name in device_group:
+                id = device_group[0]
+                break
+            if id in device_group:
+                name = device_group[1]
+                break
+            else:
+                msg = '{}: use valid device group id or name'.format(
+                    __name__
+                )
+                raise DeviceException(msg)
 
-        try:
-            assert type(device_group_to_set) is int
-        except AssertionError:
-            msg = '{}: device group specifier {} not found on Bitbar.'.format(
-                __name__,
-                device_group_to_set
-            )
-            raise DeviceException(msg)
-
-        self.device_group_id = device_group_to_set
+        self.device_group_id = id
+        self.device_group_name = name
 
     def set_device(self, device_id):
         """Sets the device using the device_id.
@@ -650,11 +757,6 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
-        # temporary while recipe standards are being worked on:
-        # check if kwargs contains at least one type of device specifier.
-        assert ('device_group_id' in kwargs or 'device_group_name' in kwargs or
-                'device_id' in kwargs or 'device_name' in kwargs)
-
         try:
             assert self._is_test_name_unique(kwargs.get('name'))
         except AssertionError:
@@ -664,7 +766,9 @@ class BitbarProject(Configuration):
             ))
 
         self.test_run_id = self.client.start_test_run(self.project_id,
+                                                      self.device_group_id,
                                                       **kwargs)
+        self.test_run_name = self.get_test_run(self.test_run_id)
 
     def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.
@@ -718,7 +822,8 @@ class BitbarProject(Configuration):
         if total_wait_time >= timeout:
             print('Test run did not complete prior to {}s timeout.'.format(
                   timeout))
-        print('Project ID:', self.project_id)
-        print('Project Framework Name:', test_run_details['frameworkName'])
-        print('Test Run ID:', self.test_run_id)
+        print('Project Name:', self.project_name)
+        print('Project Framework Name:', self.framework_name)
+        print('Device Group Name:', self.device_group_name)
+        print('Test Run Name:', self.test_run_name)
         print('Test Run State:', test_run_details['state'])
