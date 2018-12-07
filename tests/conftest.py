@@ -31,8 +31,36 @@ def mock_testdroid_client(monkeypatch):
             'frameworkId': 99
         }
 
+    def get_projects_wrapper(object):
+        return {
+            'data': [
+                {
+                    'id': 1,
+                    'name': 'mock_project',
+                    'type': 'mock_type',
+                    'osType': 'mock_type',
+                    'frameworkId': 99
+                },
+                {
+                    'id': 99,
+                    'name': 'another_mock_project',
+                    'type': 'second_mock_type',
+                    'osType': 'second_mock_type',
+                    'frameworkId': 88
+                },
+                {
+                    'id': 10000,
+                    'name': 'yet_another_mock_project',
+                    'type': 'third_mock_type',
+                    'osType': 'third_mock_type',
+                    'frameworkId': 12345
+                },
+            ]
+        }
+
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
 
     return init
 
@@ -41,8 +69,8 @@ def mock_testdroid_client(monkeypatch):
 def mock_bitbar_project(monkeypatch):
     def init(project_status, **kwargs):
         with patch.object(BitbarProject, '__init__') as project:
-            project.project_id = kwargs.get('project_id')
-            project.name = 'mock_project'
+            project.project_id = kwargs.get('id') or 1
+            project.name = kwargs.get('name') or 'mock_type'
             project.type = 'mock_type'
             project.framework_id = 99
             project.device_group_id = 1

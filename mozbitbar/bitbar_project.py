@@ -279,54 +279,39 @@ class BitbarProject(Configuration):
 
         self._set_project_attributes(output)
 
-    def use_existing_project(self, **kwargs):
-        """Use existing Bitbar project to set project parameters.
+    def use_existing_project(self, id=None, name=None):
+        """Retrieve existing Bitbar project details.
 
-        This method is a wrapper that calls the appropriate methods depending
-        on provided parameters.
-
-        Args:
-            **kwargs: Arbitrary keyword arguments.
-        """
-        if 'project_id' in kwargs.keys():
-            self.set_project_by_id(kwargs.get('project_id'))
-        if 'project_name' in kwargs.keys():
-            self.set_project_by_name(kwargs.get('project_name'))
-
-    def set_project_by_id(self, project_id):
-        """Retrieves project parameters from Bitbar using project_id.
-        """
-        output = self.client.get_project(project_id)
-
-        try:
-            assert project_id in output.values()
-        except AssertionError:
-            raise ProjectException('Project with id: {} not found.'.format(
-                                   project_id))
-
-        self._set_project_attributes(output)
-
-    def set_project_by_name(self, project_name):
-        """Retrieves project parameters from Bitbar using project_name.
+        Acceptable project identifiers are either one of project_name or
+        project_id. If both are provided, the id is prioritized due to its
+        guaranteed uniqueness.
 
         Args:
-            project_name (str): Project name to use in order to set project
-                attributes if found.
+            id (int): Integer ID of the project.
+            name (str): String representation of the project name.
 
         Raises:
-            ProjectException: If project_name is not found in the list of
-                available projects on Bitbar.
-            RequestResponseError: If Testdroid responds with an error.
+            ProjectException: If neither project_id nor project_name map
+                to an existing project on Bitbar.
         """
         available_projects = self.get_projects()
-
         for project in available_projects:
-            if project_name == project['name']:
-                self._set_project_attributes(project)
+            if id is project['id']:
+                name = project['name']
+            if name in project['name']:
+                id = project['id']
 
-        if not self.project_id:
-            raise ProjectException(
-                'Project with name {} not found.'.format(project_name))
+        try:
+            assert id, name
+        except AssertionError:
+            msg = '{}: project_name: {}, project_id: {}'.format(
+                __name__,
+                name,
+                id
+            ) + 'not found on Bitbar'
+            raise ProjectException(msg)
+
+        self._set_project_attributes(project)
 
     def get_project_configs(self):
         return self.client.get_project_config(self.project_id)
