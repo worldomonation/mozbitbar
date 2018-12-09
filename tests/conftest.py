@@ -22,10 +22,22 @@ def mock_testdroid_client(monkeypatch):
             client.download_buffer_size = 65536
 
     def create_project_wrapper(object, project_name, project_type):
-        return {
+        return get_projects_wrapper(object) + {
             'id': random.randint(1, 10),
             'name': project_name,
             'type': project_type
+        }
+
+    def get_input_files_wrapper(object):
+        return {
+            'data': [
+                {
+                    'name': 'mock_file.zip'
+                },
+                {
+                    'name': 'mocked_application_file.apk'
+                }
+            ]
         }
 
     def get_me_wrapper(object):
@@ -72,6 +84,7 @@ def mock_testdroid_client(monkeypatch):
 
     monkeypatch.setattr(Testdroid, '__init__', init)
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)

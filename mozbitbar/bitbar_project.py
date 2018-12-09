@@ -19,7 +19,7 @@ from mozbitbar.configuration import Configuration
 class BitbarProject(Configuration):
     """BitbarProject is a class which represents an instance of a project on
     Bitbar, as well as associated actions that are intended to be run against
-a specific project instance.
+    a specific project instance.
 
     This class holds attributes that are not tracked in the Testdroid
     implementation relating to the project, device groups and/or test runs.
