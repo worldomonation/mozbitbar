@@ -90,9 +90,6 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
 
-    import datetime
-    datetime.datetime.second
-
     return init
 
 
