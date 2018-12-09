@@ -19,7 +19,7 @@ from mozbitbar.configuration import Configuration
 class BitbarProject(Configuration):
     """BitbarProject is a class which represents an instance of a project on
     Bitbar, as well as associated actions that are intended to be run against
-    a specific project instance.
+a specific project instance.
 
     This class holds attributes that are not tracked in the Testdroid
     implementation relating to the project, device groups and/or test runs.
@@ -295,16 +295,20 @@ class BitbarProject(Configuration):
                 to an existing project on Bitbar.
         """
         available_projects = self.get_projects()
-        for project in available_projects:
-            if id is project['id']:
-                name = project['name']
-            if name in project['name']:
-                id = project['id']
 
-        try:
-            assert id, name
-        except AssertionError:
-            msg = '{}: project_name: {}, project_id: {}'.format(
+        for project in available_projects:
+            if id and name is None or id and name:
+                if id is project['id']:
+                    name = project['name']
+                    break
+
+            elif name and id is None:
+                if name is project['name']:
+                    id = project['id']
+                    break
+
+        if (id and name) is None:
+            msg = '{}: project_name: {}, project_id: {} '.format(
                 __name__,
                 name,
                 id
