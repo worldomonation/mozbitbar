@@ -83,6 +83,7 @@ def mock_testdroid_client(monkeypatch):
         }
 
     def upload_file_wrapper(object, path, filename):
+        pass
         # TODO: stub mock wrapper
 
     monkeypatch.setattr(Testdroid, '__init__', init)
