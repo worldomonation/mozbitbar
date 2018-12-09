@@ -576,9 +576,8 @@ class BitbarProject(Configuration):
         filename = os.path.basename(filename)
 
         output = self.client.get_input_files()
-        file_names = [file_list['name'] for file_list in output['data']]
-
-        return filename in file_names
+        return any([file_list['name'] == filename
+                   for file_list in output['data']])
 
     def upload_file(self, **kwargs):
         """Uploads file(s) to Bitbar.

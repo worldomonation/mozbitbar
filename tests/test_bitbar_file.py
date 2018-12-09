@@ -5,7 +5,6 @@ import string
 import pytest
 
 from mozbitbar.bitbar_project import BitbarProject
-from mozbitbar import FileException
 
 
 @pytest.fixture()
