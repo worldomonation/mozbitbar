@@ -82,6 +82,9 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
+    def upload_file_wrapper(object, path, filename):
+        # TODO: stub mock wrapper
+
     monkeypatch.setattr(Testdroid, '__init__', init)
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)

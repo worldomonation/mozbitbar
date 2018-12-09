@@ -556,10 +556,10 @@ class BitbarProject(Configuration):
         assert type(path) == str
 
         if os.path.isfile(path):
+            # if file with specified name is present in cwd, stop here.
             return True
 
-        absolute_path = os.path.abspath(path)
-        return os.path.isfile(absolute_path)
+        return os.path.isfile(os.path.abspath(path))
 
     def _file_on_bitbar(self, filename):
         """Checks if file with same name has been uploaded to Bitbar which

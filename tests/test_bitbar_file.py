@@ -13,6 +13,14 @@ def initialize_project():
 
 
 @pytest.mark.parametrize('file_name,expected', [
+    ('mock_file.zip', False),
+])
+def test_bb_file_on_local_disk(file_name, expected, initialize_project):
+    # TODO: stub test
+    pass
+
+
+@pytest.mark.parametrize('file_name,expected', [
     ('mock_file.zip', True),
     ('mocked_application_file.apk', True),
     (string.lowercase, False),
@@ -26,3 +34,7 @@ def test_bb_file_on_bitbar(file_name, expected, initialize_project):
             initialize_project._file_on_bitbar(file_name)
     else:
         assert initialize_project._file_on_bitbar(file_name) == expected
+
+
+def test_bb_file_upload(file_name, expected, initialize_project):
+    pass
