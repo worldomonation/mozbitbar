@@ -17,18 +17,11 @@ def initialize_project():
     ('mock_file.zip', True),
     ('mocked_application_file.apk', True),
     (string.lowercase, False),
-    ('1', False)
-])
-def test_bb_file_on_bitbar(file_name, expected, initialize_project):
-    assert initialize_project._file_on_bitbar(file_name) == expected
-
-
-@pytest.mark.parametrize('file_name,expected', [
-    ('mock_file_name', False),
+    ('1', False),
     (None, AssertionError),
     (-1, AssertionError)
 ])
-def test_bb_file_on_bitbar_parameter_is_string(file_name, expected, initialize_project):
+def test_bb_file_on_bitbar(file_name, expected, initialize_project):
     if type(file_name) is not str:
         with pytest.raises(expected):
             initialize_project._file_on_bitbar(file_name)
