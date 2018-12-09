@@ -1,5 +1,7 @@
 from __future__ import print_function, absolute_import
 
+import random
+
 import pytest
 
 
@@ -18,6 +20,13 @@ def mock_testdroid_client(monkeypatch):
             client.password = 'test_password'
             client.cloud_url = 'https://testingurl.com'
             client.download_buffer_size = 65536
+
+    def create_project_wrapper(object, project_name, project_type):
+        return {
+            'id': random.randint(1, 10),
+            'name': project_name,
+            'type': project_type
+        }
 
     def get_me_wrapper(object):
         return '{}'
@@ -62,10 +71,14 @@ def mock_testdroid_client(monkeypatch):
         }
 
     monkeypatch.setattr(Testdroid, '__init__', init)
+    monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
+
+    import datetime
+    datetime.datetime.second
 
     return init
 

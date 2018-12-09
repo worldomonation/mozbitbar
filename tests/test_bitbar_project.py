@@ -8,6 +8,8 @@ from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import ProjectException
 
 
+# Project with Existing ID #
+
 @pytest.mark.parametrize('kwargs,expected', [
     ({'id': 1}, 1),
     ({'id': 99}, 99),
@@ -89,8 +91,29 @@ def test_bb_project_existing_id_and_name(kwargs, expected):
 
 
 @pytest.mark.parametrize('project_status', ['present', 'exist', 'create'])
-def test_bitbar_project_invalid_status(project_status):
+def test_bb_project_invalid_status(project_status):
     """Ensures BitbarProject raises an exception on invalid project status.
     """
     with pytest.raises(ProjectException):
         BitbarProject(project_status)
+
+
+# Project with New ID #
+
+
+@pytest.mark.parametrize('kwargs', [
+    ({
+        'project_name': 'parametrized_project_1',
+        'project_type': 'parametrized_type'
+    })
+])
+def test_bb_project_create_valid_id(kwargs):
+    """Ensures BitbarProject.create_project() is able to create a valid
+    project instance given appropriate project name and type.
+    """
+    project = BitbarProject('new', **kwargs)
+    assert project.project_id is not None
+    assert project.project_name == kwargs['project_name']
+    assert project.project_type == kwargs['project_type']
+
+
