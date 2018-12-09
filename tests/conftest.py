@@ -11,13 +11,16 @@ from mock import patch
 
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
-    def init():
+    def init(object, **kwargs):
         with patch.object(Testdroid, '__init__') as client:
-            client.username = 'test_username'
-            client.url = 'https://testingurl.com'
-            client.password = 'test_password'
             client.apikey = 'test_apikey'
-            return client
+            client.username = 'test_username'
+            client.password = 'test_password'
+            client.cloud_url = 'https://testingurl.com'
+            client.download_buffer_size = 65536
+
+    def get_me_wrapper(object):
+        return '{}'
 
     def get_token_wrapper(object):
         return 'test_access_token'
@@ -58,6 +61,8 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
+    monkeypatch.setattr(Testdroid, '__init__', init)
+    monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
