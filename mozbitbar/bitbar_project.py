@@ -262,17 +262,14 @@ a specific project instance.
                 same name is already on Bitbar.
         """
         if not permit_duplicate:
-            try:
-                existing_projects = self.get_projects()
-                for project in existing_projects:
-                    if project_name == project['name']:
-                        raise ProjectException
-            except ProjectException:
-                msg = '{}: project_name: {} already exists'.format(
-                    __name__,
-                    project_name
-                )
-                raise ProjectException(msg)
+            existing_projects = self.get_projects()
+            for project in existing_projects:
+                if project_name == project['name']:
+                    msg = '{}: project_name: {} already exists'.format(
+                        __name__,
+                        project_name
+                    )
+                    raise ProjectException(msg)
 
         output = self.client.create_project(project_name, project_type)
         assert 'id' in output
