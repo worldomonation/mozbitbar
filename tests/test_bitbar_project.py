@@ -13,8 +13,11 @@ from mozbitbar import ProjectException
 @pytest.mark.parametrize('kwargs,expected', [
     ({'id': 1}, 1),
     ({'id': 99}, 99),
+    ({'id': 100}, ProjectException),
+    ({'id': 2**32}, ProjectException),
+    ({'id': -1}, ProjectException),
 ])
-def test_bb_project_existing_id(kwargs, expected):
+def test_bb_project_id(kwargs, expected):
     """Ensures BitbarProject sets id as expected.
 
     Directly tests methods involved in:
@@ -27,21 +30,13 @@ def test_bb_project_existing_id(kwargs, expected):
     Last call Testdroid.get_project is mocked to return a pseudo
     project.
     """
-    project = BitbarProject('existing', **kwargs)
-    assert project.project_id == expected
+    if expected is ProjectException:
+        with pytest.raises(ProjectException):
+            BitbarProject('existing', **kwargs)
 
-
-@pytest.mark.parametrize('kwargs', [
-    {'id': 100},
-    {'id': 2**32},
-    {'id': -1},
-])
-def test_bb_project_existing_invalid_id(kwargs):
-    """Ensures BitbarProject raises an exception on invalid
-    project ID.
-    """
-    with pytest.raises(ProjectException):
-        BitbarProject('existing', **kwargs)
+    else:
+        project = BitbarProject('existing', **kwargs)
+        assert project.project_id == expected
 
 
 @pytest.mark.parametrize('kwargs,expected', [
