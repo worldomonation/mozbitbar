@@ -254,22 +254,24 @@ a specific project instance.
         Args:
             project_name (str): Project name to be assigned to new project.
             project_type (str): Project type to be assigned to new project
-            permit_duplicate (bool, optional): Permit creation of project even
-                if existing project has same name.
+            permit_duplicate (bool, optional): If True, permit creation of
+                project even if the provided name already exists on Bitbar.
 
         Raises:
             ProjectException: If permit_duplicate is False and project with
-                same name is already on Bitbar.
+                same name already exists on Bitbar.
         """
         if not permit_duplicate:
             existing_projects = self.get_projects()
-            for project in existing_projects:
-                if project_name == project['name']:
-                    msg = '{}: project_name: {} already exists'.format(
-                        __name__,
-                        project_name
-                    )
-                    raise ProjectException(msg)
+            if any([project['name'] == project_name
+                   for project in existing_projects]):
+                msg = '{}: project_name: {} already exists'.format(
+                    __name__,
+                    project_name
+                )
+                raise ProjectException(msg)
+
+        # TODO: check if project_type specified is valid.
 
         output = self.client.create_project(project_name, project_type)
         assert 'id' in output

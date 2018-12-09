@@ -90,6 +90,8 @@ def test_bb_project_existing_id_and_name(kwargs, expected):
     assert project.project_name == expected[1]
 
 
+# Generic project method #
+
 @pytest.mark.parametrize('project_status', ['present', 'exist', 'create'])
 def test_bb_project_invalid_status(project_status):
     """Ensures BitbarProject raises an exception on invalid project status.
@@ -105,9 +107,13 @@ def test_bb_project_invalid_status(project_status):
     ({
         'project_name': 'parametrized_project_1',
         'project_type': 'parametrized_type'
+    }),
+    ({
+        'project_name': string.punctuation,
+        'project_type': string.lowercase
     })
 ])
-def test_bb_project_create_valid_id(kwargs):
+def test_bb_project_create_unique_name(kwargs):
     """Ensures BitbarProject.create_project() is able to create a valid
     project instance given appropriate project name and type.
     """
@@ -117,3 +123,23 @@ def test_bb_project_create_valid_id(kwargs):
     assert project.project_type == kwargs['project_type']
 
 
+@pytest.mark.parametrize('kwargs', [
+    ({
+        'project_name': 'mock_project',
+        'project_type': 'mock_type'
+    })
+])
+def test_bb_project_create_duplicate_name_without_flag(kwargs):
+    with pytest.raises(ProjectException):
+        BitbarProject('new', **kwargs)
+
+
+@pytest.mark.parametrize('kwargs', [
+    ({
+        'project_name': 'mock_project',
+        'project_type': 'mock_type',
+        'permit_duplicate': True,
+    })
+])
+def test_bb_project_create_duplicate_name_with_flag(kwargs):
+    pass
