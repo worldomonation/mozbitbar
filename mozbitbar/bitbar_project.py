@@ -294,7 +294,6 @@ class BitbarProject(Configuration):
                 to an existing project on Bitbar.
         """
         available_projects = self.get_projects()
-
         for project in available_projects:
             if id and name is None or id and name:
                 if id is project['id']:
