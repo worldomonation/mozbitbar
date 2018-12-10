@@ -8,11 +8,16 @@ from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import ProjectException
 
 
+# Project with Existing ID #
+
 @pytest.mark.parametrize('kwargs,expected', [
     ({'id': 1}, 1),
     ({'id': 99}, 99),
+    ({'id': 100}, ProjectException),
+    ({'id': 2**32}, ProjectException),
+    ({'id': -1}, ProjectException),
 ])
-def test_bb_project_existing_id(kwargs, expected):
+def test_bb_project_existing_by_id(kwargs, expected):
     """Ensures BitbarProject sets id as expected.
 
     Directly tests methods involved in:
@@ -25,27 +30,23 @@ def test_bb_project_existing_id(kwargs, expected):
     Last call Testdroid.get_project is mocked to return a pseudo
     project.
     """
-    project = BitbarProject('existing', **kwargs)
-    assert project.project_id == expected
+    if expected is ProjectException:
+        with pytest.raises(ProjectException):
+            BitbarProject('existing', **kwargs)
 
-
-@pytest.mark.parametrize('kwargs', [
-    {'id': 100},
-    {'id': 2**32},
-    {'id': -1},
-])
-def test_bb_project_existing_invalid_id(kwargs):
-    """Ensures BitbarProject raises an exception on invalid
-    project ID.
-    """
-    with pytest.raises(ProjectException):
-        BitbarProject('existing', **kwargs)
+    else:
+        project = BitbarProject('existing', **kwargs)
+        assert project.project_id == expected
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-        ({'name': 'mock_project'}, 'mock_project')
-        ])
-def test_bb_project_existing_name(kwargs, expected):
+    ({'name': 'mock_project'}, 'mock_project'),
+    ({'name': 'another_mock_project'}, 'another_mock_project'),
+    ({'name': string.lowercase}, ProjectException),
+    ({'name': 'NULL'}, ProjectException),
+    ({'name': 'None'}, ProjectException),
+])
+def test_bb_project_existing_by_name(kwargs, expected):
     """Ensures BitbarProject sets name as expected.
 
     Directly tests methods involved in:
@@ -59,18 +60,13 @@ def test_bb_project_existing_name(kwargs, expected):
     Last call Testdroid.get_project is mocked to return a pseudo
     project.
     """
-    project = BitbarProject('existing', **kwargs)
-    assert project.project_name == expected
+    if expected is ProjectException:
+        with pytest.raises(ProjectException):
+            BitbarProject('existing', **kwargs)
 
-
-@pytest.mark.parametrize('kwargs', [
-    {'name': string.lowercase},
-    {'name': 'NULL'},
-    {'name': 'None'},
-])
-def test_bb_project_existing_invalid_name(kwargs):
-    with pytest.raises(ProjectException):
-        BitbarProject('existing', **kwargs)
+    else:
+        project = BitbarProject('existing', **kwargs)
+        assert project.project_name == expected
 
 
 @pytest.mark.parametrize('kwargs,expected', [
@@ -88,9 +84,61 @@ def test_bb_project_existing_id_and_name(kwargs, expected):
     assert project.project_name == expected[1]
 
 
-@pytest.mark.parametrize('project_status', ['present', 'exist', 'create'])
-def test_bitbar_project_invalid_status(project_status):
+# Project status method #
+
+@pytest.mark.parametrize('project_status,expected', [
+    ('present', ProjectException),
+    ('exist', ProjectException),
+    ('create', ProjectException),
+])
+def test_bb_project_status(project_status, expected):
     """Ensures BitbarProject raises an exception on invalid project status.
     """
+    if expected is ProjectException:
+        with pytest.raises(ProjectException):
+            BitbarProject(project_status)
+
+
+# Project with New ID #
+
+
+@pytest.mark.parametrize('kwargs', [
+    ({
+        'project_name': 'parametrized_project_1',
+        'project_type': 'parametrized_type'
+    }),
+    ({
+        'project_name': string.punctuation,
+        'project_type': string.lowercase
+    })
+])
+def test_bb_project_create_unique_name(kwargs):
+    """Ensures BitbarProject.create_project() is able to create a valid
+    project instance given appropriate project name and type.
+    """
+    project = BitbarProject('new', **kwargs)
+    assert project.project_id is not None
+    assert project.project_name == kwargs['project_name']
+    assert project.project_type == kwargs['project_type']
+
+
+@pytest.mark.parametrize('kwargs', [
+    ({
+        'project_name': 'mock_project',
+        'project_type': 'mock_type'
+    })
+])
+def test_bb_project_create_duplicate_name_without_flag(kwargs):
     with pytest.raises(ProjectException):
-        BitbarProject(project_status)
+        BitbarProject('new', **kwargs)
+
+
+@pytest.mark.parametrize('kwargs', [
+    ({
+        'project_name': 'mock_project',
+        'project_type': 'mock_type',
+        'permit_duplicate': True,
+    })
+])
+def test_bb_project_create_duplicate_name_with_flag(kwargs):
+    pass

@@ -254,25 +254,24 @@ class BitbarProject(Configuration):
         Args:
             project_name (str): Project name to be assigned to new project.
             project_type (str): Project type to be assigned to new project
-            permit_duplicate (bool, optional): Permit creation of project even
-                if existing project has same name.
+            permit_duplicate (bool, optional): If True, permit creation of
+                project even if the provided name already exists on Bitbar.
 
         Raises:
             ProjectException: If permit_duplicate is False and project with
-                same name is already on Bitbar.
+                same name already exists on Bitbar.
         """
         if not permit_duplicate:
-            try:
-                existing_projects = self.get_projects()
-                for project in existing_projects:
-                    if project_name == project['name']:
-                        raise ProjectException
-            except ProjectException:
+            existing_projects = self.get_projects()
+            if any([project['name'] == project_name
+                   for project in existing_projects]):
                 msg = '{}: project_name: {} already exists'.format(
                     __name__,
                     project_name
                 )
                 raise ProjectException(msg)
+
+        # TODO: check if project_type specified is valid.
 
         output = self.client.create_project(project_name, project_type)
         assert 'id' in output
@@ -296,15 +295,18 @@ class BitbarProject(Configuration):
         """
         available_projects = self.get_projects()
         for project in available_projects:
-            if id is project['id']:
-                name = project['name']
-            if name in project['name']:
-                id = project['id']
+            if id and name is None or id and name:
+                if id is project['id']:
+                    name = project['name']
+                    break
 
-        try:
-            assert id, name
-        except AssertionError:
-            msg = '{}: project_name: {}, project_id: {}'.format(
+            elif name and id is None:
+                if name is project['name']:
+                    id = project['id']
+                    break
+
+        if (id and name) is None:
+            msg = '{}: project_name: {}, project_id: {} '.format(
                 __name__,
                 name,
                 id
@@ -553,10 +555,10 @@ class BitbarProject(Configuration):
         assert type(path) == str
 
         if os.path.isfile(path):
+            # if file with specified name is present in cwd, stop here.
             return True
 
-        absolute_path = os.path.abspath(path)
-        return os.path.isfile(absolute_path)
+        return os.path.isfile(os.path.abspath(path))
 
     def _file_on_bitbar(self, filename):
         """Checks if file with same name has been uploaded to Bitbar which
@@ -573,9 +575,8 @@ class BitbarProject(Configuration):
         filename = os.path.basename(filename)
 
         output = self.client.get_input_files()
-        file_names = [file_list['name'] for file_list in output['data']]
-
-        return filename in file_names
+        return any([file_list['name'] == filename
+                   for file_list in output['data']])
 
     def upload_file(self, **kwargs):
         """Uploads file(s) to Bitbar.

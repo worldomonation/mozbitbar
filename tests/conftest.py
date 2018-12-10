@@ -1,5 +1,7 @@
 from __future__ import print_function, absolute_import
 
+import random
+
 import pytest
 
 
@@ -11,13 +13,35 @@ from mock import patch
 
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
-    def init():
+    def init(object, **kwargs):
         with patch.object(Testdroid, '__init__') as client:
-            client.username = 'test_username'
-            client.url = 'https://testingurl.com'
-            client.password = 'test_password'
             client.apikey = 'test_apikey'
-            return client
+            client.username = 'test_username'
+            client.password = 'test_password'
+            client.cloud_url = 'https://testingurl.com'
+            client.download_buffer_size = 65536
+
+    def create_project_wrapper(object, project_name, project_type):
+        return get_projects_wrapper(object) + {
+            'id': random.randint(1, 10),
+            'name': project_name,
+            'type': project_type
+        }
+
+    def get_input_files_wrapper(object):
+        return {
+            'data': [
+                {
+                    'name': 'mock_file.zip'
+                },
+                {
+                    'name': 'mocked_application_file.apk'
+                }
+            ]
+        }
+
+    def get_me_wrapper(object):
+        return '{}'
 
     def get_token_wrapper(object):
         return 'test_access_token'
@@ -58,6 +82,14 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
+    def upload_file_wrapper(object, path, filename):
+        pass
+        # TODO: stub mock wrapper
+
+    monkeypatch.setattr(Testdroid, '__init__', init)
+    monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
