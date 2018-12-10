@@ -142,3 +142,13 @@ def test_bb_project_create_duplicate_name_without_flag(kwargs):
 ])
 def test_bb_project_create_duplicate_name_with_flag(kwargs):
     pass
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    ({'frameworkId': 12}, 12),
+])
+def test_bb_project_framework(kwargs, expected):
+    project = BitbarProject('existing', **{'id': 99})
+    project.set_project_framework(**kwargs)
+    assert project.framework_id == expected
+    assert False

@@ -13,6 +13,7 @@ from mock import patch
 
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
+
     def init(object, **kwargs):
         with patch.object(Testdroid, '__init__') as client:
             client.apikey = 'test_apikey'
@@ -40,11 +41,28 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
+    def get_frameworks_wrapper(object):
+        return {
+            'data': [
+                {
+                    'id': 1,
+                    'name': 'mock_framework'
+                },
+                {
+                    'id': 100,
+                    'name': 'another_mock_framework'
+                }
+            ]
+        }
+
     def get_me_wrapper(object):
         return '{}'
 
     def get_token_wrapper(object):
         return 'test_access_token'
+
+    def get_project_config_wrapper(object, project_id):
+        return {'frameworkId': None}
 
     def get_project_wrapper(object, project_id):
         return {
@@ -82,17 +100,26 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
+    def set_project_framework_wrapper(object, project_id, framework_id):
+        frameworkId = framework_id
+
     def upload_file_wrapper(object, path, filename):
         pass
         # TODO: stub mock wrapper
 
     monkeypatch.setattr(Testdroid, '__init__', init)
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_frameworks',
+                        get_frameworks_wrapper)
     monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_project_config', get_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
+    monkeypatch.setattr(Testdroid, 'set_project_framework',
+                        set_project_framework_wrapper)
+    monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)
 
     return init
 
