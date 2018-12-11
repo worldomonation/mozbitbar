@@ -759,7 +759,18 @@ class BitbarProject(Configuration):
             raise TestException('{}: name: {} is not unique'.format(
                 __name__,
                 kwargs.get('name')
-            ))
+                )
+            )
+
+        try:
+            assert self.project_id
+        except AssertionError:
+            raise ProjectException('{}: project must be set')
+
+        try:
+            assert (self.device_group_id or self.device_id)
+        except AssertionError:
+            raise DeviceException('{}: device or device group must be set')
 
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       self.device_group_id,
