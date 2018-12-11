@@ -104,12 +104,12 @@ def test_bb_project_status(project_status, expected):
 
 @pytest.mark.parametrize('kwargs', [
     ({
-        'project_name': 'parametrized_project_1',
-        'project_type': 'parametrized_type'
+        'name': 'parametrized_project_1',
+        'type': 'parametrized_type'
     }),
     ({
-        'project_name': string.punctuation,
-        'project_type': string.lowercase
+        'name': string.punctuation,
+        'type': string.lowercase
     })
 ])
 def test_bb_project_create_unique_name(kwargs):
@@ -149,6 +149,9 @@ def test_bb_project_create_duplicate_name_with_flag(kwargs):
     ({'id': 1}, {'name': 'mock_framework', 'id': 1}),
     ({'name': 'mock_framework'}, {'name': 'mock_framework', 'id': 1}),
     ({'name': 'mock_framework', 'id': 1}, {'name': 'mock_framework', 'id': 1}),
+    ({'name': u'mock_framework', 'id': 1}, {'name': 'mock_framework', 'id': 1}),
+    ({'name': 'mock_unicode_framework'},
+     {'name': 'mock_unicode_framework', 'id': 2}),
 ])
 def test_bb_project_framework(kwargs, expected):
     project = BitbarProject('existing', **{'id': 99})
