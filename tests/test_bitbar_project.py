@@ -145,11 +145,11 @@ def test_bb_project_create_duplicate_name_with_flag(kwargs):
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-    # ({'id': 12}, FrameworkException),
-    # ({'id': 1}, {'name': 'mock_framework', 'id': 1}),
-    # ({'name': 'mock_framework'}, {'name': 'mock_framework', 'id': 1}),
-    # ({'name': 'mock_framework', 'id': 1}, {'name': 'mock_framework', 'id': 1}),
-    # ({'name': u'mock_framework', 'id': 1}, {'name': 'mock_framework', 'id': 1}),
+    ({'id': 12}, FrameworkException),
+    ({'id': 1}, {'name': 'mock_framework', 'id': 1}),
+    ({'name': 'mock_framework'}, {'name': 'mock_framework', 'id': 1}),
+    ({'name': 'mock_framework', 'id': 1}, {'name': 'mock_framework', 'id': 1}),
+    ({'name': u'mock_framework', 'id': 1}, {'name': 'mock_framework', 'id': 1}),
     ({'name': 'mock_unicode_framework'},
      {'name': 'mock_unicode_framework', 'id': 2}),
 ])
