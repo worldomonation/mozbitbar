@@ -380,17 +380,18 @@ class BitbarProject(Configuration):
                         path)), 'r').read())
         return new_config
 
-    def set_project_framework(self, **kwargs):
+    def set_project_framework(self, name=None, id=None):
         """Sets the project framework using either integer id or name.
 
-        This method prioritizes framework name if both id and name are
-        provided.
+        This method prioritizes the usage of framework name if both id and
+        name are provided, but do not belong to the same framework on Bitbar.
 
-        If a framework name or id is provided that is not available on
-        Bitbar, a FrameworkException is raised.
+        If framework id or name provided is not available on Bitbar, a
+        FrameworkException is raised.
 
         Args:
-            **kwargs: Arbitrary keyword arguments.
+            name (str): String representation of the framework name.
+            id (int): Integer ID of the framework.
 
         Raises:
             FrameworkException: If framework name or framework id provided
@@ -398,33 +399,42 @@ class BitbarProject(Configuration):
             RequestResponseError: If Testdroid responds with an error.
         """
         available_frameworks = self.get_project_frameworks()
-        framework_to_set = (kwargs.get('framework_name') or
-                            kwargs.get('frameworkId'))
+
+        assert id or name
+        if id:
+            id = int(id)
+        if name:
+            name = str(name)
 
         for framework in available_frameworks:
-            if framework_to_set in framework:
-                framework_name = str(framework[0])
-                framework_id = int(framework[1])
+            if framework.get('name') is name:
+                id = framework.get('id')
+                break
+            elif framework.get('id') is id:
+                name = framework.get('name')
                 break
 
-        if not framework_id:
-            raise FrameworkException(
-                'Invalid framework identifer provided: {}'.format(
-                    kwargs.values()))
+        try:
+            assert (id and name)
+        except AssertionError:
+            msg = '{}: both framework id and name must correspond '.format(
+                __name__
+            ) + 'to an existing framework on Bitbar'
+            raise FrameworkException(msg)
 
-        self.client.set_project_framework(self.project_id, framework_id)
-        self.framework_id = framework_id
-        self.framework_name = framework_name
+        self.client.set_project_framework(self.project_id, id)
+
+        self.framework_id = id
+        self.framework_name = name
 
     def get_project_frameworks(self):
         """Returns list of project frameworks available to the user.
 
         Returns:
-            :obj:`list` of :obj:`tuple`: of :obj:`str`
+            :obj:`dict` of :obj:`str`
         """
         output = self.client.get_frameworks()
-        return [(framework['name'], framework['id'])
-                for framework in output['data']]
+        return output['data']
 
     def set_project_parameters(self, parameters, force_overwrite=False):
         """Sets project parameters.
