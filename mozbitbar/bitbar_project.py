@@ -407,7 +407,7 @@ class BitbarProject(Configuration):
             name = str(name)
 
         for framework in available_frameworks:
-            if framework.get('name') is name:
+            if framework.get('name') == name:
                 id = framework.get('id')
                 break
             elif framework.get('id') is id:

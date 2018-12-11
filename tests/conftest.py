@@ -37,6 +37,9 @@ def mock_testdroid_client(monkeypatch):
                 },
                 {
                     'name': 'mocked_application_file.apk'
+                },
+                {
+                    'name': u'mocked_unicode_file.apk'
                 }
             ]
         }
@@ -51,6 +54,10 @@ def mock_testdroid_client(monkeypatch):
                 {
                     'id': 100,
                     'name': 'another_mock_framework'
+                },
+                {
+                    'id': 2,
+                    'name': u'mock_unicode_framework'
                 }
             ]
         }
