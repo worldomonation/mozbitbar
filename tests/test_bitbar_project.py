@@ -5,7 +5,7 @@ import string
 import pytest
 
 from mozbitbar.bitbar_project import BitbarProject
-from mozbitbar import ProjectException
+from mozbitbar import ProjectException, FrameworkException
 
 
 # Project with Existing ID #
@@ -145,10 +145,17 @@ def test_bb_project_create_duplicate_name_with_flag(kwargs):
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-    ({'frameworkId': 12}, 12),
+    ({'id': 12}, FrameworkException),
+    ({'id': 1}, {'name': 'mock_framework', 'id': 1}),
+    ({'name': 'mock_framework'}, {'name': 'mock_framework', 'id': 1}),
+    ({'name': 'mock_framework', 'id': 1}, {'name': 'mock_framework', 'id': 1}),
 ])
 def test_bb_project_framework(kwargs, expected):
     project = BitbarProject('existing', **{'id': 99})
-    project.set_project_framework(**kwargs)
-    assert project.framework_id == expected
-    assert False
+    if expected == FrameworkException:
+        with pytest.raises(FrameworkException):
+            project.set_project_framework(**kwargs)
+    else:
+        project.set_project_framework(**kwargs)
+        assert project.framework_id == expected['id']
+        assert project.framework_name == expected['name']

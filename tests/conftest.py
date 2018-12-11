@@ -61,9 +61,6 @@ def mock_testdroid_client(monkeypatch):
     def get_token_wrapper(object):
         return 'test_access_token'
 
-    def get_project_config_wrapper(object, project_id):
-        return {'frameworkId': None}
-
     def get_project_wrapper(object, project_id):
         return {
             'id': project_id,
@@ -101,7 +98,7 @@ def mock_testdroid_client(monkeypatch):
         }
 
     def set_project_framework_wrapper(object, project_id, framework_id):
-        frameworkId = framework_id
+        pass
 
     def upload_file_wrapper(object, path, filename):
         pass
@@ -115,7 +112,6 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
-    monkeypatch.setattr(Testdroid, 'get_project_config', get_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
