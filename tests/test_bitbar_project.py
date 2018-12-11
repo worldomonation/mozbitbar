@@ -124,8 +124,8 @@ def test_bb_project_create_unique_name(kwargs):
 
 @pytest.mark.parametrize('kwargs', [
     ({
-        'project_name': 'mock_project',
-        'project_type': 'mock_type'
+        'name': 'mock_project',
+        'type': 'mock_type'
     })
 ])
 def test_bb_project_create_duplicate_name_without_flag(kwargs):

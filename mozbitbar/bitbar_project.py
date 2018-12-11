@@ -240,7 +240,7 @@ class BitbarProject(Configuration):
         existing_projects = self.client.get_projects()
         return existing_projects['data']
 
-    def create_project(self, project_name, project_type,
+    def create_project(self, name, type,
                        permit_duplicate=False):
         """Creates a new Bitbar project using provided parameters.
 
@@ -263,17 +263,17 @@ class BitbarProject(Configuration):
         """
         if not permit_duplicate:
             existing_projects = self.get_projects()
-            if any([project['name'] == project_name
+            if any([project['name'] == name
                    for project in existing_projects]):
                 msg = '{}: project_name: {} already exists'.format(
                     __name__,
-                    project_name
+                    name
                 )
                 raise ProjectException(msg)
 
         # TODO: check if project_type specified is valid.
 
-        output = self.client.create_project(project_name, project_type)
+        output = self.client.create_project(name, type)
         assert 'id' in output
 
         self._set_project_attributes(output)
