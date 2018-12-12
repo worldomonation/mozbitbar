@@ -11,9 +11,17 @@ from mozbitbar.bitbar_project import BitbarProject
 from mock import patch
 
 
+def base_project_template(project_id=None, project_name=None, project_type=None, project_framework_id=None):
+    return {
+        'id': random.randint(1, 10) or project_id,
+        'name': project_name or project_name,
+        'type': project_type or project_type,
+        'osType': 'mock_type',
+        'frameworkId': 99 or project_framework_id
+    }
+
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
-
     def init(object, **kwargs):
         with patch.object(Testdroid, '__init__') as client:
             client.apikey = 'test_apikey'
@@ -22,53 +30,19 @@ def mock_testdroid_client(monkeypatch):
             client.cloud_url = 'https://testingurl.com'
             client.download_buffer_size = 65536
 
+    # Project related mocks #
+
     def create_project_wrapper(object, project_name, project_type):
         return {
             'id': random.randint(1, 10),
             'name': project_name,
             'type': project_type
+            'osType': 'mock_type',
+            'frameworkId': 99
         }
-
-    def get_input_files_wrapper(object):
-        return {
-            'data': [
-                {
-                    'name': 'mock_file.zip'
-                },
-                {
-                    'name': 'mocked_application_file.apk'
-                },
-                {
-                    'name': u'mocked_unicode_file.apk'
-                }
-            ]
-        }
-
-    def get_frameworks_wrapper(object):
-        return {
-            'data': [
-                {
-                    'id': 1,
-                    'name': 'mock_framework'
-                },
-                {
-                    'id': 100,
-                    'name': 'another_mock_framework'
-                },
-                {
-                    'id': 2,
-                    'name': u'mock_unicode_framework'
-                }
-            ]
-        }
-
-    def get_me_wrapper(object):
-        return '{}'
-
-    def get_token_wrapper(object):
-        return 'test_access_token'
 
     def get_project_wrapper(object, project_id):
+        # returns a single project, don't mistake with projects!
         return {
             'id': project_id,
             'name': 'mock_project',
@@ -107,9 +81,57 @@ def mock_testdroid_client(monkeypatch):
     def set_project_framework_wrapper(object, project_id, framework_id):
         pass
 
+    # Framework related mocks #
+
+    def get_frameworks_wrapper(object):
+        return {
+            'data': [
+                {
+                    'id': 1,
+                    'name': 'mock_framework'
+                },
+                {
+                    'id': 100,
+                    'name': 'another_mock_framework'
+                },
+                {
+                    'id': 2,
+                    'name': u'mock_unicode_framework'
+                }
+            ]
+        }
+
+    # File related mocks #
+
+    def get_input_files_wrapper(object):
+        return {
+            'data': [
+                {
+                    'name': 'mock_file.zip'
+                },
+                {
+                    'name': 'mocked_application_file.apk'
+                },
+                {
+                    'name': u'mocked_unicode_file.apk'
+                }
+            ]
+        }
+
+
     def upload_file_wrapper(object, path, filename):
         pass
         # TODO: stub mock wrapper
+
+    # Additional mocks #
+
+    def get_me_wrapper(object):
+        return '{}'
+
+    def get_token_wrapper(object):
+        return 'test_access_token'
+
+    # Monkeypatch #
 
     monkeypatch.setattr(Testdroid, '__init__', init)
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
