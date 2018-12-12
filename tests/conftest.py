@@ -23,7 +23,7 @@ def mock_testdroid_client(monkeypatch):
             client.download_buffer_size = 65536
 
     def create_project_wrapper(object, project_name, project_type):
-        return get_projects_wrapper(object) + {
+        return {
             'id': random.randint(1, 10),
             'name': project_name,
             'type': project_type

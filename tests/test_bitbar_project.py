@@ -118,8 +118,8 @@ def test_bb_project_create_unique_name(kwargs):
     """
     project = BitbarProject('new', **kwargs)
     assert project.project_id is not None
-    assert project.project_name == kwargs['project_name']
-    assert project.project_type == kwargs['project_type']
+    assert project.project_name == kwargs['name']
+    assert project.project_type == kwargs['type']
 
 
 @pytest.mark.parametrize('kwargs', [
