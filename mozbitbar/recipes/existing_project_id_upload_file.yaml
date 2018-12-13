@@ -35,10 +35,12 @@
         }
     ]
     force_overwrite: False
+- action: set_device_group
+  arguments:
+    name: Edwin_Test
 - action: start_test_run
   arguments:
-    name: test_111
-    device_group_id: 32
+    name: test_122
 - action: notify_test_run_complete
   arguments:
     interval: 2
