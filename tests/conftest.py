@@ -36,7 +36,7 @@ def mock_testdroid_client(monkeypatch):
         return {
             'id': random.randint(1, 10),
             'name': project_name,
-            'type': project_type
+            'type': project_type,
             'osType': 'mock_type',
             'frameworkId': 99
         }
