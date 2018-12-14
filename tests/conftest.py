@@ -11,11 +11,12 @@ from mozbitbar.bitbar_project import BitbarProject
 from mock import patch
 
 
-def base_project_template(project_id=None, project_name=None, project_type=None, project_framework_id=None):
+def mock_project_template(project_id=None, project_name=None,
+                          project_type=None, project_framework_id=None):
     return {
-        'id': random.randint(1, 10) or project_id,
-        'name': project_name or project_name,
-        'type': project_type or project_type,
+        'id': project_id or random.randint(1, 10),
+        'name': project_name or 'mock_project',
+        'type': project_type or 'mock_type',
         'osType': 'mock_type',
         'frameworkId': 99 or project_framework_id
     }
@@ -33,25 +34,15 @@ def mock_testdroid_client(monkeypatch):
     # Project related mocks #
 
     def create_project_wrapper(object, project_name, project_type):
-        return {
-            'id': random.randint(1, 10),
-            'name': project_name,
-            'type': project_type
-            'osType': 'mock_type',
-            'frameworkId': 99
-        }
+        return mock_project_template(project_name=project_name,
+                                     project_type=project_type)
 
     def get_project_wrapper(object, project_id):
         # returns a single project, don't mistake with projects!
-        return {
-            'id': project_id,
-            'name': 'mock_project',
-            'type': 'mock_type',
-            'osType': 'mock_type',
-            'frameworkId': 99
-        }
+        return mock_project_template(project_id=project_id)
 
     def get_projects_wrapper(object):
+        # TODO: use the mock_project_template somehow.
         return {
             'data': [
                 {
@@ -79,6 +70,7 @@ def mock_testdroid_client(monkeypatch):
         }
 
     def set_project_framework_wrapper(object, project_id, framework_id):
+        # not a stub - Testdroid method does not return anything.
         pass
 
     # Framework related mocks #

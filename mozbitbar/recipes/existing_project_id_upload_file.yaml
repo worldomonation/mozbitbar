@@ -1,10 +1,10 @@
 - project: existing
   arguments:
-    id: 231942
-    name: test_project_1
+    project_id: 231942
+    project_name: test_project_1
 - action: set_project_framework
   arguments:
-    name: Mozilla test
+    framework_name: Mozilla test
 - action: upload_file
   arguments:
     test_filename: /Users/egao/Downloads/dummy-test.zip

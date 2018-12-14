@@ -1,7 +1,7 @@
 - project: new
   arguments:
-    name: test_project_1
-    type: ANDROID
+    project_name: test_project_1
+    project_type: ANDROID
     permit_duplicate: True
 - action: set_project_framework
   arguments:

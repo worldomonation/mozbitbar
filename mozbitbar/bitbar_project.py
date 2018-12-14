@@ -240,7 +240,7 @@ class BitbarProject(Configuration):
         existing_projects = self.client.get_projects()
         return existing_projects['data']
 
-    def create_project(self, name, type,
+    def create_project(self, project_name, project_type,
                        permit_duplicate=False):
         """Creates a new Bitbar project using provided parameters.
 
@@ -263,22 +263,22 @@ class BitbarProject(Configuration):
         """
         if not permit_duplicate:
             existing_projects = self.get_projects()
-            if any([project['name'] == name
+            if any([project['name'] == project_name
                    for project in existing_projects]):
                 msg = '{}: project_name: {} already exists'.format(
                     __name__,
-                    name
+                    project_name
                 )
                 raise ProjectException(msg)
 
         # TODO: check if project_type specified is valid.
 
-        output = self.client.create_project(name, type)
+        output = self.client.create_project(project_name, project_type)
         assert 'id' in output
 
         self._set_project_attributes(output)
 
-    def use_existing_project(self, id=None, name=None):
+    def use_existing_project(self, project_id=None, project_name=None):
         """Retrieve existing Bitbar project details.
 
         Acceptable project identifiers are either one of project_name or
@@ -295,21 +295,21 @@ class BitbarProject(Configuration):
         """
         available_projects = self.get_projects()
         for project in available_projects:
-            if id and name is None or id and name:
-                if id is project['id']:
-                    name = project['name']
+            if project_id and project_name is None or project_id and project_name:
+                if project_id is project['id']:
+                    project_name = project['name']
                     break
 
-            elif name and id is None:
-                if name is project['name']:
-                    id = project['id']
+            elif project_name and project_id is None:
+                if project_name is project['name']:
+                    project_id = project['id']
                     break
 
-        if (id and name) is None:
+        if (project_id and project_name) is None:
             msg = '{}: project_name: {}, project_id: {} '.format(
                 __name__,
-                name,
-                id
+                project_name,
+                project_id
             ) + 'not found on Bitbar'
             raise ProjectException(msg)
 
@@ -380,7 +380,7 @@ class BitbarProject(Configuration):
                         path)), 'r').read())
         return new_config
 
-    def set_project_framework(self, name=None, id=None):
+    def set_project_framework(self, framework_name=None, framework_id=None):
         """Sets the project framework using either integer id or name.
 
         This method prioritizes the usage of framework name if both id and
@@ -400,32 +400,32 @@ class BitbarProject(Configuration):
         """
         available_frameworks = self.get_project_frameworks()
 
-        assert id or name
-        if id:
-            id = int(id)
-        if name:
-            name = str(name)
+        assert framework_id or framework_name
+        if framework_id:
+            framework_id = int(framework_id)
+        if framework_name:
+            framework_name = str(framework_name)
 
         for framework in available_frameworks:
-            if framework.get('name') == name:
-                id = framework.get('id')
+            if framework.get('name') == framework_name:
+                framework_id = framework.get('id')
                 break
-            elif framework.get('id') is id:
-                name = framework.get('name')
+            elif framework.get('id') is framework_id:
+                framework_name = framework.get('name')
                 break
 
         try:
-            assert (id and name)
+            assert (framework_id and framework_name)
         except AssertionError:
             msg = '{}: both framework id and name must correspond '.format(
                 __name__
             ) + 'to an existing framework on Bitbar'
             raise FrameworkException(msg)
 
-        self.client.set_project_framework(self.project_id, id)
+        self.client.set_project_framework(self.project_id, framework_id)
 
-        self.framework_id = id
-        self.framework_name = name
+        self.framework_id = framework_id
+        self.framework_name = framework_name
 
     def get_project_frameworks(self):
         """Returns list of project frameworks available to the user.
