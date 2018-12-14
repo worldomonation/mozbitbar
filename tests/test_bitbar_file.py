@@ -9,7 +9,7 @@ from mozbitbar.bitbar_project import BitbarProject
 
 @pytest.fixture()
 def initialize_project():
-    return BitbarProject('existing', **{'name': 'mock_project'})
+    return BitbarProject('existing', **{'project_name': 'mock_project'})
 
 
 @pytest.mark.parametrize('file_name,expected', [
