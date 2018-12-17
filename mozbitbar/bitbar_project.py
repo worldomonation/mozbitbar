@@ -295,7 +295,8 @@ class BitbarProject(Configuration):
         """
         available_projects = self.get_projects()
         for project in available_projects:
-            if project_id and project_name is None or project_id and project_name:
+            if (project_id and project_name is None or
+                    project_id and project_name):
                 if project_id is project['id']:
                     project_name = project['name']
                     break
