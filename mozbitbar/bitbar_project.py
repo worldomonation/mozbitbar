@@ -324,8 +324,8 @@ class BitbarProject(Configuration):
 
         Provided with either a dict of config values or path to a json file
         containing configs, this method will load the values, filter out
-        values that are identical then modify the Bitbar project config
-        with remaining values.
+        values that would be unchanged, then make calls to Bitbar in order
+        to write the configuration values.
 
         Args:
             new_config (:obj:`dict`): Project configuration represented
@@ -359,7 +359,15 @@ class BitbarProject(Configuration):
             print(msg)
             return
 
-        self.client.set_project_config(self.project_id, new_config)
+        output = self.client.set_project_config(self.project_id, **new_config)
+        try:
+            assert all(key in output.keys() and output[key] == value
+                       for key, value in new_config.items())
+        except AssertionError:
+            msg = '{}: failed to write updated'.format(
+                __name__
+                ) + 'configuration values to Bitbar.'
+            raise ProjectException(msg)
 
     def _load_project_config(self, path='project_config.json'):
         """Loads project config from the disk.
