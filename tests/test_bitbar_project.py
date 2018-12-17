@@ -8,7 +8,7 @@ from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import ProjectException, FrameworkException
 
 
-# Project with Existing ID #
+# Existing projects #
 
 @pytest.mark.parametrize('kwargs,expected', [
     ({'project_id': 11}, {'id': 11}),
@@ -68,7 +68,7 @@ def test_bb_project_existing_id_and_name(kwargs, expected):
     assert project.project_name == expected['project_name']
 
 
-# Project status method #
+# Project status #
 
 @pytest.mark.parametrize('project_status,expected', [
     ('present', ProjectException),
@@ -83,7 +83,7 @@ def test_bb_project_status(project_status, expected):
             BitbarProject(project_status)
 
 
-# Project with New ID #
+# Create project #
 
 
 @pytest.mark.parametrize('kwargs,expected', [
@@ -140,6 +140,7 @@ def test_bb_project_create_unique_name(kwargs, expected):
         assert project.project_name == expected['project_name']
         assert project.project_type == expected['project_type']
 
+# Project Framework #
 
 @pytest.mark.parametrize('kwargs,expected', [
     ({'framework_id': 12}, FrameworkException),
@@ -165,3 +166,13 @@ def test_bb_project_framework(kwargs, expected):
         project.set_project_framework(**kwargs)
         assert project.framework_id == expected['framework_id']
         assert project.framework_name == expected['framework_name']
+
+# Project config #
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        'a', 'b'
+    )
+])
+def test_set_project_config(kwargs, expected):
+    pass
