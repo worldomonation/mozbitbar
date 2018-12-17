@@ -141,17 +141,6 @@ def test_bb_project_create_unique_name(kwargs, expected):
         assert project.project_type == expected['project_type']
 
 
-@pytest.mark.parametrize('kwargs', [
-    ({
-        'project_name': 'mock_project',
-        'project_type': 'mock_type',
-        'permit_duplicate': True,
-    })
-])
-def test_bb_project_create_duplicate_name_with_flag(kwargs):
-    pass
-
-
 @pytest.mark.parametrize('kwargs,expected', [
     ({'framework_id': 12}, FrameworkException),
     (

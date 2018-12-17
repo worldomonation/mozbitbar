@@ -71,7 +71,6 @@ def mock_testdroid_client(monkeypatch):
         return mock_project_template(project_id=project_id)
 
     def get_projects_wrapper(object):
-        # TODO: use the mock_project_template somehow.
         return mock_projects_list()
 
     def set_project_framework_wrapper(object, project_id, framework_id):
