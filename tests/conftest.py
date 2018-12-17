@@ -11,6 +11,34 @@ from mozbitbar.bitbar_project import BitbarProject
 from mock import patch
 
 
+def mock_projects_list():
+    return {
+        'data': [
+            {
+                'id': 11,
+                'name': 'mock_project',
+                        'type': 'mock_type',
+                        'osType': 'mock_type',
+                        'frameworkId': 99
+            },
+            {
+                'id': 99,
+                'name': 'another_mock_project',
+                        'type': 'second_mock_type',
+                        'osType': 'second_mock_type',
+                        'frameworkId': 88
+            },
+            {
+                'id': 10000,
+                'name': 'yet_another_mock_project',
+                        'type': 'third_mock_type',
+                        'osType': 'third_mock_type',
+                        'frameworkId': 12345
+            },
+        ]
+    }
+
+
 def mock_project_template(project_id=None, project_name=None,
                           project_type=None, project_framework_id=None):
     return {
@@ -20,6 +48,7 @@ def mock_project_template(project_id=None, project_name=None,
         'osType': 'mock_type',
         'frameworkId': 99 or project_framework_id
     }
+
 
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
@@ -43,31 +72,7 @@ def mock_testdroid_client(monkeypatch):
 
     def get_projects_wrapper(object):
         # TODO: use the mock_project_template somehow.
-        return {
-            'data': [
-                {
-                    'id': 1,
-                    'name': 'mock_project',
-                    'type': 'mock_type',
-                    'osType': 'mock_type',
-                    'frameworkId': 99
-                },
-                {
-                    'id': 99,
-                    'name': 'another_mock_project',
-                    'type': 'second_mock_type',
-                    'osType': 'second_mock_type',
-                    'frameworkId': 88
-                },
-                {
-                    'id': 10000,
-                    'name': 'yet_another_mock_project',
-                    'type': 'third_mock_type',
-                    'osType': 'third_mock_type',
-                    'frameworkId': 12345
-                },
-            ]
-        }
+        return mock_projects_list()
 
     def set_project_framework_wrapper(object, project_id, framework_id):
         # not a stub - Testdroid method does not return anything.
@@ -110,7 +115,6 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
-
     def upload_file_wrapper(object, path, filename):
         pass
         # TODO: stub mock wrapper
@@ -118,7 +122,11 @@ def mock_testdroid_client(monkeypatch):
     # Additional mocks #
 
     def get_me_wrapper(object):
-        return '{}'
+        return {
+            'id': 1,
+            'accountId': 2,
+            'name': 'Mock User',
+        }
 
     def get_token_wrapper(object):
         return 'test_access_token'
