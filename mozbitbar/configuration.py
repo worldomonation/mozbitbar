@@ -39,7 +39,7 @@ class Configuration(object):
             assert (self.user_name and self.user_password) or self.api_key
             assert self.url
         except AssertionError:
-            raise CredentialException('Was not able to set required' +
+            raise CredentialException('Was not able to set required ' +
                                       'credentials.')
 
         # instantiate client.

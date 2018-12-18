@@ -36,7 +36,7 @@ def initialize_project():
 ])
 def test_bb_project_existing(kwargs, expected):
     """Ensures BitbarProject is able to retrieve existing project by id
-    or name, and process resulting output of the (mockes) call.
+    or name, and process resulting output of the (mocked) call.
 
     Directly tests methods involved in:
         - initialization of project

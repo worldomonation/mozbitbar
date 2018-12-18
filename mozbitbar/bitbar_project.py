@@ -46,7 +46,7 @@ class BitbarProject(Configuration):
             ProjectException: If project_status has value other than 'new'
                 or 'existing'.
         """
-        super(BitbarProject, self).__init__()
+        super(BitbarProject, self).__init__(**kwargs)
 
         if 'new' in project_status:
             self.create_project(**kwargs)
