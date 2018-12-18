@@ -1,5 +1,7 @@
 from __future__ import print_function, absolute_import
 
+import json
+import os
 import string
 
 import pytest
@@ -8,57 +10,37 @@ from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import ProjectException, FrameworkException
 
 
-# Project with Existing ID #
+@pytest.fixture()
+def initialize_project():
+    return BitbarProject('existing', **{'project_name': 'mock_project'})
+
+# Existing projects #
 
 @pytest.mark.parametrize('kwargs,expected', [
-    ({'project_id': 1}, 1),
-    ({'project_id': 99}, 99),
+    ({'project_id': 11}, {'id': 11}),
+    ({'project_id': 99}, {'id': 99}),
     ({'project_id': 100}, ProjectException),
     ({'project_id': 2**32}, ProjectException),
     ({'project_id': -1}, ProjectException),
-])
-def test_bb_project_existing_by_id(kwargs, expected):
-    """Ensures BitbarProject sets id as expected.
-
-    Directly tests methods involved in:
-        - initialization
-        - setting of project by id
-
-    Indirectly tests methods involved in:
-        - property setter for id
-
-    Last call Testdroid.get_project is mocked to return a pseudo
-    project.
-    """
-    if expected is ProjectException:
-        with pytest.raises(ProjectException):
-            BitbarProject('existing', **kwargs)
-
-    else:
-        project = BitbarProject('existing', **kwargs)
-        assert project.project_id == expected
-
-
-@pytest.mark.parametrize('kwargs,expected', [
-    ({'project_name': 'mock_project'}, 'mock_project'),
-    ({'project_name': 'another_mock_project'}, 'another_mock_project'),
+    (
+        {'project_name': 'mock_project'},
+        {'name': 'mock_project', 'id': 1}
+    ),
+    (
+        {'project_name': 'another_mock_project'},
+        {'name': 'another_mock_project', 'id': 99}
+    ),
     ({'project_name': string.lowercase}, ProjectException),
     ({'project_name': 'NULL'}, ProjectException),
     ({'project_name': 'None'}, ProjectException),
 ])
-def test_bb_project_existing_by_name(kwargs, expected):
-    """Ensures BitbarProject sets name as expected.
+def test_bb_project_existing(kwargs, expected):
+    """Ensures BitbarProject is able to retrieve existing project by id
+    or name, and process resulting output of the (mockes) call.
 
     Directly tests methods involved in:
-        - initialization
-        - branching logic based on name or name
-        - setting of project by name
-
-    Indirectly tests methods involved in:
-        - property setter for name
-
-    Last call Testdroid.get_project is mocked to return a pseudo
-    project.
+        - initialization of project
+        - retrieve and set project parameters by id or name
     """
     if expected is ProjectException:
         with pytest.raises(ProjectException):
@@ -66,13 +48,16 @@ def test_bb_project_existing_by_name(kwargs, expected):
 
     else:
         project = BitbarProject('existing', **kwargs)
-        assert project.project_name == expected
+        assert (
+            project.project_id == expected.get('id') or
+            project.project_name == expected.get('name')
+        )
 
 
 @pytest.mark.parametrize('kwargs,expected', [
     (
-        {'project_id': 1, 'project_name': 'mock_project'},
-        {'project_id': 1, 'project_name': 'mock_project'}
+        {'project_id': 11, 'project_name': 'mock_project'},
+        {'project_id': 11, 'project_name': 'mock_project'}
     ),
     (
         {'project_id': 10000, 'project_name': 'mock_project'},
@@ -89,7 +74,7 @@ def test_bb_project_existing_id_and_name(kwargs, expected):
     assert project.project_name == expected['project_name']
 
 
-# Project status method #
+# Project status #
 
 @pytest.mark.parametrize('project_status,expected', [
     ('present', ProjectException),
@@ -104,56 +89,71 @@ def test_bb_project_status(project_status, expected):
             BitbarProject(project_status)
 
 
-# Project with New ID #
+# Create project #
 
 
 @pytest.mark.parametrize('kwargs,expected', [
     (
-        {'project_name': 'parametrized_project',
-            'project_type': 'parametrized_type'},
-        {'project_name': 'parametrized_project',
-            'project_type': 'parametrized_type'},
+        {
+            'project_name': 'parametrized_project',
+            'project_type': 'parametrized_type'
+        },
+        {
+            'project_name': 'parametrized_project',
+            'project_type': 'parametrized_type'
+        },
     ),
-    # ({
-    #     'project_name': string.punctuation,
-    #     'project_type': string.lowercase
-    # })
+    (
+        {
+            'project_name': string.punctuation,
+            'project_type': string.lowercase
+        },
+        {
+            'project_name': string.punctuation,
+            'project_type': string.lowercase
+        }
+    ),
+    (
+        {
+            'project_name': 'mock_project',
+            'project_type': 'mock_type'
+        },
+        ProjectException
+    ),
+    (
+        {
+            'project_name': 'mock_project',
+            'project_type': 'mock_type',
+            'permit_duplicate': True
+        },
+        {
+            'project_name': 'mock_project',
+            'project_type': 'mock_type'
+        }
+    )
 ])
 def test_bb_project_create_unique_name(kwargs, expected):
-    """Ensures BitbarProject.create_project() is able to create a valid
-    project instance given appropriate project name and type.
+    """Ensures BitbarProject.create_project() is able to create a project if
+    the name is unique. Otherwise, the default behavior is raise an exception,
+    unless the permit_duplicate flag is set.
     """
-    project = BitbarProject('new', **kwargs)
-    assert project.project_id is not None
-    assert project.project_name == expected['project_name']
-    assert project.project_type == expected['project_type']
+    if expected is ProjectException:
+        with pytest.raises(ProjectException):
+            project = BitbarProject('new', **kwargs)
+    else:
+        project = BitbarProject('new', **kwargs)
+        assert project.project_id is not None
+        assert project.project_name == expected['project_name']
+        assert project.project_type == expected['project_type']
 
-
-@pytest.mark.parametrize('kwargs', [
-    ({
-        'project_name': 'mock_project',
-        'project_type': 'mock_type'
-    })
-])
-def test_bb_project_create_duplicate_name_without_flag(kwargs):
-    with pytest.raises(ProjectException):
-        BitbarProject('new', **kwargs)
-
-
-@pytest.mark.parametrize('kwargs', [
-    ({
-        'project_name': 'mock_project',
-        'project_type': 'mock_type',
-        'permit_duplicate': True,
-    })
-])
-def test_bb_project_create_duplicate_name_with_flag(kwargs):
-    pass
-
+# Project Framework #
 
 @pytest.mark.parametrize('kwargs,expected', [
     ({'framework_id': 12}, FrameworkException),
-    ({'framework_id': 1}, {'framework_name': 'mock_framework', 'framework_id': 1}),
+    (
+        {'framework_id': 1},
+        {'framework_name': 'mock_framework', 'framework_id': 1}
+    ),
     ({'framework_name': 'mock_framework'}, {
      'framework_name': 'mock_framework', 'framework_id': 1}),
     ({'framework_name': 'mock_framework', 'framework_id': 1}, {
@@ -163,12 +163,61 @@ def test_bb_project_create_duplicate_name_with_flag(kwargs):
     ({'framework_name': 'mock_unicode_framework'},
      {'framework_name': 'mock_unicode_framework', 'framework_id': 2}),
 ])
-def test_bb_project_framework(kwargs, expected):
-    project = BitbarProject('existing', **{'project_id': 99})
+def test_bb_project_framework(initialize_project, kwargs, expected):
     if expected == FrameworkException:
         with pytest.raises(FrameworkException):
-            project.set_project_framework(**kwargs)
+            initialize_project.set_project_framework(**kwargs)
     else:
-        project.set_project_framework(**kwargs)
-        assert project.framework_id == expected['framework_id']
-        assert project.framework_name == expected['framework_name']
+        initialize_project.set_project_framework(**kwargs)
+        assert initialize_project.framework_id == expected['framework_id']
+        assert initialize_project.framework_name == expected['framework_name']
+
+# Project config #
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {'timeout': 10},
+        {'timeout': 10}
+    ),
+    (
+        {'timeout': 10, 'scheduler': 'SINGLE'},
+        {'timeout': 10, 'scheduler': 'SINGLE'}
+    ),
+    (
+        'not_a_dict', ProjectException
+    ),
+    (
+        {'scheduler': 'SINGLE'},
+        None
+    )
+])
+def test_set_project_config_new_config(initialize_project, kwargs, expected):
+    if expected is ProjectException:
+        with pytest.raises(ProjectException):
+            initialize_project.set_project_configs(new_config=kwargs)
+    else:
+        initialize_project.set_project_configs(new_config=kwargs)
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {'path': 'mock_config.json', 'config': {'mock': True}},
+        {'mock': True}
+    ),
+    (
+        {'config': {"scheduler": "SINGLE", "timeout": 0}},
+        {"scheduler": "SINGLE", "timeout": 0}
+    )
+])
+def test_load_project_config(initialize_project, kwargs, expected):
+    # if kwargs['path'] is defined, it is a temporary file
+    if kwargs.get('path'):
+        with open(kwargs.get('path'), 'w') as temporary_file:
+            json.dump(kwargs.get('config'), temporary_file)
+
+    # this method does its own assertions
+    initialize_project.set_project_configs(path=kwargs.get('path'))
+
+    # clean up temporary file
+    if kwargs.get('path'):
+        os.remove(kwargs.get('path'))

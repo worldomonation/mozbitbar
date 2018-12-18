@@ -229,6 +229,26 @@ class BitbarProject(Configuration):
         """
         return self.client.get_me()['id']
 
+    def _file_on_local_disk(self, path):
+        """Checks if specified path can be found on local disk.
+
+        Accepts a string representation of a local path. Firstly, the current
+        directory is checked. If path could not be found, the path is
+        converted to an absolute path.
+
+        Args:
+            path (str): String representation of a path on local disk.
+
+        Returns:
+            bool: True if path is found on local disk. False otherwise.
+        """
+        assert type(path) == str
+        return os.path.isfile(os.path.abspath(path))
+
+    def _open_file(self, path):
+        with open(path, 'r') as f:
+            return f.read()
+
     # Project operations #
 
     def get_projects(self):
@@ -295,7 +315,8 @@ class BitbarProject(Configuration):
         """
         available_projects = self.get_projects()
         for project in available_projects:
-            if project_id and project_name is None or project_id and project_name:
+            if (project_id and project_name is None or
+                    project_id and project_name):
                 if project_id is project['id']:
                     project_name = project['name']
                     break
@@ -323,8 +344,8 @@ class BitbarProject(Configuration):
 
         Provided with either a dict of config values or path to a json file
         containing configs, this method will load the values, filter out
-        values that are identical then modify the Bitbar project config
-        with remaining values.
+        values that would be unchanged, then make calls to Bitbar in order
+        to write the configuration values.
 
         Args:
             new_config (:obj:`dict`): Project configuration represented
@@ -336,7 +357,8 @@ class BitbarProject(Configuration):
                 due to type or value error.
         """
         if path:
-            new_config = self._load_project_config(path)
+            assert self._file_on_local_disk(path)
+            new_config = self._open_file(os.path.abspath(path))
 
         try:
             assert type(new_config) is dict
@@ -358,7 +380,15 @@ class BitbarProject(Configuration):
             print(msg)
             return
 
-        self.client.set_project_config(self.project_id, new_config)
+        output = self.client.set_project_config(self.project_id, **new_config)
+        try:
+            assert all(key in output.keys() and output[key] == value
+                       for key, value in new_config.items())
+        except AssertionError:
+            msg = '{}: failed to write updated'.format(
+                __name__
+                ) + 'configuration values to Bitbar.'
+            raise ProjectException(msg)
 
     def _load_project_config(self, path='project_config.json'):
         """Loads project config from the disk.
@@ -372,13 +402,7 @@ class BitbarProject(Configuration):
         Raises:
             IOError: If path to file is not found.
         """
-        new_config = json.loads(
-            open(
-                os.path.normpath(
-                    os.path.join(
-                        root_path(),
-                        path)), 'r').read())
-        return new_config
+        return json.loads(self._open_file(path))
 
     def set_project_framework(self, framework_name=None, framework_id=None):
         """Sets the project framework using either integer id or name.
@@ -548,27 +572,6 @@ class BitbarProject(Configuration):
         return None
 
     # File operations #
-
-    def _file_on_local_disk(self, path):
-        """Checks if specified path can be found on local disk.
-
-        Accepts a string representation of a local path. Firstly, the current
-        directory is checked. If path could not be found, the path is
-        converted to an absolute path.
-
-        Args:
-            path (str): String representation of a path on local disk.
-
-        Returns:
-            bool: True if path is found on local disk. False otherwise.
-        """
-        assert type(path) == str
-
-        if os.path.isfile(path):
-            # if file with specified name is present in cwd, stop here.
-            return True
-
-        return os.path.isfile(os.path.abspath(path))
 
     def _file_on_bitbar(self, filename):
         """Checks if file with same name has been uploaded to Bitbar which

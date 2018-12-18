@@ -11,15 +11,66 @@ from mozbitbar.bitbar_project import BitbarProject
 from mock import patch
 
 
+def mock_projects_list():
+    return {
+        'data': [
+            {
+                'id': 11,
+                'name': 'mock_project',
+                        'type': 'mock_type',
+                        'osType': 'mock_type',
+                        'frameworkId': 99
+            },
+            {
+                'id': 99,
+                'name': 'another_mock_project',
+                        'type': 'second_mock_type',
+                        'osType': 'second_mock_type',
+                        'frameworkId': 88
+            },
+            {
+                'id': 10000,
+                'name': 'yet_another_mock_project',
+                        'type': 'third_mock_type',
+                        'osType': 'third_mock_type',
+                        'frameworkId': 12345
+            },
+        ]
+    }
+
+
 def mock_project_template(project_id=None, project_name=None,
                           project_type=None, project_framework_id=None):
     return {
-        'id': project_id or random.randint(1, 10),
+        'id': project_id or random.randint(11, 20),
         'name': project_name or 'mock_project',
         'type': project_type or 'mock_type',
         'osType': 'mock_type',
-        'frameworkId': 99 or project_framework_id
+        'frameworkId': 99 or project_framework_id,
     }
+
+
+def mock_project_config(project_status=None, project_framework_id=None,
+                        project_id=None, scheduler=None, **kwargs):
+    base = {
+        'status': project_status or None,
+        'frameworkId': project_framework_id or None,
+        'projectId': project_id or random.randint(11, 20),
+        'testRunParameters': [
+            {
+                "value": "mock_config_value",
+                "selfURI": 'null',
+                "id": random.randint(1053092600, 1053092700),
+                "key": "mock_config_key"
+            }
+        ],
+        'scheduler': scheduler or 'PARALLEL'
+    }
+    if not kwargs:
+        return base
+    else:
+        return dict(base.items() + kwargs.items())
+
 
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
@@ -42,32 +93,7 @@ def mock_testdroid_client(monkeypatch):
         return mock_project_template(project_id=project_id)
 
     def get_projects_wrapper(object):
-        # TODO: use the mock_project_template somehow.
-        return {
-            'data': [
-                {
-                    'id': 1,
-                    'name': 'mock_project',
-                    'type': 'mock_type',
-                    'osType': 'mock_type',
-                    'frameworkId': 99
-                },
-                {
-                    'id': 99,
-                    'name': 'another_mock_project',
-                    'type': 'second_mock_type',
-                    'osType': 'second_mock_type',
-                    'frameworkId': 88
-                },
-                {
-                    'id': 10000,
-                    'name': 'yet_another_mock_project',
-                    'type': 'third_mock_type',
-                    'osType': 'third_mock_type',
-                    'frameworkId': 12345
-                },
-            ]
-        }
+        return mock_projects_list()
 
     def set_project_framework_wrapper(object, project_id, framework_id):
         # not a stub - Testdroid method does not return anything.
@@ -110,15 +136,26 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
-
     def upload_file_wrapper(object, path, filename):
         pass
         # TODO: stub mock wrapper
 
+    # Config related mocks #
+
+    def get_project_config_wrapper(object, project_id):
+        return mock_project_config(project_id)
+
+    def set_project_config_wrapper(object, project_id, **kwargs):
+        return mock_project_config(**kwargs)
+
     # Additional mocks #
 
     def get_me_wrapper(object):
-        return '{}'
+        return {
+            'id': 1,
+            'accountId': 2,
+            'name': 'Mock User',
+        }
 
     def get_token_wrapper(object):
         return 'test_access_token'
@@ -134,6 +171,10 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
+    monkeypatch.setattr(
+        Testdroid, 'get_project_config', get_project_config_wrapper)
+    monkeypatch.setattr(Testdroid, 'set_project_config',
+                        set_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
     monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)
