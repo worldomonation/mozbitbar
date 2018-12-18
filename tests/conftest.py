@@ -42,12 +42,35 @@ def mock_projects_list():
 def mock_project_template(project_id=None, project_name=None,
                           project_type=None, project_framework_id=None):
     return {
-        'id': project_id or random.randint(1, 10),
+        'id': project_id or random.randint(11, 20),
         'name': project_name or 'mock_project',
         'type': project_type or 'mock_type',
         'osType': 'mock_type',
-        'frameworkId': 99 or project_framework_id
+        'frameworkId': 99 or project_framework_id,
     }
+
+
+def mock_project_config(project_status=None, project_framework_id=None,
+                        project_id=None, scheduler=None, **kwargs):
+    base = {
+        'status': project_status or None,
+        'frameworkId': project_framework_id or None,
+        'projectId': project_id or random.randint(11, 20),
+        'testRunParameters': [
+            {
+                "value": "mock_config_value",
+                "selfURI": 'null',
+                "id": random.randint(1053092600, 1053092700),
+                "key": "mock_config_key"
+            }
+        ],
+        'scheduler': scheduler or 'PARALLEL'
+    }
+    if not kwargs:
+        return base
+    else:
+        result = dict(base.items() + kwargs.items())
+        return result
 
 
 @pytest.fixture(autouse=True)
@@ -118,6 +141,14 @@ def mock_testdroid_client(monkeypatch):
         pass
         # TODO: stub mock wrapper
 
+    # Config related mocks #
+
+    def get_project_config_wrapper(object, project_id):
+        return mock_project_config(project_id)
+
+    def set_project_config_wrapper(object, project_id, **kwargs):
+        return mock_project_config(**kwargs)
+
     # Additional mocks #
 
     def get_me_wrapper(object):
@@ -141,6 +172,10 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
+    monkeypatch.setattr(
+        Testdroid, 'get_project_config', get_project_config_wrapper)
+    monkeypatch.setattr(Testdroid, 'set_project_config',
+                        set_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
     monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)

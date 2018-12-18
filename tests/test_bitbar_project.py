@@ -8,6 +8,10 @@ from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import ProjectException, FrameworkException
 
 
+@pytest.fixture()
+def initialize_project():
+    return BitbarProject('existing', **{'project_name': 'mock_project'})
+
 # Existing projects #
 
 @pytest.mark.parametrize('kwargs,expected', [
@@ -157,22 +161,36 @@ def test_bb_project_create_unique_name(kwargs, expected):
     ({'framework_name': 'mock_unicode_framework'},
      {'framework_name': 'mock_unicode_framework', 'framework_id': 2}),
 ])
-def test_bb_project_framework(kwargs, expected):
-    project = BitbarProject('existing', **{'project_id': 99})
+def test_bb_project_framework(initialize_project, kwargs, expected):
     if expected == FrameworkException:
         with pytest.raises(FrameworkException):
-            project.set_project_framework(**kwargs)
+            initialize_project.set_project_framework(**kwargs)
     else:
-        project.set_project_framework(**kwargs)
-        assert project.framework_id == expected['framework_id']
-        assert project.framework_name == expected['framework_name']
+        initialize_project.set_project_framework(**kwargs)
+        assert initialize_project.framework_id == expected['framework_id']
+        assert initialize_project.framework_name == expected['framework_name']
 
 # Project config #
 
 @pytest.mark.parametrize('kwargs,expected', [
     (
-        'a', 'b'
+        {'timeout': 10},
+        {'timeout': 10}
+    ),
+    (
+        {'timeout': 10, 'scheduler': 'SINGLE'},
+        {'timeout': 10, 'scheduler': 'SINGLE'}
+    ),
+    (
+        'not_a_dict', ProjectException
     )
 ])
-def test_set_project_config(kwargs, expected):
-    pass
+def test_set_project_config(initialize_project, kwargs, expected):
+    if expected is ProjectException:
+        with pytest.raises(ProjectException):
+            initialize_project.set_project_configs(new_config=kwargs)
+    else:
+        initialize_project.set_project_configs(new_config=kwargs)
+
+
+
