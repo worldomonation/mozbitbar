@@ -69,8 +69,7 @@ def mock_project_config(project_status=None, project_framework_id=None,
     if not kwargs:
         return base
     else:
-        result = dict(base.items() + kwargs.items())
-        return result
+        return dict(base.items() + kwargs.items())
 
 
 @pytest.fixture(autouse=True)

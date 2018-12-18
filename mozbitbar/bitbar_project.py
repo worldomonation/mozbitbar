@@ -381,13 +381,12 @@ class BitbarProject(Configuration):
         Raises:
             IOError: If path to file is not found.
         """
-        new_config = json.loads(
+        return json.loads(
             open(
                 os.path.normpath(
                     os.path.join(
                         root_path(),
                         path)), 'r').read())
-        return new_config
 
     def set_project_framework(self, framework_name=None, framework_id=None):
         """Sets the project framework using either integer id or name.

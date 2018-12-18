@@ -1,5 +1,7 @@
 from __future__ import print_function, absolute_import
 
+import json
+import os
 import string
 
 import pytest
@@ -183,14 +185,32 @@ def test_bb_project_framework(initialize_project, kwargs, expected):
     ),
     (
         'not_a_dict', ProjectException
+    ),
+    (
+        {'scheduler': 'SINGLE'},
+        None
     )
 ])
-def test_set_project_config(initialize_project, kwargs, expected):
+def test_set_project_config_new_config(initialize_project, kwargs, expected):
     if expected is ProjectException:
         with pytest.raises(ProjectException):
             initialize_project.set_project_configs(new_config=kwargs)
     else:
         initialize_project.set_project_configs(new_config=kwargs)
 
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {'path': 'mock_config.json', 'config': {'mock': True}},
+        {'mock': True}
+    )
+])
+def test_load_project_config(tmp_path, initialize_project, kwargs, expected):
+    with open(kwargs.get('path'), 'w') as temporary_file:
+        json.dump(kwargs.get('config'), temporary_file)
+
+    initialize_project.set_project_configs(path=kwargs.get('path'))
+
+    os.remove(kwargs.get('path'))
 
 
