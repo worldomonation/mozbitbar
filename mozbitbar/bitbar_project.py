@@ -229,6 +229,26 @@ class BitbarProject(Configuration):
         """
         return self.client.get_me()['id']
 
+    def _file_on_local_disk(self, path):
+        """Checks if specified path can be found on local disk.
+
+        Accepts a string representation of a local path. Firstly, the current
+        directory is checked. If path could not be found, the path is
+        converted to an absolute path.
+
+        Args:
+            path (str): String representation of a path on local disk.
+
+        Returns:
+            bool: True if path is found on local disk. False otherwise.
+        """
+        assert type(path) == str
+        return os.path.isfile(os.path.abspath(path))
+
+    def _open_file(self, path):
+        with open(path, 'r') as f:
+            return f.read()
+
     # Project operations #
 
     def get_projects(self):
@@ -337,7 +357,8 @@ class BitbarProject(Configuration):
                 due to type or value error.
         """
         if path:
-            new_config = self._load_project_config(path)
+            assert self._file_on_local_disk(path)
+            new_config = self._open_file(os.path.abspath(path))
 
         try:
             assert type(new_config) is dict
@@ -381,12 +402,7 @@ class BitbarProject(Configuration):
         Raises:
             IOError: If path to file is not found.
         """
-        return json.loads(
-            open(
-                os.path.normpath(
-                    os.path.join(
-                        root_path(),
-                        path)), 'r').read())
+        return json.loads(self._open_file(path))
 
     def set_project_framework(self, framework_name=None, framework_id=None):
         """Sets the project framework using either integer id or name.
@@ -556,27 +572,6 @@ class BitbarProject(Configuration):
         return None
 
     # File operations #
-
-    def _file_on_local_disk(self, path):
-        """Checks if specified path can be found on local disk.
-
-        Accepts a string representation of a local path. Firstly, the current
-        directory is checked. If path could not be found, the path is
-        converted to an absolute path.
-
-        Args:
-            path (str): String representation of a path on local disk.
-
-        Returns:
-            bool: True if path is found on local disk. False otherwise.
-        """
-        assert type(path) == str
-
-        if os.path.isfile(path):
-            # if file with specified name is present in cwd, stop here.
-            return True
-
-        return os.path.isfile(os.path.abspath(path))
 
     def _file_on_bitbar(self, filename):
         """Checks if file with same name has been uploaded to Bitbar which

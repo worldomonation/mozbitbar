@@ -203,14 +203,21 @@ def test_set_project_config_new_config(initialize_project, kwargs, expected):
     (
         {'path': 'mock_config.json', 'config': {'mock': True}},
         {'mock': True}
+    ),
+    (
+        {'config': {"scheduler": "SINGLE", "timeout": 0}},
+        {"scheduler": "SINGLE", "timeout": 0}
     )
 ])
-def test_load_project_config(tmp_path, initialize_project, kwargs, expected):
-    with open(kwargs.get('path'), 'w') as temporary_file:
-        json.dump(kwargs.get('config'), temporary_file)
+def test_load_project_config(initialize_project, kwargs, expected):
+    # if kwargs['path'] is defined, it is a temporary file
+    if kwargs.get('path'):
+        with open(kwargs.get('path'), 'w') as temporary_file:
+            json.dump(kwargs.get('config'), temporary_file)
 
+    # this method does its own assertions
     initialize_project.set_project_configs(path=kwargs.get('path'))
 
-    os.remove(kwargs.get('path'))
-
-
+    # clean up temporary file
+    if kwargs.get('path'):
+        os.remove(kwargs.get('path'))
