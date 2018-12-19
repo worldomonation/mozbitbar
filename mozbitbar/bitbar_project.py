@@ -46,8 +46,8 @@ class BitbarProject(Configuration):
             **kwargs: Arbitrary keyword arguments.
 
         Raises:
-            MozbitbarProjectException: If project_status has value other than 'new'
-                or 'existing'.
+            MozbitbarProjectException: If project_status has value other
+                than 'new' or 'existing'.
         """
         super(BitbarProject, self).__init__(**kwargs)
 
@@ -56,10 +56,10 @@ class BitbarProject(Configuration):
         elif 'existing' in project_status:
             self.use_existing_project(**kwargs)
         else:
-            raise MozbitbarProjectException('invalid project status specifier ' +
-                                   'received, project cannot be set.' +
-                                   '\nproject status: {}'.format(
-                                       project_status))
+            msg = '''invalid project status specifier received,
+                     project cannot be set.\nproject status: {}
+                  '''.format(project_status)
+            raise MozbitbarProjectException(msg)
 
     # Class attributes #
 
@@ -263,7 +263,8 @@ class BitbarProject(Configuration):
         if self._file_on_local_disk(path):
             with open(path, 'r') as f:
                 return f.read()
-        raise MozbitbarFileException('{}: file: {} not found'.format(__name__, path))
+        msg = '{}: file: {} not found'.format(__name__, path)
+        raise MozbitbarFileException(msg)
 
     # Project operations #
 
@@ -294,8 +295,8 @@ class BitbarProject(Configuration):
                 project even if the provided name already exists on Bitbar.
 
         Raises:
-            MozbitbarProjectException: If permit_duplicate is False and project with
-                same name already exists on Bitbar.
+            MozbitbarProjectException: If permit_duplicate is False and
+                project with same name already exists on Bitbar.
         """
         if not permit_duplicate:
             existing_projects = self.get_projects()
@@ -326,8 +327,8 @@ class BitbarProject(Configuration):
             name (str): String representation of the project name.
 
         Raises:
-            MozbitbarProjectException: If neither project_id nor project_name map
-                to an existing project on Bitbar.
+            MozbitbarProjectException: If neither project_id nor
+                project_name map to an existing project on Bitbar.
         """
         available_projects = self.get_projects()
         for project in available_projects:
@@ -434,8 +435,8 @@ class BitbarProject(Configuration):
             id (int): Integer ID of the framework.
 
         Raises:
-            MozbitbarFrameworkException: If framework name or framework id provided
-                does not match any existing frameworks on Bitbar.
+            MozbitbarFrameworkException: If framework name or framework id
+                provided does not match any existing frameworks on Bitbar.
             RequestResponseError: If Testdroid responds with an error.
         """
         available_frameworks = self.get_project_frameworks()

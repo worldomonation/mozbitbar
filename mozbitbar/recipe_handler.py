@@ -128,8 +128,8 @@ class Recipe(object):
 
         Raises:
             IOError: If recipe path does not map to a file on local disk.
-            MozbitbarInvalidRecipeException: If file specified by recipe path is not a
-                valid YAML file.
+            MozbitbarInvalidRecipeException: If file specified by recipe path
+                is not a valid YAML file.
         """
         try:
             with open(self.recipe_path, 'r') as f:
@@ -153,8 +153,8 @@ class Recipe(object):
         to the task_list attribute.
 
         Raises:
-            MozbitbarInvalidRecipeException: If recipe does not contain a valid project
-                specifier.
+            MozbitbarInvalidRecipeException: If recipe does not contain a
+                valid project specifier.
         """
         for index, task in enumerate(recipe):
             if task.get('project'):
