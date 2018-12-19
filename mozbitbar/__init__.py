@@ -50,6 +50,14 @@ class MozbitbarCredentialException(Exception):
         pass
 
 
+class MozbitbarTestException(Exception):
+    def __init__(self, message):
+        """TestException will be raised if Bitbar test runs experience
+        any sort of issues.
+        """
+    pass
+
+
 class OperationNotImplementedException(Exception):
     def __init__(self, message):
         """OperationNotImplementedException will be raised if a recipe action
