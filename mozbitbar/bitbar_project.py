@@ -358,7 +358,7 @@ class BitbarProject(Configuration):
         """
         if path:
             assert self._file_on_local_disk(path)
-            new_config = self._open_file(os.path.abspath(path))
+            new_config = json.loads(self._open_file(os.path.abspath(path)))
 
         try:
             assert type(new_config) is dict
