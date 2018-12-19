@@ -10,7 +10,7 @@ class ProjectException(Exception):
         """ProjectException will be raised if any exceptions occur
         relating to project attributes.
         """
-        super(ProjectException, self).__init__(message)
+        pass
 
 
 class DeviceException(Exception):
@@ -18,7 +18,7 @@ class DeviceException(Exception):
         """DeviceException will be raised if any exceptions occur relating to
         device operations.
         """
-        super(DeviceException, self).__init__(message)
+        pass
 
 
 class InvalidRecipeException(Exception):
@@ -26,12 +26,12 @@ class InvalidRecipeException(Exception):
         """InvalidRecipeException will be raised upon YAML recipe having
         any errors.
         """
-        super(InvalidRecipeException, self).__init__(message)
+        pass
 
 
 class FrameworkException(Exception):
     def __init__(self, message):
-        super(FrameworkException, self).__init__(message)
+        pass
 
 
 class FileException(Exception):
@@ -39,7 +39,7 @@ class FileException(Exception):
         """FileException will be raised if errors relating to file
         transactions occur.
         """
-        super(FileException, self).__init__(message)
+        pass
 
 
 class CredentialException(Exception):
@@ -47,7 +47,7 @@ class CredentialException(Exception):
         """CredentialException will be raised if credentials supplied to
         BitbarProject has issues.
         """
-        super(CredentialException, self).__init__(message)
+        pass
 
 
 class OperationNotImplementedException(Exception):
@@ -56,7 +56,7 @@ class OperationNotImplementedException(Exception):
         does not correspond to an implemented method in the BitbarProject
         object.
         """
-        super(OperationNotImplementedException, self).__init__(message)
+        pass
 
 
 class TestException(Exception):
@@ -64,4 +64,4 @@ class TestException(Exception):
         """TestException will be raised if test runs experience any sort of
         errors.
         """
-        super(TestException, self).__init__(message)
+        pass
