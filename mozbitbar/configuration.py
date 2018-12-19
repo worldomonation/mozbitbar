@@ -23,7 +23,7 @@ class Configuration(object):
             CredentialException: If minimum required credentials were not set,
                 or supplied credentials were invalid.
         """
-        if kwargs:
+        if kwargs and 'TESTDROID_URL' in kwargs.keys():
             self.user_name = kwargs.get('TESTDROID_USERNAME')
             self.user_password = kwargs.get('TESTDROID_PASSWORD')
             self.api_key = kwargs.get('TESTDROID_APIKEY')

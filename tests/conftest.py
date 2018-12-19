@@ -183,28 +183,33 @@ def mock_testdroid_client(monkeypatch):
     return init
 
 
-@pytest.fixture(autouse=True)
-def mock_configuration(monkeypatch):
-    def init(object, **kwargs):
-        with patch.object(Configuration, '__init__') as configuration:
-            configuration.apikey = 'test_apikey'
-            configuration.username = 'test_username'
-            configuration.password = 'test_password'
-            configuration.cloud_url = 'https://testingurl.com'
+# @pytest.fixture(autouse=True)
+# def mock_configuration(monkeypatch):
+#     def init(object, **kwargs):
+#         with patch.object(Configuration, '__init__') as config:
+#             config.apikey = 'test_apikey'
+#             config.username = 'test_username'
+#             config.password = 'test_password'
+#             config.cloud_url = 'https://testingurl.com'
 
-    monkeypatch.setattr(Configuration, '__init__', init)
+#         config.client = Testdroid(
+#             username=config.username, password=config.password, apikey=config.apikey, url=config.url)
 
-    return init
+#     monkeypatch.setattr(Configuration, '__init__', init)
 
-@pytest.fixture(autouse=True)
-def mock_bitbar_project(monkeypatch):
-    def init(project_status, **kwargs):
-        with patch.object(BitbarProject, '__init__') as project:
-            project.project_id = kwargs.get('id') or 1
-            project.name = kwargs.get('name') or 'mock_type'
-            project.type = 'mock_type'
-            project.framework_id = 99
-            project.device_group_id = 1
-            return project
+#     return init
 
-    return init
+# @pytest.fixture(autouse=True)
+# def mock_bitbar_project(monkeypatch):
+#     def init(project_status, **kwargs):
+#         with patch.object(BitbarProject, '__init__') as project:
+#             super(BitbarProject, self).__init__(**kwargs)
+#             # project.project_id = kwargs.get('id') or 1
+#             # project.name = kwargs.get('name') or 'mock_type'
+#             # project.type = 'mock_type'
+#             # project.framework_id = 99
+#             # project.device_group_id = 1
+
+#     monkeypatch.setattr(BitbarProject, '__init__', init)
+
+#     return init
