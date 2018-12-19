@@ -46,7 +46,7 @@ class BitbarProject(Configuration):
             ProjectException: If project_status has value other than 'new'
                 or 'existing'.
         """
-        super(BitbarProject, self).__init__()
+        super(BitbarProject, self).__init__(**kwargs)
 
         if 'new' in project_status:
             self.create_project(**kwargs)
@@ -370,7 +370,8 @@ class BitbarProject(Configuration):
                 due to type or value error.
         """
         if path:
-            new_config = self._open_file(os.path.abspath(path))
+            assert self._file_on_local_disk(path)
+            new_config = json.loads(self._open_file(os.path.abspath(path)))
 
         try:
             assert type(new_config) is dict

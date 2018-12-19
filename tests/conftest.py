@@ -6,7 +6,6 @@ import pytest
 
 
 from testdroid import Testdroid
-from mozbitbar.bitbar_project import BitbarProject
 
 from mock import patch
 
@@ -178,19 +177,5 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
     monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)
-
-    return init
-
-
-@pytest.fixture(autouse=True)
-def mock_bitbar_project(monkeypatch):
-    def init(project_status, **kwargs):
-        with patch.object(BitbarProject, '__init__') as project:
-            project.project_id = kwargs.get('id') or 1
-            project.name = kwargs.get('name') or 'mock_type'
-            project.type = 'mock_type'
-            project.framework_id = 99
-            project.device_group_id = 1
-            return project
 
     return init
