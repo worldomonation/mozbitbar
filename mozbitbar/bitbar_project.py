@@ -12,7 +12,6 @@ from mozbitbar import (
     DeviceException,
     TestException
 )
-from mozbitbar.__root__ import path as root_path
 from mozbitbar.configuration import Configuration
 
 
