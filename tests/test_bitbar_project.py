@@ -16,6 +16,7 @@ def initialize_project():
 
 # Existing projects #
 
+
 @pytest.mark.parametrize('kwargs,expected', [
     ({'project_id': 11}, {'id': 11}),
     ({'project_id': 99}, {'id': 99}),
@@ -73,8 +74,8 @@ def test_bb_project_existing_id_and_name(kwargs, expected):
     assert project.project_id == expected['project_id']
     assert project.project_name == expected['project_name']
 
-
 # Project status #
+
 
 @pytest.mark.parametrize('project_status,expected', [
     ('present', ProjectException),
@@ -87,7 +88,6 @@ def test_bb_project_status(project_status, expected):
     if expected is ProjectException:
         with pytest.raises(ProjectException):
             BitbarProject(project_status)
-
 
 # Create project #
 
@@ -148,6 +148,7 @@ def test_bb_project_create_unique_name(kwargs, expected):
 
 # Project Framework #
 
+
 @pytest.mark.parametrize('kwargs,expected', [
     ({'framework_id': 12}, FrameworkException),
     (
@@ -173,6 +174,7 @@ def test_bb_project_framework(initialize_project, kwargs, expected):
         assert initialize_project.framework_name == expected['framework_name']
 
 # Project config #
+
 
 @pytest.mark.parametrize('kwargs,expected', [
     (

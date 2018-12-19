@@ -6,8 +6,6 @@ import pytest
 
 
 from testdroid import Testdroid
-from mozbitbar.bitbar_project import BitbarProject
-from mozbitbar.configuration import Configuration
 
 from mock import patch
 
@@ -181,35 +179,3 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)
 
     return init
-
-
-# @pytest.fixture(autouse=True)
-# def mock_configuration(monkeypatch):
-#     def init(object, **kwargs):
-#         with patch.object(Configuration, '__init__') as config:
-#             config.apikey = 'test_apikey'
-#             config.username = 'test_username'
-#             config.password = 'test_password'
-#             config.cloud_url = 'https://testingurl.com'
-
-#         config.client = Testdroid(
-#             username=config.username, password=config.password, apikey=config.apikey, url=config.url)
-
-#     monkeypatch.setattr(Configuration, '__init__', init)
-
-#     return init
-
-# @pytest.fixture(autouse=True)
-# def mock_bitbar_project(monkeypatch):
-#     def init(project_status, **kwargs):
-#         with patch.object(BitbarProject, '__init__') as project:
-#             super(BitbarProject, self).__init__(**kwargs)
-#             # project.project_id = kwargs.get('id') or 1
-#             # project.name = kwargs.get('name') or 'mock_type'
-#             # project.type = 'mock_type'
-#             # project.framework_id = 99
-#             # project.device_group_id = 1
-
-#     monkeypatch.setattr(BitbarProject, '__init__', init)
-
-#     return init
