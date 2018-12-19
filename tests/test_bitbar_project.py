@@ -11,7 +11,7 @@ import string
 import pytest
 
 from mozbitbar.bitbar_project import BitbarProject
-from mozbitbar import ProjectException, FrameworkException
+from mozbitbar import MozbitbarProjectException, MozbitbarFrameworkException
 
 
 @pytest.fixture()
@@ -24,9 +24,9 @@ def initialize_project():
 @pytest.mark.parametrize('kwargs,expected', [
     ({'project_id': 11}, {'id': 11}),
     ({'project_id': 99}, {'id': 99}),
-    ({'project_id': 100}, ProjectException),
-    ({'project_id': 2**32}, ProjectException),
-    ({'project_id': -1}, ProjectException),
+    ({'project_id': 100}, MozbitbarProjectException),
+    ({'project_id': 2**32}, MozbitbarProjectException),
+    ({'project_id': -1}, MozbitbarProjectException),
     (
         {'project_name': 'mock_project'},
         {'name': 'mock_project', 'id': 1}
@@ -35,9 +35,9 @@ def initialize_project():
         {'project_name': 'another_mock_project'},
         {'name': 'another_mock_project', 'id': 99}
     ),
-    ({'project_name': string.lowercase}, ProjectException),
-    ({'project_name': 'NULL'}, ProjectException),
-    ({'project_name': 'None'}, ProjectException),
+    ({'project_name': string.lowercase}, MozbitbarProjectException),
+    ({'project_name': 'NULL'}, MozbitbarProjectException),
+    ({'project_name': 'None'}, MozbitbarProjectException),
 ])
 def test_bb_project_existing(kwargs, expected):
     """Ensures BitbarProject is able to retrieve existing project by id
@@ -47,8 +47,8 @@ def test_bb_project_existing(kwargs, expected):
         - initialization of project
         - retrieve and set project parameters by id or name
     """
-    if expected is ProjectException:
-        with pytest.raises(ProjectException):
+    if expected is MozbitbarProjectException:
+        with pytest.raises(MozbitbarProjectException):
             BitbarProject('existing', **kwargs)
 
     else:
@@ -82,15 +82,15 @@ def test_bb_project_existing_id_and_name(kwargs, expected):
 
 
 @pytest.mark.parametrize('project_status,expected', [
-    ('present', ProjectException),
-    ('exist', ProjectException),
-    ('create', ProjectException),
+    ('present', MozbitbarProjectException),
+    ('exist', MozbitbarProjectException),
+    ('create', MozbitbarProjectException),
 ])
 def test_bb_project_status(project_status, expected):
     """Ensures BitbarProject raises an exception on invalid project status.
     """
-    if expected is ProjectException:
-        with pytest.raises(ProjectException):
+    if expected is MozbitbarProjectException:
+        with pytest.raises(MozbitbarProjectException):
             BitbarProject(project_status)
 
 # Create project #
@@ -122,7 +122,7 @@ def test_bb_project_status(project_status, expected):
             'project_name': 'mock_project',
             'project_type': 'mock_type'
         },
-        ProjectException
+        MozbitbarProjectException
     ),
     (
         {
@@ -141,8 +141,8 @@ def test_bb_project_create_unique_name(kwargs, expected):
     the name is unique. Otherwise, the default behavior is raise an exception,
     unless the permit_duplicate flag is set.
     """
-    if expected is ProjectException:
-        with pytest.raises(ProjectException):
+    if expected is MozbitbarProjectException:
+        with pytest.raises(MozbitbarProjectException):
             project = BitbarProject('new', **kwargs)
     else:
         project = BitbarProject('new', **kwargs)
@@ -154,13 +154,15 @@ def test_bb_project_create_unique_name(kwargs, expected):
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-    ({'framework_id': 12}, FrameworkException),
+    ({'framework_id': 12}, MozbitbarFrameworkException),
     (
         {'framework_id': 1},
         {'framework_name': 'mock_framework', 'framework_id': 1}
     ),
-    ({'framework_name': 'mock_framework'}, {
-     'framework_name': 'mock_framework', 'framework_id': 1}),
+    (
+        {'framework_name': 'mock_framework'},
+        {'framework_name': 'mock_framework', 'framework_id': 1}
+    ),
     ({'framework_name': 'mock_framework', 'framework_id': 1}, {
      'framework_name': 'mock_framework', 'framework_id': 1}),
     ({'framework_name': u'mock_framework', 'framework_id': 1}, {
@@ -169,8 +171,8 @@ def test_bb_project_create_unique_name(kwargs, expected):
      {'framework_name': 'mock_unicode_framework', 'framework_id': 2}),
 ])
 def test_bb_project_framework(initialize_project, kwargs, expected):
-    if expected == FrameworkException:
-        with pytest.raises(FrameworkException):
+    if expected == MozbitbarFrameworkException:
+        with pytest.raises(MozbitbarFrameworkException):
             initialize_project.set_project_framework(**kwargs)
     else:
         initialize_project.set_project_framework(**kwargs)
@@ -190,7 +192,7 @@ def test_bb_project_framework(initialize_project, kwargs, expected):
         {'timeout': 10, 'scheduler': 'SINGLE'}
     ),
     (
-        'not_a_dict', ProjectException
+        'not_a_dict', MozbitbarProjectException
     ),
     (
         {'scheduler': 'SINGLE'},
@@ -198,8 +200,8 @@ def test_bb_project_framework(initialize_project, kwargs, expected):
     )
 ])
 def test_set_project_config_new_config(initialize_project, kwargs, expected):
-    if expected is ProjectException:
-        with pytest.raises(ProjectException):
+    if expected is MozbitbarProjectException:
+        with pytest.raises(MozbitbarProjectException):
             initialize_project.set_project_configs(new_config=kwargs)
     else:
         initialize_project.set_project_configs(new_config=kwargs)

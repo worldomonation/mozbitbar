@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import
 
 import os
 
-from mozbitbar import CredentialException
+from mozbitbar import MozbitbarCredentialException
 from testdroid import Testdroid, RequestResponseError
 
 
@@ -24,8 +24,8 @@ class Configuration(object):
             **kwargs: Arbitrary keyword arguments.
 
         Raises:
-            CredentialException: If minimum required credentials were not set,
-                or supplied credentials were invalid.
+            MozbitbarCredentialException: If minimum required credentials
+                were not set, or supplied credentials were invalid.
         """
         if kwargs and 'TESTDROID_URL' in kwargs.keys():
             self.user_name = kwargs.get('TESTDROID_USERNAME')
@@ -43,8 +43,8 @@ class Configuration(object):
             assert (self.user_name and self.user_password) or self.api_key
             assert self.url
         except AssertionError:
-            raise CredentialException('Was not able to set required ' +
-                                      'credentials.')
+            msg = 'Was not able to set required credentials.'
+            raise MozbitbarCredentialException(msg)
 
         # instantiate client.
         self.client = Testdroid(username=self.user_name,
@@ -56,4 +56,4 @@ class Configuration(object):
         try:
             self.client.get_me()
         except RequestResponseError:
-            raise CredentialException('Invalid credentials supplied.')
+            raise MozbitbarCredentialException('Invalid credentials supplied.')
