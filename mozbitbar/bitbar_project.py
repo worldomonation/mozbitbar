@@ -232,9 +232,9 @@ class BitbarProject(Configuration):
     def _file_on_local_disk(self, path):
         """Checks if specified path can be found on local disk.
 
-        Accepts a string representation of a local path. Firstly, the current
-        directory is checked. If path could not be found, the path is
-        converted to an absolute path.
+        Accepts a string representation of a local path, which is turned into
+        an absolute path. Then the location specified by the path is checked
+        using the os module.
 
         Args:
             path (str): String representation of a path on local disk.
@@ -246,8 +246,21 @@ class BitbarProject(Configuration):
         return os.path.isfile(os.path.abspath(path))
 
     def _open_file(self, path):
-        with open(path, 'r') as f:
-            return f.read()
+        """Given a path, opens the file and reads its contents.
+
+        Args:
+            path (str): String representation of a path on local disk.
+
+        Returns:
+            str: String representation of the contents of the file.
+
+        Raises:
+            FileException: If path does not map to an existing file.
+        """
+        if self._file_on_local_disk(path):
+            with open(path, 'r') as f:
+                return f.read()
+        raise FileException('{}: file: {} not found'.format(__name__, path))
 
     # Project operations #
 
