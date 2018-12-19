@@ -111,6 +111,7 @@ class Recipe(object):
                 a fully qualified path on local disk.
         """
         if os.path.isfile(path):
+            # TODO: refactor this to be more intuitive.
             self.recipe_name = path
             self.recipe_path = path
         else:

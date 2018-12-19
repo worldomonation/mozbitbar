@@ -31,6 +31,9 @@ class MozbitbarInvalidRecipeException(Exception):
 
 class MozbitbarFrameworkException(Exception):
     def __init__(self, message):
+        """FrameworkException is raised when project framework encounters
+        an issue.
+        """
         pass
 
 
