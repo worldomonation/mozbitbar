@@ -5,6 +5,15 @@ Mozbitbar is a wrapper around Bitbar's [Testdroid](https://github.com/bitbar/tes
 Mozbitbar implements a subset of tasks that Testdroid supports, but aims to make the process of starting Bitbar tasks easier and better defined through the use of _recipes_.
 
 
+## Invocation
+
+Since Mozbitbar currently does not support installation via a package manager, users are recommended to use the following syntax, in the root directory of Mozbitbar:
+
+```
+$ export PYTHONPATH=.
+$ python mozbitbar/main.py --recipe <full_path_to_recipe>
+```
+
 ## Usage
 
 Define a recipe under `mozbitbar/recipes` subdirectory.
@@ -20,7 +29,9 @@ An example of the expected format of the recipe can be seen below:
     type: DEFAULT
 ````
 
-There are specific rules that must be followed in order to create a valid Mozbitbar recipe.
+There are specific rules that must be followed in order to create a valid Mozbitbar recipe, which will be covered below.
+
+## Defining a recipe
 
 ### action
 
