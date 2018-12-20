@@ -7,7 +7,7 @@ from __future__ import print_function, absolute_import
 from argparse import ArgumentParser
 
 
-def parser_arguments(args):
+def parse_arguments(args):
     parser = ArgumentParser('Runs Testdroid tasks.')
     parser.add_argument('-r', '--recipe')
 
@@ -17,7 +17,7 @@ def parser_arguments(args):
 
 
 def cli(args):
-    args, remainder = parser_arguments(args)
+    args, _ = parse_arguments(args)
 
     if args.recipe:
         return args.recipe
