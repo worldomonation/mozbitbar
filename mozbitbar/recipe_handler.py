@@ -14,7 +14,7 @@ from mozbitbar import (
     MozbitbarProjectException,
     MozbitbarFrameworkException,
     MozbitbarCredentialException,
-    OperationNotImplementedException,
+    MozbitbarOperationNotImplementedException,
     MozbitbarDeviceException,
     MozbitbarTestException
     )
@@ -194,8 +194,8 @@ def run_recipe(recipe_name):
             recipe to be run.
 
     Raises:
-        OperationNotImplementedException: If recipe specified an action that
-            is not implemented in BitbarProject.
+        MozbitbarOperationNotImplementedException: If recipe specified an
+            action that is not implemented in BitbarProject.
     """
     # example implementation showing how the process may look like.
     # using the recipe, this method will parse actions that need to be done,
@@ -248,4 +248,4 @@ def run_recipe(recipe_name):
                 __name__,
                 action
             )
-            raise OperationNotImplementedException(msg)
+            raise MozbitbarOperationNotImplementedException(msg)
