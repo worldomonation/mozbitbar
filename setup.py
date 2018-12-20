@@ -16,19 +16,20 @@ PACKAGE_VERSION = '.'.join([
     str(item) for item in [MAJOR_VERSION, MINOR_VERSION, REVISION]
 ])
 DESCRIPTION = '''Tool to interact with Bitbar REST API.'''
-with open(os.path.normpath(''.join([os.path.dirname(), 'README.md']))) as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'README.md')) as f:
     README = f.read()
 
 DEPENDENCIES = [
-    'testdroid',
-    'pyyaml',
     'pytest'
+    'pyyaml',
+    'testdroid',
 ]
 
 setup(
     name='mozbitbar',
     version=PACKAGE_VERSION,
     description=DESCRIPTION,
+    long_description=README,
     keywords='mozilla',
     author='Edwin Gao',
     author_email='egao@mozilla.com',
