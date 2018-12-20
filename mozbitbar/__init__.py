@@ -15,16 +15,16 @@ class MozbitbarProjectException(Exception):
 
 class MozbitbarDeviceException(Exception):
     def __init__(self, message):
-        """MozbitbarDeviceException will be raised if any exceptions occur relating to
-        device operations.
+        """MozbitbarDeviceException will be raised if any exceptions occur
+        relating to device operations.
         """
         pass
 
 
 class MozbitbarInvalidRecipeException(Exception):
     def __init__(self, message):
-        """MozbitbarInvalidRecipeException will be raised upon YAML recipe having
-        any errors.
+        """MozbitbarInvalidRecipeException will be raised upon YAML recipe
+        having any errors.
         """
         pass
 
@@ -44,8 +44,8 @@ class MozbitbarFileException(Exception):
 
 class MozbitbarCredentialException(Exception):
     def __init__(self, message):
-        """MozbitbarCredentialException will be raised if credentials supplied to
-        BitbarProject has issues.
+        """MozbitbarCredentialException will be raised if credentials
+        supplied to BitbarProject has issues.
         """
         pass
 
@@ -58,10 +58,10 @@ class MozbitbarTestException(Exception):
     pass
 
 
-class OperationNotImplementedException(Exception):
+class MozbitbarOperationNotImplementedException(Exception):
     def __init__(self, message):
-        """OperationNotImplementedException will be raised if a recipe action
-        does not correspond to an implemented method in the BitbarProject
-        object.
+        """MozbitbarOperationNotImplementedException will be raised if a
+        recipe action does not correspond to an implemented method in the
+        BitbarProject object.
         """
         pass
