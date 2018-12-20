@@ -5,9 +5,29 @@ Mozbitbar is a wrapper around Bitbar's [Testdroid](https://github.com/bitbar/tes
 Mozbitbar implements a subset of tasks that Testdroid supports, but aims to make the process of starting Bitbar tasks easier and better defined through the use of _recipes_.
 
 
+## Installation
+
+Currently, installation via `setuptools` is supported.
+
+```
+$ python setup.py install
+```
+
+If working on the code, please use
+
+```
+$ python setup.py develop
+```
+
 ## Invocation
 
-Since Mozbitbar currently does not support installation via a package manager, users are recommended to use the following syntax, in the root directory of Mozbitbar:
+If installed using `setuptools`, Mozbitbar can be started as command-line tool:
+
+```
+$ mozbitbar --recipe <path_to_recipe>
+```
+
+If the repository is cloned but package installed, it is still possible to invoke Mozbitbar:
 
 ```
 $ export PYTHONPATH=.
