@@ -21,9 +21,9 @@ class MozbitbarDeviceException(Exception):
         pass
 
 
-class MozbitbarInvalidRecipeException(Exception):
+class MozbitbarRecipeException(Exception):
     def __init__(self, message):
-        """MozbitbarInvalidRecipeException will be raised upon YAML recipe
+        """MozbitbarRecipeException will be raised upon YAML recipe
         having any errors.
         """
         pass
@@ -58,7 +58,7 @@ class MozbitbarTestException(Exception):
         """MozbitbarTestException will be raised if Bitbar test runs experience
         any sort of issues.
         """
-    pass
+        pass
 
 
 class MozbitbarOperationNotImplementedException(Exception):

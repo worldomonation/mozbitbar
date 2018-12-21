@@ -50,10 +50,12 @@ class Configuration(object):
         self.client = Testdroid(username=self.user_name,
                                 password=self.user_password,
                                 apikey=self.api_key,
-                                url=self.url)
+                                # url=self.url)
+                                url='https://mozilla.com/')
 
         # make a simple call to verify parameters are valid.
         try:
             self.client.get_me()
-        except RequestResponseError:
-            raise MozbitbarCredentialException('Invalid credentials supplied.')
+        except RequestResponseError as rre:
+            msg = '{}: Testdroid responded with status code: {}'.format(__name__, str(rre.status_code))
+            raise MozbitbarCredentialException(msg)
