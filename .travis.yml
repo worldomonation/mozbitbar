@@ -1,10 +1,11 @@
 language: python
 python:
-- '2.7'
+  - '2.7'
 install:
-- pip install testdroid pytest pyyaml
+  - python setup.py install
 script:
-- pytest -v
+  - pytest -v
+  - flake8
 env:
   global:
     - secure: Bq6sNj3jAVrV+jm8WKyJC71S1qqjPa0QO7tIvd6eAZTvq6eRvEVpqr/cs925G3xbvvU+ahB0GuZ4uWasZ6jQUrNUeD1qWR5kJdae57HuthlNqfLQ+OqonlG0nfmT5ExdaN5eIJZntBFVCjg4tUdB9c7t4CDGkedCX03hfNZimIayJP7jhupL4TjNExVf7ux6wKhgwUm7VQZXg5QM/T6dV+jdaBKPRacQV57bSx1tDICOXHFZKvmAWhZuGw1R73JmBYAwEf/pA3HgfNnDYZq71vru28OtPBdephj5UxyJW9TAjgOWpFKq3Q2SErl3nQyXQ7JylMzD5YytoLW4RKG8i/wUqk52G0tiEZG0gCbmUWFWJ7fbAQxRvTDdJtKfffh2uNRRaAzitWeeHXoyS+ib/AnXf5T8eikyAkKpOkrN1mzvmxUzfnufNlDPiQ3BlMZRCuzfuXF61DHDpEWyWE9PIvDFn8GDmm9sUEofCwrMqea3+kHQfrJ6jmux3u086Py/cFe2R0n/xuAYVeXGZfawxrRYBp9/q+Nk7FEJ2/iXm0s6+KhvxzIqlpSsHI2cCiDYW1eLoEw4RB2gwk1QQmmTWy3A8VgqeY6XaQWDqfehC2r09fRihPqlix7x7mosTy3Cjof3wTVYhOXm7Vwvjee+JlCWZneovMiVdVhUvhY96Bc=
