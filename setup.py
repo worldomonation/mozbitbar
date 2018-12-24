@@ -16,7 +16,8 @@ PACKAGE_VERSION = '.'.join([
     str(item) for item in [MAJOR_VERSION, MINOR_VERSION, REVISION]
 ])
 DESCRIPTION = '''Tool to interact with Bitbar REST API.'''
-with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'README.md')) as f:
+with open(os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), 'README.md')) as f:
     README = f.read()
 
 DEPENDENCIES = [
