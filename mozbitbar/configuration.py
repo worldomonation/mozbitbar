@@ -43,7 +43,7 @@ class Configuration(object):
             assert (self.user_name and self.user_password) or self.api_key
             assert self.url
         except AssertionError:
-            msg = 'Was not able to set required credentials.'
+            msg = '{}: could not assert the Bitbar configuration values'
             raise MozbitbarCredentialException(msg)
 
         # instantiate client.
@@ -57,5 +57,8 @@ class Configuration(object):
         try:
             self.client.get_me()
         except RequestResponseError as rre:
-            msg = '{}: Testdroid responded with status code: {}'.format(__name__, str(rre.status_code))
+            msg = '{}: Testdroid responded with status code: {}'.format(
+                __name__,
+                str(rre.status_code)
+            )
             raise MozbitbarCredentialException(msg)
