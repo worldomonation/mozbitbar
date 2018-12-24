@@ -20,10 +20,11 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'README.md'))
     README = f.read()
 
 DEPENDENCIES = [
+    'flake8',
+    'mock',
     'pytest',
     'pyyaml',
     'testdroid',
-    'tox'
 ]
 
 setup(
