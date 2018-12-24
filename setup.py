@@ -20,9 +20,10 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'README.md'))
     README = f.read()
 
 DEPENDENCIES = [
-    'pytest'
+    'pytest',
     'pyyaml',
     'testdroid',
+    'tox'
 ]
 
 setup(
