@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import
 
 import pytest
 
+from mozbitbar import MozbitbarCredentialException
 from mozbitbar.configuration import Configuration
 
 
@@ -18,13 +19,42 @@ from mozbitbar.configuration import Configuration
             'TESTDROID_URL': 'https://www.mock_test.com',
         },
         {
-            None
+            'user_name': 'MOCK_TEST',
+            'user_password': 'MOCK_TEST',
+            'api_key': 'MOCK_TEST',
+            'url': 'https://www.mock_test.com',
         }
+    ),
+    (
+        {
+            'TESTDROID_USERNAME': 'MOCK_TEST',
+            'TESTDROID_PASSWORD': 'MOCK_TEST',
+            'TESTDROID_URL': 'https://www.mock_test.com'
+        },
+        {
+            'user_name': 'MOCK_TEST',
+            'user_password': 'MOCK_TEST',
+            'api_key': None,
+            'url': 'https://www.mock_test.com',
+        }
+    ),
+    (
+        {
+            'TESTDROID_USERNAME': 'MOCK_TEST'
+        },
+        MozbitbarCredentialException
     )
 ])
-def test_configuration(kwargs, expected):
+def test_configuration(kwargs,expected):
+    """Ensures the Configuration object can be instantiated with appropriate
+    values provided to the constructor.
     """
-    """
-    config = Configuration(**kwargs)
-    assert config.client is not None
-    assert config.url is kwargs.get('TESTDROID_URL')
+    if expected is MozbitbarCredentialException:
+        with pytest.raises(MozbitbarCredentialException):
+            config = Configuration(**kwargs)
+    else:
+        config = Configuration(**kwargs)
+        assert config.client is not None
+        for attribute, value in expected.iteritems():
+            assert hasattr(config, attribute)
+            assert getattr(config, attribute) == value
