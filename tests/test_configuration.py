@@ -6,10 +6,7 @@ from __future__ import print_function, absolute_import
 
 import pytest
 
-<<<<<<< HEAD
 from mozbitbar import MozbitbarCredentialException
-=======
->>>>>>> ef5a583ab5966f99c1f56a09b5e9fea8a8490a68
 from mozbitbar.configuration import Configuration
 
 
@@ -22,7 +19,6 @@ from mozbitbar.configuration import Configuration
             'TESTDROID_URL': 'https://www.mock_test.com',
         },
         {
-<<<<<<< HEAD
             'user_name': 'MOCK_TEST',
             'user_password': 'MOCK_TEST',
             'api_key': 'MOCK_TEST',
@@ -49,7 +45,7 @@ from mozbitbar.configuration import Configuration
         MozbitbarCredentialException
     )
 ])
-def test_configuration(kwargs,expected):
+def test_configuration_from_kwargs(kwargs, expected):
     """Ensures the Configuration object can be instantiated with appropriate
     values provided to the constructor.
     """
@@ -62,15 +58,74 @@ def test_configuration(kwargs,expected):
         for attribute, value in expected.iteritems():
             assert hasattr(config, attribute)
             assert getattr(config, attribute) == value
-=======
-            None
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {
+            'TESTDROID_USERNAME': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'TESTDROID_PASSWORD': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'TESTDROID_APIKEY': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'TESTDROID_URL': 'https://www.mock_test_env_var.com',
+        },
+        {
+            'user_name': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'user_password': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'api_key': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'url': 'https://www.mock_test_env_var.com',
         }
+    ),
+    (
+        {
+            'TESTDROID_USERNAME': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'TESTDROID_PASSWORD': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'TESTDROID_URL': 'https://www.mock_test_env_var.com',
+        },
+        {
+            'user_name': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'user_password': 'MOCK_ENVIRONMENT_VALUE_TEST',
+            'api_key': None,
+            'url': 'https://www.mock_test_env_var.com',
+        }
+    ),
+    (
+        {
+            'TESTDROID_APIKEY': 'MOCK_ENVIRONMENT_API_KEY',
+            'TESTDROID_URL': 'https://www.mock_test_env_var.com',
+        },
+        {
+            'api_key': 'MOCK_ENVIRONMENT_API_KEY',
+            'url': 'https://www.mock_test_env_var.com',
+        }
+    ),
+    (
+        {
+            'TESTDROID_URL': 'https://www.mock_test_env_var.com',
+        },
+        MozbitbarCredentialException
     )
 ])
-def test_configuration(kwargs, expected):
+def test_configuration_from_env_var(kwargs, expected, monkeypatch):
+    """Ensures the Configuration object can be instantiated using
+    key values set from environment variables.
     """
-    """
-    config = Configuration(**kwargs)
-    assert config.client is not None
-    assert config.url is kwargs.get('TESTDROID_URL')
->>>>>>> ef5a583ab5966f99c1f56a09b5e9fea8a8490a68
+    # dynamically patch the environment variable under test.
+    # first delete the environment variables.
+    monkeypatch.delenv('TESTDROID_USERNAME')
+    monkeypatch.delenv('TESTDROID_PASSWORD')
+    monkeypatch.delenv('TESTDROID_APIKEY')
+    monkeypatch.delenv('TESTDROID_URL')
+
+    # then set only the variables that were provided by test data.
+    for key, attribute in kwargs.iteritems():
+        monkeypatch.setenv(key, attribute)
+
+    if expected is MozbitbarCredentialException:
+        with pytest.raises(MozbitbarCredentialException):
+            config = Configuration()
+    else:
+        config = Configuration()
+        assert config.client is not None
+        for attribute, value in expected.iteritems():
+            assert hasattr(config, attribute)
+            assert getattr(config, attribute) == value
