@@ -6,7 +6,10 @@ from __future__ import print_function, absolute_import
 
 import pytest
 
+<<<<<<< HEAD
 from mozbitbar import MozbitbarCredentialException
+=======
+>>>>>>> ef5a583ab5966f99c1f56a09b5e9fea8a8490a68
 from mozbitbar.configuration import Configuration
 
 
@@ -19,6 +22,7 @@ from mozbitbar.configuration import Configuration
             'TESTDROID_URL': 'https://www.mock_test.com',
         },
         {
+<<<<<<< HEAD
             'user_name': 'MOCK_TEST',
             'user_password': 'MOCK_TEST',
             'api_key': 'MOCK_TEST',
@@ -58,3 +62,15 @@ def test_configuration(kwargs,expected):
         for attribute, value in expected.iteritems():
             assert hasattr(config, attribute)
             assert getattr(config, attribute) == value
+=======
+            None
+        }
+    )
+])
+def test_configuration(kwargs, expected):
+    """
+    """
+    config = Configuration(**kwargs)
+    assert config.client is not None
+    assert config.url is kwargs.get('TESTDROID_URL')
+>>>>>>> ef5a583ab5966f99c1f56a09b5e9fea8a8490a68

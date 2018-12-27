@@ -144,6 +144,7 @@ def mock_testdroid_client(monkeypatch):
     # Additional mocks #
 
     def get_me_wrapper(object):
+        print(object.api_key)
         return {
             'id': 1,
             'accountId': 2,
