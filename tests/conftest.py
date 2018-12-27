@@ -8,10 +8,7 @@ import random
 
 import pytest
 
-
 from testdroid import Testdroid
-
-from mock import patch
 
 
 def mock_projects_list():
@@ -77,13 +74,6 @@ def mock_project_config(project_status=None, project_framework_id=None,
 
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
-    def init(object, **kwargs):
-        with patch.object(Testdroid, '__init__') as client:
-            client.apikey = 'test_apikey'
-            client.username = 'test_username'
-            client.password = 'test_password'
-            client.cloud_url = 'https://testingurl.com'
-            client.download_buffer_size = 65536
 
     # Project related mocks #
 
@@ -154,6 +144,7 @@ def mock_testdroid_client(monkeypatch):
     # Additional mocks #
 
     def get_me_wrapper(object):
+        print(object.api_key)
         return {
             'id': 1,
             'accountId': 2,
@@ -165,7 +156,6 @@ def mock_testdroid_client(monkeypatch):
 
     # Monkeypatch #
 
-    monkeypatch.setattr(Testdroid, '__init__', init)
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_frameworks',
                         get_frameworks_wrapper)
@@ -181,5 +171,3 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
     monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)
-
-    return init
