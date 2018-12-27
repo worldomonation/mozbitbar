@@ -13,12 +13,18 @@ from testdroid import Testdroid, RequestResponseError
 class Configuration(object):
     def __init__(self, **kwargs):
         """Initializes the Configuration class, in one of two ways:
-            - using kwargs: user-provided dictionary of required parameters.
+            - using kwargs: user-provided dictionary containing key/value
+                pairs. Keys are expected to be named in same manner as
+                using environment variables.
             - using envvar: parses the environment variables set on
             host machine.
 
         Either methods are supported. By default, the environment variable
-        approach is preferred.
+        approach is prioritized.
+
+        For reference on how to name the environment variables, please refer
+        to Testdroid documentation at
+        https://github.com/bitbar/testdroid-api-client-python#usage
 
         Args:
             **kwargs: Arbitrary keyword arguments.
