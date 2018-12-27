@@ -10,7 +10,7 @@ import yaml
 
 from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import (
-    MozbitbarInvalidRecipeException,
+    MozbitbarRecipeException,
     MozbitbarProjectException,
     MozbitbarFrameworkException,
     MozbitbarCredentialException,
@@ -111,6 +111,7 @@ class Recipe(object):
                 a fully qualified path on local disk.
         """
         if os.path.isfile(path):
+            # TODO: refactor this to be more intuitive.
             self.recipe_name = path
             self.recipe_path = path
         else:
@@ -128,7 +129,7 @@ class Recipe(object):
 
         Raises:
             IOError: If recipe path does not map to a file on local disk.
-            MozbitbarInvalidRecipeException: If file specified by recipe path
+            MozbitbarRecipeException: If file specified by recipe path
                 is not a valid YAML file.
         """
         try:
@@ -139,7 +140,7 @@ class Recipe(object):
                 __name__,
                 self.recipe_path
             )
-            raise MozbitbarInvalidRecipeException(msg)
+            raise MozbitbarRecipeException(msg)
 
     def validate_recipe(self, recipe):
         """Validates the loaded recipe.
@@ -153,7 +154,7 @@ class Recipe(object):
         to the task_list attribute.
 
         Raises:
-            MozbitbarInvalidRecipeException: If recipe does not contain a
+            MozbitbarRecipeException: If recipe does not contain a
                 valid project specifier.
         """
         for index, task in enumerate(recipe):
@@ -172,7 +173,7 @@ class Recipe(object):
                 __name__,
                 self.recipe_name
             )
-            raise MozbitbarInvalidRecipeException(msg)
+            raise MozbitbarRecipeException(msg)
 
         # remaining recipe object is the list of actions to run.
         self.task_list = recipe
@@ -216,6 +217,9 @@ def run_recipe(recipe_name):
     except MozbitbarProjectException as pe:
         print(pe.message)
         sys.exit(1)
+    except MozbitbarCredentialException as ce:
+        print(ce.message)
+        sys.exit(1)
 
     print('Bitbar tasks starting...')
     for task in recipe.task_list:
@@ -230,7 +234,7 @@ def run_recipe(recipe_name):
                 print('Testdroid raised an exception:')
                 print('Status code: ', rre.status_code)
                 print(rre.message)
-            except MozbitbarInvalidRecipeException as ire:
+            except MozbitbarRecipeException as ire:
                 print(ire.message)
             except MozbitbarProjectException as pe:
                 print(pe.message)
