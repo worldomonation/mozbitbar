@@ -4,10 +4,13 @@
 
 from __future__ import print_function, absolute_import
 
+import logging
 import os
 
 from mozbitbar import MozbitbarCredentialException
 from testdroid import Testdroid, RequestResponseError
+
+logger = logging.getLogger('mozbitbar')
 
 
 class Configuration(object):
@@ -38,27 +41,22 @@ class Configuration(object):
             self.api_key = os.getenv('TESTDROID_APIKEY')
             self.url = os.getenv('TESTDROID_URL')
 
-        # ensure minimal viable set of parameters are set.
         try:
-            assert (self.user_name and self.user_password) or self.api_key
-            assert self.url
-        except AssertionError:
-            msg = '{}: could not assert the Bitbar configuration values'
-            raise MozbitbarCredentialException(msg)
+            assert ((self.user_name and self.user_password) or
+                    self.api_key), 'Missing Credentials'
+            assert self.url, 'Missing Testdroid cloud URL'
+        except (AssertionError, AttributeError) as ae:
+            raise MozbitbarCredentialException(message=ae.args)
 
         # instantiate client.
-        self.client = Testdroid(username=self.user_name,
-                                password=self.user_password,
-                                apikey=self.api_key,
-                                # url=self.url)
-                                url='https://mozilla.com/')
+        self.client = Testdroid(username=self.user_name or None,
+                                password=self.user_password or None,
+                                apikey=self.api_key or None,
+                                url=self.url)
 
         # make a simple call to verify parameters are valid.
         try:
             self.client.get_me()
         except RequestResponseError as rre:
-            msg = '{}: Testdroid responded with status code: {}'.format(
-                __name__,
-                str(rre.status_code)
-            )
-            raise MozbitbarCredentialException(msg)
+            raise MozbitbarCredentialException(message=rre.message,
+                                               status_code=rre.status_code)

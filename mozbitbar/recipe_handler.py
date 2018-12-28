@@ -4,6 +4,7 @@
 
 from __future__ import print_function, absolute_import
 
+import logging
 import os
 import sys
 import yaml
@@ -16,10 +17,12 @@ from mozbitbar import (
     MozbitbarCredentialException,
     MozbitbarOperationNotImplementedException,
     MozbitbarDeviceException,
-    MozbitbarTestException
+    MozbitbarTestRunException
     )
 from testdroid import RequestResponseError
 from yaml.scanner import ScannerError
+
+logger = logging.getLogger('mozbitbar')
 
 
 class Recipe(object):
@@ -34,7 +37,6 @@ class Recipe(object):
                 to be loaded.
         """
         self.locate_recipe(recipe_name)
-
         self.load_recipe_from_yaml()
 
     @property
@@ -107,8 +109,8 @@ class Recipe(object):
             path (str): Base filename or fully qualified path on local disk.
 
         Raises:
-            IOError: If path is neither a file in current working directory nor
-                a fully qualified path on local disk.
+            MozbitbarRecipeException: If path is neither a file in current
+                working directory nor a fully qualified path on local disk.
         """
         if os.path.isfile(path):
             # TODO: refactor this to be more intuitive.
@@ -119,7 +121,7 @@ class Recipe(object):
                 name=__name__,
                 path=path
             )
-            raise IOError(msg)
+            raise MozbitbarRecipeException(message=msg)
 
     def load_recipe_from_yaml(self):
         """Parses a recipe from a YAML file stored locally.
@@ -140,7 +142,7 @@ class Recipe(object):
                 __name__,
                 self.recipe_path
             )
-            raise MozbitbarRecipeException(msg)
+            raise MozbitbarRecipeException(message=msg)
 
     def validate_recipe(self, recipe):
         """Validates the loaded recipe.
@@ -159,23 +161,25 @@ class Recipe(object):
         """
         for index, task in enumerate(recipe):
             if task.get('project'):
-                # project specifier found in recipe. Remove it from the recipe
-                # and store it in its own attributes.
+                # project attribute must be specified, otherwise
+                # no further operations can take place
                 self.project = task.get('project')
                 self.project_arguments = task.get('arguments')
                 recipe.pop(index)
+
+                break
 
         try:
             assert self.project
             assert self.project_arguments
         except AssertionError:
-            msg = '{}: project specifier not found in recipe: {}'.format(
+            msg = '{}: project attribute not found in recipe: {}'.format(
                 __name__,
                 self.recipe_name
             )
-            raise MozbitbarRecipeException(msg)
+            raise MozbitbarRecipeException(message=msg)
 
-        # remaining recipe object is the list of actions to run.
+        # remaining recipe object is the list of Bitbar actions to be run
         self.task_list = recipe
 
 
@@ -204,27 +208,28 @@ def run_recipe(recipe_name):
     # object. As long as the recipe is defined with the action that matches
     # the method name, and the appropriate arguments are provided,
     # this method will execute each action automatically.
-    print('Recipe tasks starting...')
+    logger.info('Recipe object initialization...')
     try:
         recipe = Recipe(recipe_name)
-    except IOError as ie:
-        print(ie.message)
+    except MozbitbarRecipeException as re:
+        logger.critical(re.message)
         sys.exit(1)
-    print('Bitbar initialization...')
+    logger.info('Recipe object successfully initialized.')
+
+    logger.info('Bitbar project initialization...')
     try:
         bitbar_project = BitbarProject(recipe.project,
                                        **recipe.project_arguments)
-    except MozbitbarProjectException as pe:
-        print(pe.message)
+    except (MozbitbarProjectException, MozbitbarCredentialException) as e:
+        logger.critical(e.message)
         sys.exit(1)
-    except MozbitbarCredentialException as ce:
-        print(ce.message)
-        sys.exit(1)
+    logger.info('Bitbar project object successfully initialized.')
 
-    print('Bitbar tasks starting...')
+    logger.info('Start executing Bitbar tasks defined in recipe...')
     for task in recipe.task_list:
         action = task.pop('action')
         arguments = task.pop('arguments')
+        logger.debug(' '.join(['Action to run:', action]))
 
         func = getattr(bitbar_project, action, None)
         if func:
@@ -244,7 +249,7 @@ def run_recipe(recipe_name):
                 print(ce.message)
             except MozbitbarDeviceException as de:
                 print(de.message)
-            except MozbitbarTestException as te:
+            except MozbitbarTestRunException as te:
                 print(te.message)
                 sys.exit(1)
         else:
@@ -252,4 +257,4 @@ def run_recipe(recipe_name):
                 __name__,
                 action
             )
-            raise MozbitbarOperationNotImplementedException(msg)
+            raise MozbitbarOperationNotImplementedException(message=msg)

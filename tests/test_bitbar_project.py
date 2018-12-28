@@ -18,6 +18,7 @@ from mozbitbar import MozbitbarProjectException, MozbitbarFrameworkException
 def initialize_project():
     return BitbarProject('existing', **{'project_name': 'mock_project'})
 
+
 # Existing projects #
 
 
@@ -78,6 +79,7 @@ def test_bb_project_existing_id_and_name(kwargs, expected):
     assert project.project_id == expected['project_id']
     assert project.project_name == expected['project_name']
 
+
 # Project status #
 
 
@@ -92,6 +94,7 @@ def test_bb_project_status(project_status, expected):
     if expected is MozbitbarProjectException:
         with pytest.raises(MozbitbarProjectException):
             BitbarProject(project_status)
+
 
 # Create project #
 
@@ -149,6 +152,7 @@ def test_bb_project_create_unique_name(kwargs, expected):
         assert project.project_id is not None
         assert project.project_name == expected['project_name']
         assert project.project_type == expected['project_type']
+
 
 # Project Framework #
 
