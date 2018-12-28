@@ -11,15 +11,12 @@ from mozbitbar.cli import cli
 
 from mozbitbar import log
 logger = log.setup_logger()
-logger.debug('test_debug')
-logger.info('test_info')
 
 
 def main():
     # example of how to call and use Bitbar with this harness.
     # in a taskcluster/treeherder environment, the script will
     # call these methods instead of instead of main().
-    logger.debug('inside main')
     recipe_name = cli(sys.argv[1:])
     recipe_handler.run_recipe(recipe_name)
 
