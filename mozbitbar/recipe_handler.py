@@ -161,23 +161,25 @@ class Recipe(object):
         """
         for index, task in enumerate(recipe):
             if task.get('project'):
-                # project specifier found in recipe. Remove it from the recipe
-                # and store it in its own attributes.
+                # project attribute must be specified, otherwise
+                # no further operations can take place
                 self.project = task.get('project')
                 self.project_arguments = task.get('arguments')
                 recipe.pop(index)
+
+                break
 
         try:
             assert self.project
             assert self.project_arguments
         except AssertionError:
-            msg = '{}: project specifier not found in recipe: {}'.format(
+            msg = '{}: project attribute not found in recipe: {}'.format(
                 __name__,
                 self.recipe_name
             )
             raise MozbitbarRecipeException(msg)
 
-        # remaining recipe object is the list of actions to run.
+        # remaining recipe object is the list of Bitbar actions to be run
         self.task_list = recipe
 
 

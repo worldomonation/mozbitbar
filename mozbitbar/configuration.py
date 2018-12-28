@@ -5,7 +5,6 @@
 from __future__ import print_function, absolute_import
 
 import os
-import sys
 
 from mozbitbar import MozbitbarCredentialException
 from testdroid import Testdroid, RequestResponseError

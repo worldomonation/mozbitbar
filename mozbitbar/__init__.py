@@ -29,7 +29,7 @@ class MozbitbarRecipeException(Exception):
         """MozbitbarRecipeException will be raised upon YAML recipe
         having any errors.
         """
-        pass
+        self.message = message
 
 
 class MozbitbarFrameworkException(Exception):
@@ -37,15 +37,16 @@ class MozbitbarFrameworkException(Exception):
         """FrameworkException is raised when project framework encounters
         an issue.
         """
-        pass
+        self.message = message
 
 
 class MozbitbarFileException(Exception):
-    def __init__(self, message):
+    def __init__(self, message, path):
         """MozbitbarFileException will be raised if errors relating to file
         transactions occur.
         """
-        pass
+        self.message = message
+        self.path = path
 
 
 class MozbitbarCredentialException(Exception):
@@ -60,12 +61,14 @@ class MozbitbarCredentialException(Exception):
         self.message = message
         self.status_code = status_code
 
+
 class MozbitbarTestRunException(Exception):
-    def __init__(self, message):
+    def __init__(self, message, test_run_id):
         """MozbitbarTestRunException will be raised if Bitbar test runs experience
         any sort of issues.
         """
-        pass
+        self.message = message
+        self.test_run_id = test_run_id
 
 
 class MozbitbarOperationNotImplementedException(Exception):
@@ -74,4 +77,4 @@ class MozbitbarOperationNotImplementedException(Exception):
         recipe action does not correspond to an implemented method in the
         BitbarProject object.
         """
-        pass
+        self.message = message

@@ -5,6 +5,7 @@
 from __future__ import print_function, absolute_import
 
 import json
+import logging
 import os
 import time
 
@@ -17,6 +18,8 @@ from mozbitbar import (
     MozbitbarTestRunException
 )
 from mozbitbar.configuration import Configuration
+
+logger = logging.getLogger('mozbitbar')
 
 
 class BitbarProject(Configuration):
@@ -624,19 +627,17 @@ class BitbarProject(Configuration):
 
             if self._file_on_bitbar(filename):
                 # skip and go to the next item in the list of files.
-                msg = '{}: {} already exists on Bitbar, skipping'.format(
-                    __name__,
-                    filename
-                )
-                print(msg)
+                msg = 'File: {} already exists on Bitbar, \
+                       skipping upload'.format(filename)
+                logger.info(msg)
                 continue
 
             try:
                 assert self._file_on_local_disk(filename)
             except AssertionError:
-                msg = '''Failed to locate file on disk: path:
-                         {}'''.format(filename)
-                raise MozbitbarFileException(msg)
+                logger.critical('Failed to locate file on disk')
+                msg = 'Could not locate file'
+                raise MozbitbarFileException(msg, filename)
 
             api_path_components = [
                 "users/{user_id}/".format(user_id=self.get_user_id()),

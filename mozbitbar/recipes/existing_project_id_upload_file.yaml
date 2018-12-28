@@ -31,7 +31,7 @@
         },
         {
             key: DOCKER_IMAGE_VERSION,
-            value: 20181101usb
+            value: 20181221T151808
         }
     ]
     force_overwrite: False
@@ -40,7 +40,7 @@
     name: Edwin_Test
 - action: start_test_run
   arguments:
-    name: test_122
+    name: test_124
 - action: notify_test_run_complete
   arguments:
     interval: 2
