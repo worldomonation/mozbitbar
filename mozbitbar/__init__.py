@@ -53,9 +53,9 @@ class MozbitbarCredentialException(Exception):
         pass
 
 
-class MozbitbarTestException(Exception):
+class MozbitbarTestRunException(Exception):
     def __init__(self, message):
-        """MozbitbarTestException will be raised if Bitbar test runs experience
+        """MozbitbarTestRunException will be raised if Bitbar test runs experience
         any sort of issues.
         """
         pass

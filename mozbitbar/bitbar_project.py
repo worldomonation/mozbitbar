@@ -14,7 +14,7 @@ from mozbitbar import (
     MozbitbarProjectException,
     MozbitbarFrameworkException,
     MozbitbarDeviceException,
-    MozbitbarTestException
+    MozbitbarTestRunException
 )
 from mozbitbar.configuration import Configuration
 
@@ -778,7 +778,7 @@ class BitbarProject(Configuration):
         try:
             assert self._is_test_name_unique(kwargs.get('name'))
         except AssertionError:
-            raise MozbitbarTestException('{}: name: {} is not unique'.format(
+            raise MozbitbarTestRunException('{}: name: {} is not unique'.format(
                 __name__,
                 kwargs.get('name')
                 )
