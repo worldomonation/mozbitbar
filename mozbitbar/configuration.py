@@ -44,7 +44,7 @@ class Configuration(object):
             assert (self.user_name and self.user_password) or self.api_key
             assert self.url
         except AssertionError:
-            msg = '{}: failed assertion of Bitbar configuration values'
+            msg = 'Failed to assert minimum required Bitbar credentials'
             raise MozbitbarCredentialException(msg)
         except AttributeError as ae:
             raise MozbitbarCredentialException(ae.message)
