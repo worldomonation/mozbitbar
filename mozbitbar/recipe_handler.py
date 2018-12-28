@@ -219,6 +219,7 @@ def run_recipe(recipe_name):
         bitbar_project = BitbarProject(recipe.project,
                                        **recipe.project_arguments)
     except (MozbitbarProjectException, MozbitbarCredentialException) as e:
+        logger.critical(' '.join(['Status code:', str(e.status_code)]))
         logger.critical(e.message)
         sys.exit(1)
     logger.info('Bitbar project object successfully initialized.')

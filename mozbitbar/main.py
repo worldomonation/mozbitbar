@@ -9,9 +9,6 @@ import sys
 from mozbitbar import recipe_handler
 from mozbitbar.cli import cli
 
-from mozbitbar import log
-logger = log.setup_logger()
-
 
 def main():
     # example of how to call and use Bitbar with this harness.

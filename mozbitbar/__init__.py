@@ -4,6 +4,9 @@
 
 from __future__ import print_function, absolute_import
 
+from mozbitbar import log
+logger = log.setup_logger()
+
 
 class MozbitbarProjectException(Exception):
     def __init__(self, message):
@@ -46,12 +49,16 @@ class MozbitbarFileException(Exception):
 
 
 class MozbitbarCredentialException(Exception):
-    def __init__(self, message):
+    def __init__(self, message, status_code=None):
         """MozbitbarCredentialException will be raised if credentials
         supplied to BitbarProject has issues.
-        """
-        pass
 
+        Args:
+            message (str): Exception message.
+            status_code (int, optional): HTTP status code from Testdroid.
+        """
+        self.message = message
+        self.status_code = status_code
 
 class MozbitbarTestRunException(Exception):
     def __init__(self, message):
