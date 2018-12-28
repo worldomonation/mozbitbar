@@ -58,12 +58,11 @@ class BitbarProject(Configuration):
             logger.debug('Create new project')
             self.create_project(**kwargs)
         elif 'existing' in project_status:
+            logger.debug('Use existing project')
             self.use_existing_project(**kwargs)
         else:
-            msg = '''invalid project status specifier received,
-                     project cannot be set.\nproject status: {}
-                  '''.format(project_status)
-            raise MozbitbarProjectException(msg)
+            msg = 'Invalid project status: {}'.format(project_status)
+            raise MozbitbarProjectException(message=msg)
 
     # Class attributes #
 
@@ -212,12 +211,11 @@ class BitbarProject(Configuration):
     # Additional Methods #
 
     def _set_project_attributes(self, response):
-        """Sets class attributes.
+        """Sets class attributes from the parameter value.
 
-        The following values are set:
-            - project_id
-            - project_name
-            - project_type
+        Args:
+            response (:obj:`dict`): Response from Bitbar represented as
+                dictionary of strings.
         """
         self.project_id = response['id']
         self.project_name = response['name']
@@ -250,6 +248,7 @@ class BitbarProject(Configuration):
             bool: True if path is found on local disk. False otherwise.
         """
         assert type(path) == str
+        logger.debug(' '.join(['Absolute path:', os.path.abspath(path)]))
         return os.path.isfile(os.path.abspath(path))
 
     def _open_file(self, path):
@@ -267,8 +266,10 @@ class BitbarProject(Configuration):
         if self._file_on_local_disk(path):
             with open(path, 'r') as f:
                 return f.read()
-        msg = '{}: file: {} not found'.format(__name__, path)
-        raise MozbitbarFileException(msg)
+
+        msg = 'File could not be located for opening'
+        logger.critical(msg)
+        raise MozbitbarFileException(message=msg, path=path)
 
     # Project operations #
 
@@ -310,7 +311,7 @@ class BitbarProject(Configuration):
                     __name__,
                     project_name
                 )
-                raise MozbitbarProjectException(msg)
+                raise MozbitbarProjectException(message=msg)
 
         # TODO: check if project_type specified is valid.
 
@@ -353,7 +354,7 @@ class BitbarProject(Configuration):
                 project_name,
                 project_id
             ) + 'not found on Bitbar'
-            raise MozbitbarProjectException(msg)
+            raise MozbitbarProjectException(message=msg)
 
         self._set_project_attributes(project)
 
@@ -385,7 +386,7 @@ class BitbarProject(Configuration):
             assert type(new_config) is dict
         except AssertionError:
             msg = '{}: config: not valid dict'.format(__name__)
-            raise MozbitbarProjectException(msg)
+            raise MozbitbarProjectException(message=msg)
 
         existing_configs = self.get_project_configs()
 
@@ -409,7 +410,7 @@ class BitbarProject(Configuration):
             msg = '{}: failed to write updated'.format(
                 __name__
                 ) + 'configuration values to Bitbar.'
-            raise MozbitbarProjectException(msg)
+            raise MozbitbarProjectException(message=msg)
 
     def _load_project_config(self, path='project_config.json'):
         """Loads project config from the disk.
@@ -465,7 +466,7 @@ class BitbarProject(Configuration):
             msg = '{}: both framework id and name must correspond '.format(
                 __name__
             ) + 'to an existing framework on Bitbar'
-            raise MozbitbarFrameworkException(msg)
+            raise MozbitbarFrameworkException(message=msg)
 
         self.client.set_project_framework(self.project_id, framework_id)
 
@@ -520,7 +521,12 @@ class BitbarProject(Configuration):
                 assert output['id']
             except RequestResponseError as rre:
                 if rre.status_code is 409:
-                    print(rre.message, 'skipping..')
+                    logger.info(rre.message)
+                    logger.info(' '.join(['Skipping parameter:', parameter]))
+                else:
+                    logger.critical('Testdroid responded with an error')
+                    raise MozbitbarProjectException(message=rre.message,
+                                                    status_code=rre.status_code)
 
     def delete_project_parameter(self, parameter_to_delete):
         """Deletes a single project parameter from the project.
@@ -628,17 +634,18 @@ class BitbarProject(Configuration):
 
             if self._file_on_bitbar(filename):
                 # skip and go to the next item in the list of files.
-                msg = 'File: {} already exists on Bitbar, \
-                       skipping upload'.format(filename)
+                msg = ', '.join([
+                    'File: {} already exists on Bitbar'.format(filename),
+                    'skipping upload'
+                ])
                 logger.info(msg)
                 continue
 
             try:
                 assert self._file_on_local_disk(filename)
             except AssertionError:
-                logger.critical('Failed to locate file on disk')
-                msg = 'Could not locate file'
-                raise MozbitbarFileException(msg, filename)
+                msg = 'Failed to locate file on disk.'
+                raise MozbitbarFileException(path=filename, message=msg)
 
             api_path_components = [
                 "users/{user_id}/".format(user_id=self.get_user_id()),
@@ -709,7 +716,7 @@ class BitbarProject(Configuration):
                 msg = '{}: use valid device group id or name'.format(
                     __name__
                 )
-                raise MozbitbarDeviceException(msg)
+                raise MozbitbarDeviceException(message=msg)
 
         self.device_group_id = id
         self.device_group_name = name
@@ -744,7 +751,7 @@ class BitbarProject(Configuration):
             __name__,
             device_id
         )
-        raise MozbitbarDeviceException(msg)
+        raise MozbitbarDeviceException(message=msg)
 
     # Test Run operations #
 
@@ -787,15 +794,15 @@ class BitbarProject(Configuration):
             )
 
         try:
-            assert self.project_id
-        except AssertionError:
-            raise MozbitbarProjectException('{}: project must be set')
+            assert self.project_id, 'Project ID not set'
+        except AssertionError as ae:
+            raise MozbitbarProjectException(message=ae.args)
 
         try:
             assert (self.device_group_id or self.device_id)
         except AssertionError:
             raise MozbitbarDeviceException(
-                '{}: device or device group must be set')
+                message='{}: device or device group must be set')
 
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       self.device_group_id,

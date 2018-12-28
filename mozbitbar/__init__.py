@@ -8,49 +8,62 @@ from mozbitbar import log
 logger = log.setup_logger()
 
 
-class MozbitbarProjectException(Exception):
-    def __init__(self, message):
+class MozbitbarBaseException(Exception):
+    def __init__(self, **kwargs):
+        """MozbitbarBaseException is the base class from which all custom
+        Mozbitbar exceptions inherit from. It in turn inherits from the base
+        Exception class in Python.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments.
+        """
+        self.message = kwargs.pop('message', None)
+        self.status_code = kwargs.pop('status_code', None)
+
+
+class MozbitbarProjectException(MozbitbarBaseException):
+    def __init__(self, **kwargs):
         """MozbitbarProjectException will be raised if any exceptions occur
         relating to project attributes.
         """
-        self.message = message
+        super(MozbitbarProjectException, self).__init__(**kwargs)
 
 
-class MozbitbarDeviceException(Exception):
-    def __init__(self, message):
-        """MozbitbarDeviceException will be raised if any exceptions occur
-        relating to device operations.
+class MozbitbarDeviceException(MozbitbarBaseException):
+    def __init__(self, **kwargs):
+        """MozbitbarDeviceException will be raised for any exceptions relating
+        to device, device groups or device operations.
         """
-        self.message = message
+        super(MozbitbarDeviceException, self).__init__(**kwargs)
 
 
-class MozbitbarRecipeException(Exception):
-    def __init__(self, message):
-        """MozbitbarRecipeException will be raised upon YAML recipe
-        having any errors.
+class MozbitbarRecipeException(MozbitbarBaseException):
+    def __init__(self, **kwargs):
+        """MozbitbarRecipeException will be raised upon the recipe having any
+        sort of errors.
         """
-        self.message = message
+        super(MozbitbarRecipeException, self).__init__(**kwargs)
 
 
-class MozbitbarFrameworkException(Exception):
-    def __init__(self, message):
-        """FrameworkException is raised when project framework encounters
-        an issue.
+class MozbitbarFrameworkException(MozbitbarBaseException):
+    def __init__(self, **kwargs):
+        """FrameworkException is raised when Bitbar project framework
+        encounters an issue.
         """
-        self.message = message
+        super(MozbitbarFrameworkException, self).__init__(**kwargs)
 
 
-class MozbitbarFileException(Exception):
-    def __init__(self, message, path):
+class MozbitbarFileException(MozbitbarBaseException):
+    def __init__(self, path, **kwargs):
         """MozbitbarFileException will be raised if errors relating to file
         transactions occur.
         """
-        self.message = message
+        super(MozbitbarFileException, self).__init__(**kwargs)
         self.path = path
 
 
-class MozbitbarCredentialException(Exception):
-    def __init__(self, message, status_code=None):
+class MozbitbarCredentialException(MozbitbarBaseException):
+    def __init__(self, **kwargs):
         """MozbitbarCredentialException will be raised if credentials
         supplied to BitbarProject has issues.
 
@@ -58,23 +71,23 @@ class MozbitbarCredentialException(Exception):
             message (str): Exception message.
             status_code (int, optional): HTTP status code from Testdroid.
         """
-        self.message = message
-        self.status_code = status_code
+        super(MozbitbarCredentialException, self).__init__(**kwargs)
 
 
-class MozbitbarTestRunException(Exception):
-    def __init__(self, message, test_run_id):
+class MozbitbarTestRunException(MozbitbarBaseException):
+    def __init__(self, test_run_id=None, **kwargs):
         """MozbitbarTestRunException will be raised if Bitbar test runs experience
         any sort of issues.
         """
-        self.message = message
+        super(MozbitbarTestRunException, self).__init__(**kwargs)
         self.test_run_id = test_run_id
 
 
-class MozbitbarOperationNotImplementedException(Exception):
-    def __init__(self, message):
+class MozbitbarOperationNotImplementedException(MozbitbarBaseException):
+    def __init__(self, **kwargs):
         """MozbitbarOperationNotImplementedException will be raised if a
         recipe action does not correspond to an implemented method in the
         BitbarProject object.
         """
-        self.message = message
+        super(MozbitbarOperationNotImplementedException, self).__init__(
+            **kwargs)

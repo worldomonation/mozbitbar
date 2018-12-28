@@ -30,7 +30,6 @@ class Configuration(object):
             MozbitbarCredentialException: If minimum required credentials
                 were not set, or supplied credentials were invalid.
         """
-        logger.debug('kwargs: {}'.format(**kwargs))
         if kwargs and any(['TESTDROID' in key for key in kwargs.keys()]):
             self.user_name = kwargs.get('TESTDROID_USERNAME')
             self.user_password = kwargs.get('TESTDROID_PASSWORD')
@@ -42,15 +41,12 @@ class Configuration(object):
             self.api_key = os.getenv('TESTDROID_APIKEY')
             self.url = os.getenv('TESTDROID_URL')
 
-        # ensure minimal viable set of parameters are set.
         try:
-            assert (self.user_name and self.user_password) or self.api_key
-            assert self.url
-        except AssertionError:
-            msg = 'Failed to assert minimum required Bitbar credentials'
-            raise MozbitbarCredentialException(msg)
-        except AttributeError as ae:
-            raise MozbitbarCredentialException(ae.message)
+            assert ((self.user_name and self.user_password) or
+                    self.api_key), 'Missing Credentials'
+            assert self.url, 'Missing Testdroid cloud URL'
+        except (AssertionError, AttributeError) as ae:
+            raise MozbitbarCredentialException(message=ae.args)
 
         # instantiate client.
         self.client = Testdroid(username=self.user_name or None,
@@ -62,6 +58,5 @@ class Configuration(object):
         try:
             self.client.get_me()
         except RequestResponseError as rre:
-            msg = '''Bitbar rejected supplied credentials.
-                     Check the supplied **kwargs or environment variables.'''
-            raise MozbitbarCredentialException(msg, rre.status_code)
+            raise MozbitbarCredentialException(message=rre.message,
+                                               status_code=rre.status_code)

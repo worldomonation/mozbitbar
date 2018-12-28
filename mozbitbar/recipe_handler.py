@@ -121,7 +121,7 @@ class Recipe(object):
                 name=__name__,
                 path=path
             )
-            raise MozbitbarRecipeException(msg)
+            raise MozbitbarRecipeException(message=msg)
 
     def load_recipe_from_yaml(self):
         """Parses a recipe from a YAML file stored locally.
@@ -142,7 +142,7 @@ class Recipe(object):
                 __name__,
                 self.recipe_path
             )
-            raise MozbitbarRecipeException(msg)
+            raise MozbitbarRecipeException(message=msg)
 
     def validate_recipe(self, recipe):
         """Validates the loaded recipe.
@@ -177,7 +177,7 @@ class Recipe(object):
                 __name__,
                 self.recipe_name
             )
-            raise MozbitbarRecipeException(msg)
+            raise MozbitbarRecipeException(message=msg)
 
         # remaining recipe object is the list of Bitbar actions to be run
         self.task_list = recipe
@@ -221,7 +221,6 @@ def run_recipe(recipe_name):
         bitbar_project = BitbarProject(recipe.project,
                                        **recipe.project_arguments)
     except (MozbitbarProjectException, MozbitbarCredentialException) as e:
-        logger.critical(' '.join(['Status code:', str(e.status_code)]))
         logger.critical(e.message)
         sys.exit(1)
     logger.info('Bitbar project object successfully initialized.')
@@ -258,4 +257,4 @@ def run_recipe(recipe_name):
                 __name__,
                 action
             )
-            raise MozbitbarOperationNotImplementedException(msg)
+            raise MozbitbarOperationNotImplementedException(message=msg)
