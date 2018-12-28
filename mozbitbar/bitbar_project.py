@@ -55,6 +55,7 @@ class BitbarProject(Configuration):
         super(BitbarProject, self).__init__(**kwargs)
 
         if 'new' in project_status:
+            logger.debug('Create new project')
             self.create_project(**kwargs)
         elif 'existing' in project_status:
             self.use_existing_project(**kwargs)

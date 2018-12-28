@@ -10,6 +10,12 @@ fmt = '%(asctime)s - %(levelname)s - %(module)s - %(message)s'
 
 
 def setup_logger():
+    """Sets up the logging facilities.
+
+    Returns:
+        :obj:`logging`: Instance of logging object instantiated with
+            pre-set values.
+    """
     formatter = logging.Formatter(fmt=fmt)
 
     handler = logging.StreamHandler()

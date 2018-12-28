@@ -4,10 +4,13 @@
 
 from __future__ import print_function, absolute_import
 
+import logging
 import os
 
 from mozbitbar import MozbitbarCredentialException
 from testdroid import Testdroid, RequestResponseError
+
+logger = logging.getLogger('mozbitbar')
 
 
 class Configuration(object):
@@ -27,6 +30,7 @@ class Configuration(object):
             MozbitbarCredentialException: If minimum required credentials
                 were not set, or supplied credentials were invalid.
         """
+        logger.debug('kwargs: {}'.format(**kwargs))
         if kwargs and any(['TESTDROID' in key for key in kwargs.keys()]):
             self.user_name = kwargs.get('TESTDROID_USERNAME')
             self.user_password = kwargs.get('TESTDROID_PASSWORD')
