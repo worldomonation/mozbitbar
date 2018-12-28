@@ -6,17 +6,21 @@ from __future__ import print_function, absolute_import
 
 import logging
 
+fmt = '%(asctime)s - %(levelname)s - %(module)s - %(message)s'
+
 
 def setup_logger():
-    formatter = logging.Formatter(
-        fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+    formatter = logging.Formatter(fmt=fmt)
 
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
     logger = logging.getLogger('mozbitbar')
+    # very important to stop duplicate logging entries
     logger.propagate = False
+    # TODO: support debug level after reading contents of cli arguments
     logger.setLevel(logging.INFO)
+
     if not logger.handlers:
         logger.addHandler(handler)
     return logger

@@ -13,7 +13,7 @@ class MozbitbarProjectException(Exception):
         """MozbitbarProjectException will be raised if any exceptions occur
         relating to project attributes.
         """
-        pass
+        self.message = message
 
 
 class MozbitbarDeviceException(Exception):
@@ -21,7 +21,7 @@ class MozbitbarDeviceException(Exception):
         """MozbitbarDeviceException will be raised if any exceptions occur
         relating to device operations.
         """
-        pass
+        self.message = message
 
 
 class MozbitbarRecipeException(Exception):
