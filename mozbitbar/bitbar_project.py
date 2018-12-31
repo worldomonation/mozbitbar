@@ -362,7 +362,7 @@ class BitbarProject(Configuration):
     def get_project_configs(self):
         return self.client.get_project_config(self.project_id)
 
-    def set_project_configs(self, new_config={}, path=None):
+    def set_project_configs(self, new_config=None, path=None):
         """Overwrites part or all of project configuration with new values.
 
         Provided with either a dict of config values or path to a json file
@@ -379,14 +379,20 @@ class BitbarProject(Configuration):
             RequestResponseError: If new_config was not accepted by Bitbar
                 due to type or value error.
         """
-        if path:
-            assert self._file_on_local_disk(path)
-            new_config = json.loads(self._open_file(os.path.abspath(path)))
+        if new_config and not path:
+            logger.debug('New Config provided as parameter.')
+        elif path and not new_config:
+            if self._file_on_local_disk(path):
+                new_config = json.loads(self._open_file(os.path.abspath(path)))
+            else:
+                logger.error(
+                    'Specified path not found on disk: {}'.format(path))
+        else:
+            logger.error('Path not provided')
+            return
 
-        try:
-            assert type(new_config) is dict
-        except AssertionError:
-            msg = '{}: config: not valid dict'.format(__name__)
+        if type(new_config) is not dict:
+            msg = 'Loaded config is not a valid dict'
             raise MozbitbarProjectException(message=msg)
 
         existing_configs = self.get_project_configs()
@@ -404,13 +410,10 @@ class BitbarProject(Configuration):
             return
 
         output = self.client.set_project_config(self.project_id, **new_config)
-        try:
-            assert all(key in output.keys() and output[key] == value
-                       for key, value in new_config.items())
-        except AssertionError:
-            msg = '{}: failed to write updated'.format(
-                __name__
-                ) + 'configuration values to Bitbar.'
+
+        if not all(key in output.keys() and
+            output[key] == value for key, value in new_config.items()):
+            msg = 'Failed to validate all project configuration values were written to Bitbar.'
             raise MozbitbarProjectException(message=msg)
 
     def _load_project_config(self, path='project_config.json'):
@@ -447,7 +450,7 @@ class BitbarProject(Configuration):
         """
         available_frameworks = self.get_project_frameworks()
 
-        assert framework_id or framework_name, '' # TODO
+        assert framework_id or framework_name
 
         if framework_id:
             framework_id = int(framework_id)
