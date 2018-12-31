@@ -411,9 +411,10 @@ class BitbarProject(Configuration):
 
         output = self.client.set_project_config(self.project_id, **new_config)
 
-        if not all(key in output.keys() and
-            output[key] == value for key, value in new_config.items()):
-            msg = 'Failed to validate all project configuration values were written to Bitbar.'
+        if not all(key in output.keys() and output[key] == value
+                   for key, value in new_config.items()):
+            msg = 'Failed to validate all project configuration \
+                   values were written to Bitbar.'
             raise MozbitbarProjectException(message=msg)
 
     def _load_project_config(self, path='project_config.json'):
