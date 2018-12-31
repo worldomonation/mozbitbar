@@ -198,14 +198,13 @@ class BitbarProject(Configuration):
             id (int): Value to set for the device_group_id attribute of this
                 object.
 
-        Raises:
-            AssertionError: If supplied id value is not integer.
+        Returns:
+            int: Value set for the device_id attribute of this object.
         """
         return self.__device_id
 
     @device_id.setter
     def device_id(self, id):
-        assert type(id) is int
         self.__device_id = id
 
     # Additional Methods #
@@ -247,7 +246,7 @@ class BitbarProject(Configuration):
         Returns:
             bool: True if path is found on local disk. False otherwise.
         """
-        assert type(path) == str
+        path = str(path)
         logger.debug(' '.join(['Absolute path:', os.path.abspath(path)]))
         return os.path.isfile(os.path.abspath(path))
 
@@ -316,7 +315,9 @@ class BitbarProject(Configuration):
         # TODO: check if project_type specified is valid.
 
         output = self.client.create_project(project_name, project_type)
-        assert 'id' in output
+        if 'id' not in output:
+            msg = 'Testdroid response does not contain created project ID.'
+            raise MozbitbarProjectException(message=msg)
 
         self._set_project_attributes(output)
 
@@ -446,7 +447,8 @@ class BitbarProject(Configuration):
         """
         available_frameworks = self.get_project_frameworks()
 
-        assert framework_id or framework_name
+        assert framework_id or framework_name, '' # TODO
+
         if framework_id:
             framework_id = int(framework_id)
         if framework_name:
