@@ -463,7 +463,7 @@ class BitbarProject(Configuration):
             if framework.get('name') == framework_name:
                 framework_id = framework.get('id')
                 break
-            elif framework.get('id') is framework_id:
+            elif framework.get('id') == framework_id:
                 framework_name = framework.get('name')
                 break
 
@@ -523,9 +523,12 @@ class BitbarProject(Configuration):
                                                             parameter)
                 assert output['id']
             except RequestResponseError as rre:
-                if rre.status_code is 409:
-                    logger.info(rre.message)
-                    logger.info(' '.join(['Skipping parameter:', parameter]))
+                if rre.status_code == 409:
+                    msg = ', '.join([
+                        'Value already set: {}'.format(parameter['key']),
+                        'skipping parameter'
+                    ])
+                    logger.info(msg)
                 else:
                     logger.critical('Testdroid responded with an error')
                     raise MozbitbarProjectException(message=rre.message,
@@ -579,7 +582,7 @@ class BitbarProject(Configuration):
             msg = ' '.join([
                 'Deletion attempt of project parameter: {}'.format(
                     parameter_to_delete),
-                'did not return status code 204 as expected'
+                'did not return HTTP 204 as expected'
             ])
             raise MozbitbarProjectException(message=msg)
 
@@ -649,10 +652,8 @@ class BitbarProject(Configuration):
                 logger.info(msg)
                 continue
 
-            try:
-                assert self._file_on_local_disk(filename)
-            except AssertionError:
-                msg = 'Failed to locate file on disk.'
+            if not self._file_on_local_disk(filename):
+                msg = 'Failed to locate on disk: {}'.format(filename)
                 raise MozbitbarFileException(path=filename, message=msg)
 
             api_path_components = [
@@ -660,18 +661,16 @@ class BitbarProject(Configuration):
                 "projects/{project_id}/".format(project_id=self.project_id),
                 "files/{file_type}".format(file_type=file_type)
             ]
-            api_path = ''.join([api_path_components])
+            api_path = ''.join(api_path_components)
 
             output = self.client.upload(path=api_path, filename=filename)
 
-            assert output
-
-            try:
-                assert self._file_on_bitbar(filename)
-            except AssertionError:
-                msg = '''Failed to upload file to Bitbar:
-                         file type: {}, file name: {}
-                      '''.format(file_type, filename)
+            if output.status_code not in range(200, 300):
+                msg = ' '.join([
+                    'Failed to upload file to Bitbar;',
+                    'file type: {}'.format(file_type),
+                    'file name: {}'.format(filename)
+                ])
                 raise MozbitbarFileException(msg)
 
     # Device operations #
@@ -699,8 +698,11 @@ class BitbarProject(Configuration):
         """
         return self.client.get_devices()['data']
 
-    def set_device_group(self, name=None, id=None):
+    def set_device_group(self, device_group_name=None, device_group_id=None):
         """Sets the project's device group to be used for test runs.
+
+        Supports referencing device groups by both name and id. This method
+        will attempt to find a match for whichever parameter that is supplied.
 
         Args:
             name (str, optional): Device group name in string.
@@ -709,27 +711,24 @@ class BitbarProject(Configuration):
         Raises:
             MozbitbarDeviceException: If neither id nor name was supplied.
         """
-        device_groups = [(device_group['id'], device_group['displayName'])
-                         for device_group in self.get_device_groups()]
-
-        for device_group in device_groups:
+        for device_group in self.get_device_groups():
             # fill out missing parameter so we have both id and name.
-            if name in device_group:
-                id = device_group[0]
-                break
-            if id in device_group:
-                name = device_group[1]
-                break
+            if device_group_name in device_group:
+                self.device_group_id = device_group['id']
+                self.device_group_name = device_group_name
+                return
+            elif device_group_id in device_group:
+                self.device_group_id = device_group_id
+                self.device_group_name = device_group['displayName']
+                return
             else:
-                msg = '{}: use valid device group id or name'.format(
-                    __name__
-                )
-                raise MozbitbarDeviceException(message=msg)
+                pass
 
-        self.device_group_id = id
-        self.device_group_name = name
+        msg = 'Device group name or device group id \
+                did not match any group on Bitbar'
+        raise MozbitbarDeviceException(message=msg)
 
-    def set_device(self, device_id):
+    def set_device(self, device_id=None, device_name=None):
         """Sets the device using the device_id.
 
         Accepts either a device name or device id.
@@ -743,22 +742,19 @@ class BitbarProject(Configuration):
             MozbitbarDeviceException: If device_id is not found in list of
                 available device on Bitbar.
         """
-        devices_list = self.get_devices()
-
-        for device in devices_list:
+        for device in self.get_devices():
             if device['id'] == device_id:
                 self.device_id = device_id
                 self.device_name = device['displayName']
                 return
-            if device['displayName'] == device_id:
+            elif device['displayName'] == device_name:
                 self.device_id = device['id']
                 self.device_name = device_id
                 return
+            else:
+                pass
 
-        msg = '{}: device specifier {} not found on Bitbar.'.format(
-            __name__,
-            device_id
-        )
+        msg = 'Device specifier not found on Bitbar: {}'.format(device_id)
         raise MozbitbarDeviceException(message=msg)
 
     # Test Run operations #
