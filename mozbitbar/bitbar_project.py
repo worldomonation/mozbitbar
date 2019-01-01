@@ -371,13 +371,16 @@ class BitbarProject(Configuration):
         to write the configuration values.
 
         Args:
-            new_config (:obj:`dict`): Project configuration represented
-                as dict.
+            new_config (:obj:`dict`, optional): Project configuration
+                represented as dict.
+            path (str, optional): Path to a locally stored file containing
+                project configuration.
+
+        Return:
+            None: When no actions need to be performed.
 
         Raises:
             MozbitbarProjectException: If new_config is not a valid dict.
-            RequestResponseError: If new_config was not accepted by Bitbar
-                due to type or value error.
         """
         if new_config and not path:
             logger.debug('New Config provided as parameter.')
@@ -393,7 +396,7 @@ class BitbarProject(Configuration):
 
         if type(new_config) is not dict:
             msg = 'Loaded config is not a valid dict'
-            raise MozbitbarProjectException(message=msg)
+            raise TypeError(msg)
 
         existing_configs = self.get_project_configs()
 
@@ -404,9 +407,8 @@ class BitbarProject(Configuration):
                 new_config.pop(key)
 
         if len(new_config) is 0:
-            msg = ''.join(['{}: no project configuration '.format(__name__),
-                           'values to update on Bitbar'])
-            print(msg)
+            msg = 'No project configuration values need to be updated'
+            logger.info(msg)
             return
 
         output = self.client.set_project_config(self.project_id, **new_config)
@@ -414,7 +416,7 @@ class BitbarProject(Configuration):
         if not all(key in output.keys() and output[key] == value
                    for key, value in new_config.items()):
             msg = 'Failed to validate all project configuration \
-                   values were written to Bitbar.'
+                   values were written to Bitbar'
             raise MozbitbarProjectException(message=msg)
 
     def _load_project_config(self, path='project_config.json'):
@@ -441,22 +443,21 @@ class BitbarProject(Configuration):
         MozbitbarFrameworkException is raised.
 
         Args:
-            name (str): String representation of the framework name.
-            id (int): Integer ID of the framework.
+            framework_name (str): String representation of the framework name.
+            framework_id (int): Integer ID of the framework.
 
         Raises:
             MozbitbarFrameworkException: If framework name or framework id
                 provided does not match any existing frameworks on Bitbar.
             RequestResponseError: If Testdroid responds with an error.
         """
-        available_frameworks = self.get_project_frameworks()
-
-        assert framework_id or framework_name
-
+        # looks redundant, except Python 2 has strings and then Unicode strings
         if framework_id:
             framework_id = int(framework_id)
         if framework_name:
             framework_name = str(framework_name)
+
+        available_frameworks = self.get_project_frameworks()
 
         for framework in available_frameworks:
             if framework.get('name') == framework_name:
@@ -466,12 +467,8 @@ class BitbarProject(Configuration):
                 framework_name = framework.get('name')
                 break
 
-        try:
-            assert (framework_id and framework_name)
-        except AssertionError:
-            msg = '{}: both framework id and name must correspond '.format(
-                __name__
-            ) + 'to an existing framework on Bitbar'
+        if not (framework_id and framework_name):
+            msg = 'Framework ID and/or name was invalid.'
             raise MozbitbarFrameworkException(message=msg)
 
         self.client.set_project_framework(self.project_id, framework_id)
@@ -511,7 +508,7 @@ class BitbarProject(Configuration):
             RequestResponseError: If Testdroid responds with an error.
         """
         if not parameters:
-            print('No project parameters supplied.')
+            logger.info('No project parameters supplied.')
             return
 
         if force_overwrite:
