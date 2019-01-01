@@ -557,26 +557,34 @@ class BitbarProject(Configuration):
             sanitized_parameter_id = int(parameter_to_delete)
         except ValueError:
             # if not, we have a parameter_name that needs conversion to id.
-            sanitized_parameter_id = self.get_project_parameter_id_by_name(
+            sanitized_parameter_id = self.get_project_parameter_id(
                 parameter_to_delete)
 
         if sanitized_parameter_id is None:
             # if user-supplied parameter name or id is not in fact set for the
             # project on Bitbar, skip the deletion process.
-            print('Parameter ID for {} not found.'.format(parameter_to_delete),
-                  'skipping deletion..')
+            msg = ', '.join([
+                'Parameter: {} is not set for project'.format(
+                    parameter_to_delete),
+                'skipping deletion'
+            ])
+            logger.info(msg)
             return
-
-        assert type(sanitized_parameter_id) is int
 
         output = self.client.delete_project_parameters(
             self.project_id,
             sanitized_parameter_id
         )
-        assert output.status_code is 204
+        if output.status_code is not 204:
+            msg = ' '.join([
+                'Deletion attempt of project parameter: {}'.format(
+                    parameter_to_delete),
+                'did not return status code 204 as expected'
+            ])
+            raise MozbitbarProjectException(message=msg)
 
-    def get_project_parameter_id_by_name(self, parameter_name):
-        """Returns the parameter_id value represented by the string.
+    def get_project_parameter_id(self, parameter_name):
+        """Returns the parameter_id value.
 
         This method will convert the string representation of the
         project parameter name to an integer id.
@@ -592,8 +600,6 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
-        assert type(parameter_name) is str
-
         output = self.client.get_project_parameters(self.project_id)
         for parameter in output['data']:
             if parameter_name == parameter['key']:
@@ -613,9 +619,8 @@ class BitbarProject(Configuration):
         Returns:
             bool: True if filename is found on Bitbar. False otherwise.
         """
-        assert type(filename) == str
         # sanitize the provided path to just the file name itself.
-        filename = os.path.basename(filename)
+        filename = os.path.basename(str(filename))
 
         output = self.client.get_input_files()
         return any([file_list['name'] == filename
