@@ -510,7 +510,7 @@ class BitbarProject(Configuration):
         for parameter in parameters:
             try:
                 self.client.set_project_parameters(self.project_id,
-                                                            parameter)
+                                                   parameter)
             except RequestResponseError as rre:
                 if rre.status_code == 409:
                     # not an error per se, just means there exists already a
