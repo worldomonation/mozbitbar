@@ -164,8 +164,7 @@ class BitbarProject(Configuration):
 
     @framework_id.setter
     def framework_id(self, framework_id):
-        assert type(framework_id) is int
-        self.__framework_id = framework_id
+        self.__framework_id = int(framework_id)
 
     @property
     def framework_name(self):
@@ -179,8 +178,7 @@ class BitbarProject(Configuration):
 
     @framework_name.setter
     def framework_name(self, framework_name):
-        assert type(framework_name) is str
-        self.__framework_name = framework_name
+        self.__framework_name = str(framework_name)
 
     @property
     def device_id(self):
@@ -511,16 +509,13 @@ class BitbarProject(Configuration):
 
         for parameter in parameters:
             try:
-                output = self.client.set_project_parameters(self.project_id,
+                self.client.set_project_parameters(self.project_id,
                                                             parameter)
-                assert output['id']
             except RequestResponseError as rre:
                 if rre.status_code == 409:
-                    msg = ', '.join([
-                        'Value already set: {}'.format(parameter['key']),
-                        'skipping parameter'
-                    ])
-                    logger.info(msg)
+                    # not an error per se, just means there exists already a
+                    # parameter with the given key name.
+                    logger.info(', '.join([rre.message, 'skipping..']))
                 else:
                     logger.critical('Testdroid responded with an error')
                     raise MozbitbarProjectException(message=rre.message,
@@ -543,8 +538,8 @@ class BitbarProject(Configuration):
                 from the project. Could be string (name) or integer (id).
 
         Raises:
-            AssertionError: If HTTPS response of the deletion attempt is
-                anything other than 204.
+            MozbitbarProjectException: If HTTPS response of the deletion
+                attempt returns anything other than 204.
             RequestResponseError: If Testdroid responds with an error.
         """
         try:
