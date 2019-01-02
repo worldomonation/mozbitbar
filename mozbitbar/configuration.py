@@ -41,12 +41,14 @@ class Configuration(object):
             self.api_key = os.getenv('TESTDROID_APIKEY')
             self.url = os.getenv('TESTDROID_URL')
 
-        try:
-            assert ((self.user_name and self.user_password) or
-                    self.api_key), 'Missing Credentials'
-            assert self.url, 'Missing Testdroid cloud URL'
-        except (AssertionError, AttributeError) as ae:
-            raise MozbitbarCredentialException(message=ae.args)
+        if not ((self.user_name and self.user_password) or self.api_key):
+            msg = 'Missing Testdroid credentials. \
+                   Check username/password or apikey value.'
+            raise MozbitbarCredentialException(message=msg)
+
+        if not self.url:
+            msg = 'Missing Testdroid cloud URL. Check url value.'
+            raise MozbitbarCredentialException(message=msg)
 
         # instantiate client.
         self.client = Testdroid(username=self.user_name or None,
