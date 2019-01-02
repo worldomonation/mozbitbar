@@ -133,11 +133,7 @@ class BitbarProject(Configuration):
 
     @device_group_id.setter
     def device_group_id(self, device_group_id):
-        if type(device_group_id) is not int:
-            raise ValueError('invalid device_group_id type:' +
-                             'expected int, received {}'.format(
-                                type(device_group_id)))
-        self.__device_group_id = device_group_id
+        self.__device_group_id = int(device_group_id)
 
     @property
     def device_group_name(self):
@@ -154,11 +150,7 @@ class BitbarProject(Configuration):
 
     @device_group_name.setter
     def device_group_name(self, device_group_name):
-        if type(device_group_name) is not str:
-            raise ValueError('invalid device_group_name type:' +
-                             'expected str, received {}'.format(
-                                 type(device_group_name)))
-        self.__device_group_name = device_group_name
+        self.__device_group_name = str(device_group_name)
 
     @property
     def framework_id(self):
@@ -172,8 +164,7 @@ class BitbarProject(Configuration):
 
     @framework_id.setter
     def framework_id(self, framework_id):
-        assert type(framework_id) is int
-        self.__framework_id = framework_id
+        self.__framework_id = int(framework_id)
 
     @property
     def framework_name(self):
@@ -187,8 +178,7 @@ class BitbarProject(Configuration):
 
     @framework_name.setter
     def framework_name(self, framework_name):
-        assert type(framework_name) is str
-        self.__framework_name = framework_name
+        self.__framework_name = str(framework_name)
 
     @property
     def device_id(self):
@@ -198,14 +188,13 @@ class BitbarProject(Configuration):
             id (int): Value to set for the device_group_id attribute of this
                 object.
 
-        Raises:
-            AssertionError: If supplied id value is not integer.
+        Returns:
+            int: Value set for the device_id attribute of this object.
         """
         return self.__device_id
 
     @device_id.setter
     def device_id(self, id):
-        assert type(id) is int
         self.__device_id = id
 
     # Additional Methods #
@@ -247,7 +236,7 @@ class BitbarProject(Configuration):
         Returns:
             bool: True if path is found on local disk. False otherwise.
         """
-        assert type(path) == str
+        path = str(path)
         logger.debug(' '.join(['Absolute path:', os.path.abspath(path)]))
         return os.path.isfile(os.path.abspath(path))
 
@@ -316,7 +305,9 @@ class BitbarProject(Configuration):
         # TODO: check if project_type specified is valid.
 
         output = self.client.create_project(project_name, project_type)
-        assert 'id' in output
+        if 'id' not in output:
+            msg = 'Testdroid response does not contain created project ID.'
+            raise MozbitbarProjectException(message=msg)
 
         self._set_project_attributes(output)
 
@@ -361,7 +352,7 @@ class BitbarProject(Configuration):
     def get_project_configs(self):
         return self.client.get_project_config(self.project_id)
 
-    def set_project_configs(self, new_config={}, path=None):
+    def set_project_configs(self, new_config=None, path=None):
         """Overwrites part or all of project configuration with new values.
 
         Provided with either a dict of config values or path to a json file
@@ -370,23 +361,32 @@ class BitbarProject(Configuration):
         to write the configuration values.
 
         Args:
-            new_config (:obj:`dict`): Project configuration represented
-                as dict.
+            new_config (:obj:`dict`, optional): Project configuration
+                represented as dict.
+            path (str, optional): Path to a locally stored file containing
+                project configuration.
+
+        Return:
+            None: When no actions need to be performed.
 
         Raises:
             MozbitbarProjectException: If new_config is not a valid dict.
-            RequestResponseError: If new_config was not accepted by Bitbar
-                due to type or value error.
         """
-        if path:
-            assert self._file_on_local_disk(path)
-            new_config = json.loads(self._open_file(os.path.abspath(path)))
+        if new_config and not path:
+            logger.debug('New Config provided as parameter.')
+        elif path and not new_config:
+            if self._file_on_local_disk(path):
+                new_config = json.loads(self._open_file(os.path.abspath(path)))
+            else:
+                logger.error(
+                    'Specified path not found on disk: {}'.format(path))
+        else:
+            logger.error('Path not provided')
+            return
 
-        try:
-            assert type(new_config) is dict
-        except AssertionError:
-            msg = '{}: config: not valid dict'.format(__name__)
-            raise MozbitbarProjectException(message=msg)
+        if type(new_config) is not dict:
+            msg = 'Loaded config is not a valid dict'
+            raise TypeError(msg)
 
         existing_configs = self.get_project_configs()
 
@@ -397,19 +397,16 @@ class BitbarProject(Configuration):
                 new_config.pop(key)
 
         if len(new_config) is 0:
-            msg = ''.join(['{}: no project configuration '.format(__name__),
-                           'values to update on Bitbar'])
-            print(msg)
+            msg = 'No project configuration values need to be updated'
+            logger.info(msg)
             return
 
         output = self.client.set_project_config(self.project_id, **new_config)
-        try:
-            assert all(key in output.keys() and output[key] == value
-                       for key, value in new_config.items())
-        except AssertionError:
-            msg = '{}: failed to write updated'.format(
-                __name__
-                ) + 'configuration values to Bitbar.'
+
+        if not all(key in output.keys() and output[key] == value
+                   for key, value in new_config.items()):
+            msg = 'Failed to validate all project configuration \
+                   values were written to Bitbar'
             raise MozbitbarProjectException(message=msg)
 
     def _load_project_config(self, path='project_config.json'):
@@ -436,36 +433,32 @@ class BitbarProject(Configuration):
         MozbitbarFrameworkException is raised.
 
         Args:
-            name (str): String representation of the framework name.
-            id (int): Integer ID of the framework.
+            framework_name (str): String representation of the framework name.
+            framework_id (int): Integer ID of the framework.
 
         Raises:
             MozbitbarFrameworkException: If framework name or framework id
                 provided does not match any existing frameworks on Bitbar.
             RequestResponseError: If Testdroid responds with an error.
         """
-        available_frameworks = self.get_project_frameworks()
-
-        assert framework_id or framework_name
+        # looks redundant, except Python 2 has strings and then Unicode strings
         if framework_id:
             framework_id = int(framework_id)
         if framework_name:
             framework_name = str(framework_name)
 
+        available_frameworks = self.get_project_frameworks()
+
         for framework in available_frameworks:
             if framework.get('name') == framework_name:
                 framework_id = framework.get('id')
                 break
-            elif framework.get('id') is framework_id:
+            elif framework.get('id') == framework_id:
                 framework_name = framework.get('name')
                 break
 
-        try:
-            assert (framework_id and framework_name)
-        except AssertionError:
-            msg = '{}: both framework id and name must correspond '.format(
-                __name__
-            ) + 'to an existing framework on Bitbar'
+        if not (framework_id and framework_name):
+            msg = 'Framework ID and/or name was invalid.'
             raise MozbitbarFrameworkException(message=msg)
 
         self.client.set_project_framework(self.project_id, framework_id)
@@ -505,7 +498,7 @@ class BitbarProject(Configuration):
             RequestResponseError: If Testdroid responds with an error.
         """
         if not parameters:
-            print('No project parameters supplied.')
+            logger.info('No project parameters supplied.')
             return
 
         if force_overwrite:
@@ -516,13 +509,13 @@ class BitbarProject(Configuration):
 
         for parameter in parameters:
             try:
-                output = self.client.set_project_parameters(self.project_id,
+                self.client.set_project_parameters(self.project_id,
                                                             parameter)
-                assert output['id']
             except RequestResponseError as rre:
-                if rre.status_code is 409:
-                    logger.info(rre.message)
-                    logger.info(' '.join(['Skipping parameter:', parameter]))
+                if rre.status_code == 409:
+                    # not an error per se, just means there exists already a
+                    # parameter with the given key name.
+                    logger.info(', '.join([rre.message, 'skipping..']))
                 else:
                     logger.critical('Testdroid responded with an error')
                     raise MozbitbarProjectException(message=rre.message,
@@ -545,8 +538,8 @@ class BitbarProject(Configuration):
                 from the project. Could be string (name) or integer (id).
 
         Raises:
-            AssertionError: If HTTPS response of the deletion attempt is
-                anything other than 204.
+            MozbitbarProjectException: If HTTPS response of the deletion
+                attempt returns anything other than 204.
             RequestResponseError: If Testdroid responds with an error.
         """
         try:
@@ -554,26 +547,34 @@ class BitbarProject(Configuration):
             sanitized_parameter_id = int(parameter_to_delete)
         except ValueError:
             # if not, we have a parameter_name that needs conversion to id.
-            sanitized_parameter_id = self.get_project_parameter_id_by_name(
+            sanitized_parameter_id = self.get_project_parameter_id(
                 parameter_to_delete)
 
         if sanitized_parameter_id is None:
             # if user-supplied parameter name or id is not in fact set for the
             # project on Bitbar, skip the deletion process.
-            print('Parameter ID for {} not found.'.format(parameter_to_delete),
-                  'skipping deletion..')
+            msg = ', '.join([
+                'Parameter: {} is not set for project'.format(
+                    parameter_to_delete),
+                'skipping deletion'
+            ])
+            logger.info(msg)
             return
-
-        assert type(sanitized_parameter_id) is int
 
         output = self.client.delete_project_parameters(
             self.project_id,
             sanitized_parameter_id
         )
-        assert output.status_code is 204
+        if output.status_code is not 204:
+            msg = ' '.join([
+                'Deletion attempt of project parameter: {}'.format(
+                    parameter_to_delete),
+                'did not return HTTP 204 as expected'
+            ])
+            raise MozbitbarProjectException(message=msg)
 
-    def get_project_parameter_id_by_name(self, parameter_name):
-        """Returns the parameter_id value represented by the string.
+    def get_project_parameter_id(self, parameter_name):
+        """Returns the parameter_id value.
 
         This method will convert the string representation of the
         project parameter name to an integer id.
@@ -589,8 +590,6 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
-        assert type(parameter_name) is str
-
         output = self.client.get_project_parameters(self.project_id)
         for parameter in output['data']:
             if parameter_name == parameter['key']:
@@ -610,9 +609,8 @@ class BitbarProject(Configuration):
         Returns:
             bool: True if filename is found on Bitbar. False otherwise.
         """
-        assert type(filename) == str
         # sanitize the provided path to just the file name itself.
-        filename = os.path.basename(filename)
+        filename = os.path.basename(str(filename))
 
         output = self.client.get_input_files()
         return any([file_list['name'] == filename
@@ -641,10 +639,8 @@ class BitbarProject(Configuration):
                 logger.info(msg)
                 continue
 
-            try:
-                assert self._file_on_local_disk(filename)
-            except AssertionError:
-                msg = 'Failed to locate file on disk.'
+            if not self._file_on_local_disk(filename):
+                msg = 'Failed to locate on disk: {}'.format(filename)
                 raise MozbitbarFileException(path=filename, message=msg)
 
             api_path_components = [
@@ -652,18 +648,16 @@ class BitbarProject(Configuration):
                 "projects/{project_id}/".format(project_id=self.project_id),
                 "files/{file_type}".format(file_type=file_type)
             ]
-            api_path = ''.join([api_path_components])
+            api_path = ''.join(api_path_components)
 
             output = self.client.upload(path=api_path, filename=filename)
 
-            assert output
-
-            try:
-                assert self._file_on_bitbar(filename)
-            except AssertionError:
-                msg = '''Failed to upload file to Bitbar:
-                         file type: {}, file name: {}
-                      '''.format(file_type, filename)
+            if output.status_code not in range(200, 300):
+                msg = ' '.join([
+                    'Failed to upload file to Bitbar;',
+                    'file type: {}'.format(file_type),
+                    'file name: {}'.format(filename)
+                ])
                 raise MozbitbarFileException(msg)
 
     # Device operations #
@@ -691,8 +685,11 @@ class BitbarProject(Configuration):
         """
         return self.client.get_devices()['data']
 
-    def set_device_group(self, name=None, id=None):
+    def set_device_group(self, device_group_name=None, device_group_id=None):
         """Sets the project's device group to be used for test runs.
+
+        Supports referencing device groups by both name and id. This method
+        will attempt to find a match for whichever parameter that is supplied.
 
         Args:
             name (str, optional): Device group name in string.
@@ -701,27 +698,24 @@ class BitbarProject(Configuration):
         Raises:
             MozbitbarDeviceException: If neither id nor name was supplied.
         """
-        device_groups = [(device_group['id'], device_group['displayName'])
-                         for device_group in self.get_device_groups()]
-
-        for device_group in device_groups:
+        for device_group in self.get_device_groups():
             # fill out missing parameter so we have both id and name.
-            if name in device_group:
-                id = device_group[0]
-                break
-            if id in device_group:
-                name = device_group[1]
-                break
+            if device_group_name in device_group['displayName']:
+                self.device_group_id = device_group['id']
+                self.device_group_name = device_group_name
+                return
+            elif device_group_id == device_group['id']:
+                self.device_group_id = device_group_id
+                self.device_group_name = device_group['displayName']
+                return
             else:
-                msg = '{}: use valid device group id or name'.format(
-                    __name__
-                )
-                raise MozbitbarDeviceException(message=msg)
+                pass
 
-        self.device_group_id = id
-        self.device_group_name = name
+        msg = 'Device group name or device group id \
+                did not match any group on Bitbar'
+        raise MozbitbarDeviceException(message=msg)
 
-    def set_device(self, device_id):
+    def set_device(self, device_id=None, device_name=None):
         """Sets the device using the device_id.
 
         Accepts either a device name or device id.
@@ -735,22 +729,19 @@ class BitbarProject(Configuration):
             MozbitbarDeviceException: If device_id is not found in list of
                 available device on Bitbar.
         """
-        devices_list = self.get_devices()
-
-        for device in devices_list:
+        for device in self.get_devices():
             if device['id'] == device_id:
                 self.device_id = device_id
                 self.device_name = device['displayName']
                 return
-            if device['displayName'] == device_id:
+            elif device['displayName'] == device_name:
                 self.device_id = device['id']
                 self.device_name = device_id
                 return
+            else:
+                pass
 
-        msg = '{}: device specifier {} not found on Bitbar.'.format(
-            __name__,
-            device_id
-        )
+        msg = 'Device specifier not found on Bitbar: {}'.format(device_id)
         raise MozbitbarDeviceException(message=msg)
 
     # Test Run operations #
@@ -784,25 +775,20 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
-        try:
-            assert self._is_test_name_unique(kwargs.get('name'))
-        except AssertionError:
-            raise MozbitbarTestRunException('{}: name: {} is not unique'.format(
-                __name__,
-                kwargs.get('name')
-                )
+        if not self._is_test_name_unique(kwargs.get('name')):
+            msg = 'Test name is not unique'
+            raise MozbitbarTestRunException(
+                message=msg,
+                test_run_name=kwargs.get('name')
             )
 
-        try:
-            assert self.project_id, 'Project ID not set'
-        except AssertionError as ae:
-            raise MozbitbarProjectException(message=ae.args)
+        if not self.project_id:
+            msg = 'Project ID is not set'
+            raise MozbitbarProjectException(message=msg)
 
-        try:
-            assert (self.device_group_id or self.device_id)
-        except AssertionError:
-            raise MozbitbarDeviceException(
-                message='{}: device or device group must be set')
+        if not (self.device_group_id or self.device_id):
+            msg = 'Device or device group id is not set'
+            raise MozbitbarDeviceException(message=msg)
 
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       self.device_group_id,
@@ -825,11 +811,11 @@ class BitbarProject(Configuration):
             test_run_name (str): Name of the test run.
 
         Returns:
-            :obj:`dict` of str: Dictionary of strings containing relevant
-                test run information.
+            :obj:`dict` of str: Dictionary of strings containing test run
+                information.
 
         Raises:
-            RequestResponseError: If Testdroid responds with an error.
+            MozbitbarTestRunException: If Testdroid responds with an error.
         """
         if test_run_name:
             test_runs = self.client.get_project_test_runs(self.project_id)
@@ -837,9 +823,13 @@ class BitbarProject(Configuration):
                 if test_run_name in test_run:
                     test_run_id = test_run['id']
 
-        assert type(test_run_id) is int
+        try:
+            output = self.client.get_test_run(self.project_id, test_run_id)
+        except RequestResponseError as rre:
+            raise MozbitbarTestRunException(message=rre.message,
+                                            status_code=rre.status_code)
 
-        return self.client.get_test_run(self.project_id, test_run_id)
+        return output
 
     def get_all_test_runs(self):
         """Returns all tests for the project.
@@ -866,20 +856,20 @@ class BitbarProject(Configuration):
             if state != 'FINISHED':
                 time.sleep(interval)
                 total_wait_time += interval
-                print('Checking test run state for {}...'.format(
-                    self.test_run_name)
-                )
-                print('Waited {}s...'.format(total_wait_time))
+                logger.debug('Checking test run state for {}...'.format(
+                    self.test_run_name))
+                logger.debug('Waited {}s...'.format(total_wait_time))
             else:
                 break
 
         test_run_details = self.get_test_run(self.test_run_id)
 
         if total_wait_time >= timeout:
-            print('Test run did not complete prior to {}s timeout.'.format(
-                  timeout))
-        print('Project Name:', self.project_name)
-        print('Project Framework Name:', self.framework_name)
-        print('Device Group Name:', self.device_group_name)
-        print('Test Run Name:', self.test_run_name)
-        print('Test Run State:', test_run_details['state'])
+            msg = 'Test run did not complete prior to {}s timeout.'.format(
+                timeout)
+            logger.error(msg)
+        logger.info('Project Name: {}'.format(self.project_name))
+        logger.info('Project Framework Name: {}'.format(self.framework_name))
+        logger.info('Device Group Name: {}'.format(self.device_group_name))
+        logger.info('Test Run Name: {}'.format(self.test_run_name))
+        logger.info('Test Run State: {}'.format(test_run_details['state']))

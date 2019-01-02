@@ -75,12 +75,13 @@ class MozbitbarCredentialException(MozbitbarBaseException):
 
 
 class MozbitbarTestRunException(MozbitbarBaseException):
-    def __init__(self, test_run_id=None, **kwargs):
+    def __init__(self, **kwargs):
         """MozbitbarTestRunException will be raised if Bitbar test runs experience
         any sort of issues.
         """
         super(MozbitbarTestRunException, self).__init__(**kwargs)
-        self.test_run_id = test_run_id
+        self.test_run_id = kwargs.pop('test_run_id')
+        self.test_run_name = kwargs.pop('test_run_name')
 
 
 class MozbitbarOperationNotImplementedException(MozbitbarBaseException):

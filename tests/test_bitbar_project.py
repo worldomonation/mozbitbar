@@ -158,7 +158,10 @@ def test_bb_project_create_unique_name(kwargs, expected):
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-    ({'framework_id': 12}, MozbitbarFrameworkException),
+    (
+        {'framework_id': -1},
+        MozbitbarFrameworkException
+    ),
     (
         {'framework_id': 1},
         {'framework_name': 'mock_framework', 'framework_id': 1}
@@ -167,8 +170,10 @@ def test_bb_project_create_unique_name(kwargs, expected):
         {'framework_name': 'mock_framework'},
         {'framework_name': 'mock_framework', 'framework_id': 1}
     ),
-    ({'framework_name': 'mock_framework', 'framework_id': 1}, {
-     'framework_name': 'mock_framework', 'framework_id': 1}),
+    (
+        {'framework_name': 'mock_framework', 'framework_id': 1},
+        {'framework_name': 'mock_framework', 'framework_id': 1}
+    ),
     ({'framework_name': u'mock_framework', 'framework_id': 1}, {
      'framework_name': 'mock_framework', 'framework_id': 1}),
     ({'framework_name': 'mock_unicode_framework'},
@@ -196,7 +201,7 @@ def test_bb_project_framework(initialize_project, kwargs, expected):
         {'timeout': 10, 'scheduler': 'SINGLE'}
     ),
     (
-        'not_a_dict', MozbitbarProjectException
+        'not_a_dict', TypeError
     ),
     (
         {'scheduler': 'SINGLE'},
@@ -204,8 +209,9 @@ def test_bb_project_framework(initialize_project, kwargs, expected):
     )
 ])
 def test_set_project_config_new_config(initialize_project, kwargs, expected):
-    if expected is MozbitbarProjectException:
-        with pytest.raises(MozbitbarProjectException):
+
+    if expected is TypeError:
+        with pytest.raises(TypeError):
             initialize_project.set_project_configs(new_config=kwargs)
     else:
         initialize_project.set_project_configs(new_config=kwargs)
