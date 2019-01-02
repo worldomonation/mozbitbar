@@ -867,7 +867,7 @@ class BitbarProject(Configuration):
         if total_wait_time >= timeout:
             msg = 'Test run did not complete prior to {}s timeout.'.format(
                 timeout)
-            logger.error(msg)
+            logger.warning(msg)
         logger.info('Project Name: {}'.format(self.project_name))
         logger.info('Project Framework Name: {}'.format(self.framework_name))
         logger.info('Device Group Name: {}'.format(self.device_group_name))

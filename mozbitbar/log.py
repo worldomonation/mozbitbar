@@ -6,26 +6,36 @@ from __future__ import print_function, absolute_import
 
 import logging
 
-fmt = '%(asctime)s - %(levelname)s - %(module)s:%(funcName)s - %(message)s'
+default_fmt = ' - '.join([
+    '%(asctime)s',
+    '%(levelname)s',
+    '%(module)s:%(funcName)s',
+    '%(message)s'
+])
 
 
-def setup_logger():
+def setup_logger(config=None):
     """Sets up the logging facilities.
+
+    Args:
+        config (:obj:`dict`, optional): Optional dictionary specifying custom
+            values to set.
 
     Returns:
         :obj:`logging`: Instance of logging object instantiated with
             pre-set values.
     """
+    fmt = (getattr(config, 'fmt', None) or default_fmt)
     formatter = logging.Formatter(fmt=fmt)
 
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger('mozbitbar')
+    logger = logging.getLogger(getattr(config, 'name', None) or 'mozbitbar')
     # very important to stop duplicate logging entries
     logger.propagate = False
-    # TODO: support debug level after reading contents of cli arguments
-    logger.setLevel(logging.INFO)
+    logger.setLevel(
+        logging.DEBUG if getattr(config, 'verbose', None) else logging.INFO)
 
     if not logger.handlers:
         logger.addHandler(handler)
