@@ -4,9 +4,6 @@
 
 from __future__ import print_function, absolute_import
 
-# from mozbitbar import log
-# logger = log.setup_logger()
-
 
 class MozbitbarBaseException(Exception):
     def __init__(self, **kwargs):
