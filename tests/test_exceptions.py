@@ -8,7 +8,8 @@ import pytest
 
 from mozbitbar import (
     MozbitbarBaseException,
-    MozbitbarFileException
+    MozbitbarFileException,
+    MozbitbarTestRunException
 )
 
 @pytest.mark.parametrize('kwargs,expected', [
@@ -56,3 +57,27 @@ def test_file_exception(kwargs, expected):
     assert e.message == expected.get('message')
     assert e.status_code == expected.get('status_code')
     assert e.path == expected.get('path')
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {
+            'message': 'mock_file_exception_test',
+            'status_code': 300,
+            'test_run_id': 100,
+            'test_run_name': 'mock_test_run_name'
+        },
+        {
+            'message': 'mock_file_exception_test',
+            'status_code': 300,
+            'test_run_id': 100,
+            'test_run_name': 'mock_test_run_name'
+        },
+    )
+])
+def test_test_run_exception(kwargs, expected):
+    e = MozbitbarTestRunException(**kwargs)
+    assert e.message == expected.get('message')
+    assert e.status_code == expected.get('status_code')
+    assert e.test_run_id == expected.get('test_run_id')
+    assert e.test_run_name == expected.get('test_run_name')
