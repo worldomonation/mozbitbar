@@ -133,11 +133,7 @@ class BitbarProject(Configuration):
 
     @device_group_id.setter
     def device_group_id(self, device_group_id):
-        if type(device_group_id) is not int:
-            raise ValueError('invalid device_group_id type:' +
-                             'expected int, received {}'.format(
-                                type(device_group_id)))
-        self.__device_group_id = device_group_id
+        self.__device_group_id = int(device_group_id)
 
     @property
     def device_group_name(self):
@@ -154,11 +150,7 @@ class BitbarProject(Configuration):
 
     @device_group_name.setter
     def device_group_name(self, device_group_name):
-        if type(device_group_name) is not str:
-            raise ValueError('invalid device_group_name type:' +
-                             'expected str, received {}'.format(
-                                 type(device_group_name)))
-        self.__device_group_name = device_group_name
+        self.__device_group_name = str(device_group_name)
 
     @property
     def framework_id(self):
@@ -713,11 +705,11 @@ class BitbarProject(Configuration):
         """
         for device_group in self.get_device_groups():
             # fill out missing parameter so we have both id and name.
-            if device_group_name in device_group:
+            if device_group_name in device_group['displayName']:
                 self.device_group_id = device_group['id']
                 self.device_group_name = device_group_name
                 return
-            elif device_group_id in device_group:
+            elif device_group_id == device_group['id']:
                 self.device_group_id = device_group_id
                 self.device_group_name = device_group['displayName']
                 return
@@ -788,25 +780,20 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
-        try:
-            assert self._is_test_name_unique(kwargs.get('name'))
-        except AssertionError:
-            raise MozbitbarTestRunException('{}: name: {} is not unique'.format(
-                __name__,
-                kwargs.get('name')
-                )
+        if not self._is_test_name_unique(kwargs.get('name')):
+            msg = 'Test name is not unique'
+            raise MozbitbarTestRunException(
+                message=msg,
+                test_run_name=kwargs.get('name')
             )
 
-        try:
-            assert self.project_id, 'Project ID not set'
-        except AssertionError as ae:
-            raise MozbitbarProjectException(message=ae.args)
+        if not self.project_id:
+            msg = 'Project ID is not set'
+            raise MozbitbarProjectException(message=msg)
 
-        try:
-            assert (self.device_group_id or self.device_id)
-        except AssertionError:
-            raise MozbitbarDeviceException(
-                message='{}: device or device group must be set')
+        if not (self.device_group_id or self.device_id):
+            msg = 'Device or device group id is not set'
+            raise MozbitbarDeviceException(message=msg)
 
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       self.device_group_id,
@@ -829,11 +816,11 @@ class BitbarProject(Configuration):
             test_run_name (str): Name of the test run.
 
         Returns:
-            :obj:`dict` of str: Dictionary of strings containing relevant
-                test run information.
+            :obj:`dict` of str: Dictionary of strings containing test run
+                information.
 
         Raises:
-            RequestResponseError: If Testdroid responds with an error.
+            MozbitbarTestRunException: If Testdroid responds with an error.
         """
         if test_run_name:
             test_runs = self.client.get_project_test_runs(self.project_id)
@@ -841,9 +828,13 @@ class BitbarProject(Configuration):
                 if test_run_name in test_run:
                     test_run_id = test_run['id']
 
-        assert type(test_run_id) is int
+        try:
+            output = self.client.get_test_run(self.project_id, test_run_id)
+        except RequestResponseError as rre:
+            raise MozbitbarTestRunException(message=rre.message,
+                                            status_code=rre.status_code)
 
-        return self.client.get_test_run(self.project_id, test_run_id)
+        return output
 
     def get_all_test_runs(self):
         """Returns all tests for the project.
@@ -870,20 +861,20 @@ class BitbarProject(Configuration):
             if state != 'FINISHED':
                 time.sleep(interval)
                 total_wait_time += interval
-                print('Checking test run state for {}...'.format(
-                    self.test_run_name)
-                )
-                print('Waited {}s...'.format(total_wait_time))
+                logger.debug('Checking test run state for {}...'.format(
+                    self.test_run_name))
+                logger.debug('Waited {}s...'.format(total_wait_time))
             else:
                 break
 
         test_run_details = self.get_test_run(self.test_run_id)
 
         if total_wait_time >= timeout:
-            print('Test run did not complete prior to {}s timeout.'.format(
-                  timeout))
-        print('Project Name:', self.project_name)
-        print('Project Framework Name:', self.framework_name)
-        print('Device Group Name:', self.device_group_name)
-        print('Test Run Name:', self.test_run_name)
-        print('Test Run State:', test_run_details['state'])
+            msg = 'Test run did not complete prior to {}s timeout.'.format(
+                timeout)
+            logger.error(msg)
+        logger.info('Project Name: {}'.format(self.project_name))
+        logger.info('Project Framework Name: {}'.format(self.framework_name))
+        logger.info('Device Group Name: {}'.format(self.device_group_name))
+        logger.info('Test Run Name: {}'.format(self.test_run_name))
+        logger.info('Test Run State: {}'.format(test_run_details['state']))
