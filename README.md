@@ -27,7 +27,7 @@ If installed using `setuptools`, Mozbitbar can be started as command-line tool:
 $ mozbitbar --recipe <path_to_recipe>
 ```
 
-If the repository is cloned but package installed, it is still possible to invoke Mozbitbar:
+If the repository is cloned but not installed, it is still possible to invoke Mozbitbar:
 
 ```
 $ export PYTHONPATH=.
@@ -36,9 +36,9 @@ $ python mozbitbar/main.py --recipe <full_path_to_recipe>
 
 ## Usage
 
-Define a recipe under `mozbitbar/recipes` subdirectory.
+Define a recipe under `mozbitbar/recipes` directory.
 
-Recipes must be in valid YAML format. If unsure, ensure the recipe can be parsed by PyYAML.
+Recipes must be in valid YAML format. If uncertain, first step is to ensure the recipe can be parsed by PyYAML.
 
 An example of the expected format of the recipe can be seen below:
 
@@ -71,4 +71,4 @@ Following the `arguments` subcommand is the list of arguments to be passed into 
 
 ## Other Notes
 
-It is recommended to use a virtual environment with Mozbitbar.
+It is _highly_ recommended to use a virtual environment with Mozbitbar.
