@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import
 
 import logging
 
-fmt = '%(asctime)s - %(levelname)s - %(module)s - %(message)s'
+fmt = '%(asctime)s - %(levelname)s - %(module)s:%(funcName)s - %(message)s'
 
 
 def setup_logger():
