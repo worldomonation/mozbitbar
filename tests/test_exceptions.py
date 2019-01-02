@@ -12,6 +12,7 @@ from mozbitbar import (
     MozbitbarTestRunException
 )
 
+
 @pytest.mark.parametrize('kwargs,expected', [
     (
         {
@@ -29,6 +30,25 @@ from mozbitbar import (
         },
         {
             'message': 'mock_test'
+        }
+    ),
+    pytest.param(
+        {
+            'status_code': '200'
+        },
+        {
+            'status_code': 200
+        },
+        marks=pytest.mark.xfail
+    ),
+    (
+        {
+            'message': None,
+            'status_code': None
+        },
+        {
+            'message': None,
+            'status_code': None
         }
     )
 ])
