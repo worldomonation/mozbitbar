@@ -15,6 +15,8 @@ def parse_arguments(args):
                         help='Specifies a recipe to load from disk.')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Enables debugging output.')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Disables all output except warning and higher.')
 
     args, remainder = parser.parse_known_args()
 

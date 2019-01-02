@@ -34,8 +34,12 @@ def setup_logger(config=None):
     logger = logging.getLogger(getattr(config, 'name', None) or 'mozbitbar')
     # very important to stop duplicate logging entries
     logger.propagate = False
-    logger.setLevel(
-        logging.DEBUG if getattr(config, 'verbose', None) else logging.INFO)
+    if getattr(config, 'verbose', None):
+        logger.setLevel(logging.DEBUG)
+    elif getattr(config, 'quiet', None):
+        logger.setLevel(logging.WARNING)
+    else:
+        logger.setLevel(logging.INFO)
 
     if not logger.handlers:
         logger.addHandler(handler)
