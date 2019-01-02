@@ -82,12 +82,12 @@ class Recipe(object):
         if type(task_list) is not list:
             raise TypeError('Recipe task list must be of type list.')
         for action in task_list:
-            if not type(action) is dict:
+            if type(action) is not dict:
                 raise TypeError('Recipe action must be of type dict.')
-            if not 'action' in action:
+            if 'action' not in action:
                 msg = 'Recipe action must contain key value: action.'
                 raise MozbitbarRecipeException(message=msg)
-            if not 'arguments' in action:
+            if 'arguments' not in action:
                 msg = 'Recipe action must contain key value: arguments.'
                 raise MozbitbarRecipeException(message=msg)
         self.__task_list = task_list
