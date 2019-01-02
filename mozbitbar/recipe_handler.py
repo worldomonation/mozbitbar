@@ -79,11 +79,17 @@ class Recipe(object):
 
     @task_list.setter
     def task_list(self, task_list):
-        assert type(task_list) is list
+        if type(task_list) is not list:
+            raise TypeError('Recipe task list must be of type list.')
         for action in task_list:
-            assert type(action) is dict
-            assert 'action' in action
-            assert 'arguments' in action
+            if type(action) is not dict:
+                raise TypeError('Recipe action must be of type dict.')
+            if 'action' not in action:
+                msg = 'Recipe action must contain key value: action.'
+                raise MozbitbarRecipeException(message=msg)
+            if 'arguments' not in action:
+                msg = 'Recipe action must contain key value: arguments.'
+                raise MozbitbarRecipeException(message=msg)
         self.__task_list = task_list
 
     @property
@@ -98,7 +104,8 @@ class Recipe(object):
 
     @project_arguments.setter
     def project_arguments(self, project_arguments):
-        assert type(project_arguments) is dict
+        if not type(project_arguments) is dict:
+            raise TypeError('Project arguments must be of type dict.')
 
         self.__project_arguments = project_arguments
 
@@ -169,14 +176,8 @@ class Recipe(object):
 
                 break
 
-        try:
-            assert self.project
-            assert self.project_arguments
-        except AssertionError:
-            msg = '{}: project attribute not found in recipe: {}'.format(
-                __name__,
-                self.recipe_name
-            )
+        if not (self.project and self.project_arguments):
+            msg = 'Project specifier and project arguments not set.'
             raise MozbitbarRecipeException(message=msg)
 
         # remaining recipe object is the list of Bitbar actions to be run
