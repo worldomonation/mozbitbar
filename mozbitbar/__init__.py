@@ -4,9 +4,6 @@
 
 from __future__ import print_function, absolute_import
 
-from mozbitbar import log
-logger = log.setup_logger()
-
 
 class MozbitbarBaseException(Exception):
     def __init__(self, **kwargs):
@@ -80,8 +77,8 @@ class MozbitbarTestRunException(MozbitbarBaseException):
         any sort of issues.
         """
         super(MozbitbarTestRunException, self).__init__(**kwargs)
-        self.test_run_id = kwargs.pop('test_run_id')
-        self.test_run_name = kwargs.pop('test_run_name')
+        self.test_run_id = kwargs.pop('test_run_id', None)
+        self.test_run_name = kwargs.pop('test_run_name', None)
 
 
 class MozbitbarOperationNotImplementedException(MozbitbarBaseException):

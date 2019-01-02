@@ -4,22 +4,26 @@
 
 from __future__ import print_function, absolute_import
 
+import sys
+
 from argparse import ArgumentParser
 
 
 def parse_arguments(args):
     parser = ArgumentParser('Runs Testdroid tasks.')
-    parser.add_argument('-r', '--recipe')
+    parser.add_argument('-r', '--recipe',
+                        help='Specifies a recipe to load from disk.')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Enables debugging output.')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Disables all output except warning and higher.')
 
     args, remainder = parser.parse_known_args()
 
     return args, remainder
 
 
-def cli(args):
-    args, _ = parse_arguments(args)
+def cli(cli_args=sys.argv[1:]):
+    args, _ = parse_arguments(cli_args)
 
-    if args.recipe:
-        return args.recipe
-
-    return None
+    return args
