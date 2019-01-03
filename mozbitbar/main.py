@@ -18,7 +18,7 @@ def main():
     # in a taskcluster/treeherder environment, the script will
     # call these methods instead of instead of main().
     args = cli()
-    initialize_logging(args)
+    initialize_logging(vars(args))
     recipe_handler.run_recipe(args.recipe)
 
 

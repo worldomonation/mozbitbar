@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import
 
 import logging
 
-default_fmt = ' - '.join([
+_default_fmt = ' - '.join([
     '%(asctime)s',
     '%(levelname)s',
     '%(module)s:%(funcName)s',
@@ -14,32 +14,35 @@ default_fmt = ' - '.join([
 ])
 
 
-def setup_logger(config=None):
+def setup_logger(**config):
     """Sets up the logging facilities.
 
     Args:
         config (:obj:`dict`, optional): Optional dictionary specifying custom
-            values to set.
+            values to be used for the initialization of logging facility.
 
     Returns:
-        :obj:`logging`: Instance of logging object instantiated with
-            pre-set values.
+        :obj:`logging`: Instance of logging object.
     """
-    fmt = (getattr(config, 'fmt', None) or default_fmt)
+    fmt = (config.get('fmt') or _default_fmt)
     formatter = logging.Formatter(fmt=fmt)
 
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger(getattr(config, 'name', None) or 'mozbitbar')
+    logger = logging.getLogger(config.get('name') or 'mozbitbar')
     # very important to stop duplicate logging entries
     logger.propagate = False
-    if getattr(config, 'verbose', None):
+    if config.get('verbose'):
         logger.setLevel(logging.DEBUG)
-    elif getattr(config, 'quiet', None):
+    elif config.get('quiet'):
         logger.setLevel(logging.WARNING)
     else:
         logger.setLevel(logging.INFO)
+
+    if logger.handlers:
+        for old_handler in logger.handlers:
+            logger.removeHandler(old_handler)
 
     if not logger.handlers:
         logger.addHandler(handler)
