@@ -40,7 +40,7 @@
     device_group_name: Edwin_Test
 - action: start_test_run
   arguments:
-    name: test_131
+    name: test_133
 - action: notify_test_run_complete
   arguments:
     interval: 2
