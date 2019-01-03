@@ -43,6 +43,12 @@ from mozbitbar.configuration import Configuration
             'TESTDROID_USERNAME': 'MOCK_TEST'
         },
         MozbitbarCredentialException
+    ),
+    (
+        {
+            'TESTDROID_APIKEY': 'MOCK_APIKEY'
+        },
+        MozbitbarCredentialException
     )
 ])
 def test_configuration_from_kwargs(kwargs, expected):
