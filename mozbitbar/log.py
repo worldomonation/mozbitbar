@@ -19,11 +19,10 @@ def setup_logger(**config):
 
     Args:
         config (:obj:`dict`, optional): Optional dictionary specifying custom
-            values to set.
+            values to be used for the initialization of logging facility.
 
     Returns:
-        :obj:`logging`: Instance of logging object instantiated with
-            pre-set values.
+        :obj:`logging`: Instance of logging object.
     """
     fmt = (config.get('fmt') or _default_fmt)
     formatter = logging.Formatter(fmt=fmt)
