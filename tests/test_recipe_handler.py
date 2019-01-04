@@ -13,6 +13,7 @@ import yaml
 
 from mozbitbar import MozbitbarRecipeException
 from mozbitbar.recipe_handler import Recipe
+from yaml.scanner import ScannerError
 
 
 def generate_recipe():
@@ -31,30 +32,47 @@ def mock_recipe():
         return recipe_obj
 
 
-@pytest.mark.parametrize('kwargs', [
-    ({
-        'file_name': 'mock_parametrized_recipe.yaml'
-    }),
-    ({
-        'file_name': 'another_mock_file.yaml',
-        'content': 'dummy'
-    })
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {
+            'file_name': 'mock_parametrized_recipe.yaml'
+        },
+        None.__class__
+    ),
+    (
+        {
+            'file_name': 'another_mock_file.yaml',
+            'content': 'dummy'
+        },
+        None.__class__
+    ),
+    (
+        {
+            'file_name': 'mock_recipe_that_does_not_exist.yaml'
+        },
+        MozbitbarRecipeException
+    ),
 ])
-def test_locate_recipe(tmpdir, mock_recipe, kwargs):
-    mock_file_name = kwargs.get('file_name' or 'mock_recipe.yaml')
-    path = tmpdir.mkdir('mock').join(mock_file_name)
+def test_locate_recipe(tmpdir, mock_recipe, kwargs, expected):
+    if issubclass(expected, Exception):
+        with pytest.raises(expected) as mre:
+            mock_recipe.locate_recipe(kwargs.get('file_name'))
+            assert 'recipe not found' in mre.message
+    else:
+        mock_file_name = kwargs.get('file_name') or 'mock_recipe.yaml'
+        path = tmpdir.mkdir('mock').join(mock_file_name)
 
-    content = kwargs.get('content') or {'project': 'existing',
-                                        'arguments': {
-                                            'project_id': 10101010,
-                                            'project_name': 'mock_project'}
-                                       }
-    yaml_converted_content = yaml.dump(content)
-    path.write(yaml_converted_content)
+        content = kwargs.get('content') or {'project': 'existing',
+                                            'arguments': {
+                                                'project_id': 10101010,
+                                                'project_name': 'mock_project'}
+                                        }
+        yaml_converted_content = yaml.dump(content)
+        path.write(yaml_converted_content)
 
-    mock_recipe.locate_recipe(path.strpath)
-    assert mock_recipe.recipe_path == path.strpath
-    assert mock_recipe.recipe_name == path.basename
+        mock_recipe.locate_recipe(path.strpath)
+        assert mock_recipe.recipe_path == path.strpath
+        assert mock_recipe.recipe_name == path.basename
 
 
 @pytest.mark.parametrize('kwargs,expected', [
@@ -100,6 +118,17 @@ def test_locate_recipe(tmpdir, mock_recipe, kwargs):
         }],
         MozbitbarRecipeException
     ),
+    (
+        [{
+            'project': 'mock',
+            'arguments': {'mock_argument': 'mock'}
+        },
+        {
+            'action': 'mock_action',
+            'arguments': {'mock_argument': 'mock_action_argument'}
+        }],
+        None.__class__
+    ),
 ])
 def test_validate_recipe(tmpdir, mock_recipe, kwargs, expected):
     if issubclass(expected, Exception):
@@ -108,3 +137,42 @@ def test_validate_recipe(tmpdir, mock_recipe, kwargs, expected):
     else:
         mock_recipe.validate_recipe(kwargs)
         assert mock_recipe.project_arguments is not None
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {
+            'file_name': 'mock_file.mock'
+        },
+        MozbitbarRecipeException
+    ),
+    (
+        {
+            'content': '````invalid_yaml````',
+            'file_name': 'invalid_yaml.file'
+        },
+        MozbitbarRecipeException
+    ),
+    (
+        {
+            'content': """{'project': 'existing'}""",
+            'file_name': 'valid.yaml'
+        },
+        None.__class__
+    )
+])
+def test_load_recipe_from_yaml(tmpdir, mock_recipe, kwargs, expected):
+    with mock.patch.object(Recipe, 'validate_recipe', return_value=None):
+        mock_file_name = kwargs.get('file_name') or 'mock_recipe.yaml'
+        path = tmpdir.mkdir('mock').join(mock_file_name)
+
+        content = kwargs.get('content') or '`invalid_yaml_text'
+        path.write(content)
+        mock_recipe.recipe_path = path.strpath
+
+        if issubclass(expected, Exception):
+            with pytest.raises(expected) as exc:
+                mock_recipe.load_recipe_from_yaml()
+                assert 'Invalid YAML file' in exc.message
+        else:
+            mock_recipe.load_recipe_from_yaml()

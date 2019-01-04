@@ -21,6 +21,7 @@ from mozbitbar import (
     )
 from testdroid import RequestResponseError
 from yaml.scanner import ScannerError
+from yaml.reader import ReaderError
 
 logger = logging.getLogger('mozbitbar')
 
@@ -148,13 +149,11 @@ class Recipe(object):
         """
         try:
             with open(self.recipe_path, 'r') as f:
-                self.validate_recipe(yaml.load(f))
-        except ScannerError:
-            msg = '{}: {} is not a valid YAML file.'.format(
-                __name__,
-                self.recipe_path
-            )
+                content = yaml.load(f.read())
+        except (ScannerError, ReaderError):
+            msg = 'Invalid YAML file: {}'.format(self.recipe_path)
             raise MozbitbarRecipeException(message=msg)
+        self.validate_recipe(content)
 
     def validate_recipe(self, recipe):
         """Validates the loaded recipe.

@@ -183,5 +183,5 @@ def mock_recipe_object(monkeypatch):
         pass
 
     # monkeypatch.setattr(Recipe, '__init__', init_wrapper)
-    monkeypatch.setattr(Recipe, 'load_recipe_from_yaml',
-                        load_recipe_from_yaml_wrapper)
+    # monkeypatch.setattr(Recipe, 'load_recipe_from_yaml',
+    #                     load_recipe_from_yaml_wrapper)
