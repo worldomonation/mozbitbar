@@ -8,6 +8,7 @@ import random
 
 import pytest
 
+from mozbitbar.recipe_handler import Recipe
 from testdroid import Testdroid
 
 
@@ -170,3 +171,17 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
     monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)
+
+
+@pytest.fixture(autouse=True)
+def mock_recipe_object(monkeypatch):
+
+    def init_wrapper(object, recipe_name):
+        pass
+
+    def load_recipe_from_yaml_wrapper(object):
+        pass
+
+    # monkeypatch.setattr(Recipe, '__init__', init_wrapper)
+    monkeypatch.setattr(Recipe, 'load_recipe_from_yaml',
+                        load_recipe_from_yaml_wrapper)
