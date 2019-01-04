@@ -50,7 +50,7 @@ class Recipe(object):
 
     @recipe_name.setter
     def recipe_name(self, recipe_name):
-        self.__recipe_name = os.path.basename(recipe_name)
+        self.__recipe_name = recipe_name
 
     @property
     def recipe_path(self):
@@ -119,9 +119,9 @@ class Recipe(object):
             MozbitbarRecipeException: If path is neither a file in current
                 working directory nor a fully qualified path on local disk.
         """
+        logger.debug('Recipe path: {}'.format(path))
         if os.path.isfile(path):
-            # TODO: refactor this to be more intuitive.
-            self.recipe_name = path
+            self.recipe_name = os.path.basename(path)
             self.recipe_path = path
         else:
             msg = '{name}: recipe not found at: {path}'.format(
@@ -172,8 +172,8 @@ class Recipe(object):
                 # no further operations can take place
                 self.project = task.get('project')
                 self.project_arguments = task.get('arguments')
+                # remove the project related item from the list
                 recipe.pop(index)
-
                 break
 
         if not (self.project and self.project_arguments):
