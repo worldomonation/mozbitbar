@@ -25,5 +25,4 @@ def parse_arguments(args):
 
 def cli(cli_args=sys.argv[1:]):
     args, _ = parse_arguments(cli_args)
-
     return args
