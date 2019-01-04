@@ -16,13 +16,13 @@ from mozbitbar.recipe_handler import Recipe
 from yaml.scanner import ScannerError
 
 
-def generate_recipe():
-    recipe = {
-        'project': random.choice(['existing', 'new']),
-        'arguments': {
-
-        }
+_default_recipe = {
+    'project': 'existing',
+    'arguments': {
+        'project_id': 10101010,
+        'project_name': 'mock_project'
     }
+}
 
 
 @pytest.fixture(autouse=True)
@@ -62,13 +62,8 @@ def test_locate_recipe(tmpdir, mock_recipe, kwargs, expected):
         mock_file_name = kwargs.get('file_name') or 'mock_recipe.yaml'
         path = tmpdir.mkdir('mock').join(mock_file_name)
 
-        content = kwargs.get('content') or {'project': 'existing',
-                                            'arguments': {
-                                                'project_id': 10101010,
-                                                'project_name': 'mock_project'}
-                                        }
-        yaml_converted_content = yaml.dump(content)
-        path.write(yaml_converted_content)
+        content = kwargs.get('content') or _default_recipe
+        path.write(yaml.dump(content))
 
         mock_recipe.locate_recipe(path.strpath)
         assert mock_recipe.recipe_path == path.strpath
@@ -176,3 +171,72 @@ def test_load_recipe_from_yaml(tmpdir, mock_recipe, kwargs, expected):
                 assert 'Invalid YAML file' in exc.message
         else:
             mock_recipe.load_recipe_from_yaml()
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {},
+        (TypeError, 'Recipe task list must be of type list.')
+    ),
+    (
+        ['action', 'mock'],
+        (TypeError, 'Recipe action must be of type dict.')
+    ),
+    (
+        [{
+            'argument': 'mock_argument'
+        }],
+        (
+            MozbitbarRecipeException,
+            'Recipe action must contain key value: action.'
+        )
+    ),
+    (
+        [{
+            'action': 'mock_action'
+        }],
+        (
+            MozbitbarRecipeException,
+            'Recipe action must contain key value: arguments'
+        )
+    )
+])
+def test_property_task_list(mock_recipe, kwargs, expected):
+    with pytest.raises(expected[0]) as exc:
+        mock_recipe.task_list = kwargs
+        assert expected[1] in exc.message
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        [{
+            'project': 'mock',
+            'arguments': {'mock_argument': 'mock'}
+        },
+            {
+            'action': 'mock_action',
+            'arguments': {'mock_argument': 'mock_action_argument'}
+        }],
+        None.__class__
+    ),
+    (
+        [{
+            'action': 'mock_action',
+            'arguments': {'mock_argument': 'mock_action_argument'}
+        }],
+        MozbitbarRecipeException
+    )
+])
+def test_init(tmpdir, kwargs, expected):
+    path = tmpdir.mkdir('mock').join('mock_recipe.yaml')
+    content = kwargs or _default_recipe
+    path.write(yaml.dump(content))
+
+    if issubclass(expected, Exception):
+        with pytest.raises(expected):
+            recipe_object = Recipe(path.strpath)
+    else:
+        recipe_object = Recipe(path.strpath)
+        assert recipe_object.project
+        assert recipe_object.project_arguments
+        assert recipe_object.task_list
