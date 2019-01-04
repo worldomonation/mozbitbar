@@ -73,7 +73,33 @@ def test_locate_recipe(tmpdir, mock_recipe, kwargs):
             'arguments': {}
         }],
         MozbitbarRecipeException
-    )
+    ),
+    (
+        [{
+            'project': 'mock'
+        }],
+        TypeError
+    ),
+    (
+        [{
+            'project': 'mock',
+            'arguments': []
+        }],
+        TypeError
+    ),
+    (
+        [{
+            'project': 'mock',
+            'arguments': {}
+        }],
+        MozbitbarRecipeException
+    ),
+    (
+        [{
+            'arguments': {}
+        }],
+        MozbitbarRecipeException
+    ),
 ])
 def test_validate_recipe(tmpdir, mock_recipe, kwargs, expected):
     if issubclass(expected, Exception):
@@ -81,3 +107,4 @@ def test_validate_recipe(tmpdir, mock_recipe, kwargs, expected):
             mock_recipe.validate_recipe(kwargs)
     else:
         mock_recipe.validate_recipe(kwargs)
+        assert mock_recipe.project_arguments is not None

@@ -105,7 +105,12 @@ class Recipe(object):
     @project_arguments.setter
     def project_arguments(self, project_arguments):
         if not type(project_arguments) is dict:
-            raise TypeError('Project arguments must be of type dict.')
+            msg = 'Project arguments must be of type dict, got {}.'.format(
+                type(project_arguments))
+            raise TypeError(msg)
+        if not bool(project_arguments):
+            msg = 'Project arguments must not be empty.'
+            raise MozbitbarRecipeException(message=msg)
 
         self.__project_arguments = project_arguments
 
@@ -175,12 +180,10 @@ class Recipe(object):
                 # remove the project related item from the list
                 recipe.pop(index)
                 break
+            else:
+                msg = 'Project specifier missing from recipe.'
+                raise MozbitbarRecipeException(message=msg)
 
-        if not (self.project and self.project_arguments):
-            msg = 'Project specifier and project arguments not set.'
-            raise MozbitbarRecipeException(message=msg)
-
-        # remaining recipe object is the list of Bitbar actions to be run
         self.task_list = recipe
 
 
