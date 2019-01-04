@@ -38,7 +38,7 @@ def test_bb_file_on_bitbar(file_name, expected, initialize_project):
 
 
 @pytest.mark.parametrize('file_name,expected', [
-    pytest.param('mock_file.zip', False, marks=pytest.mark.xfail),
+    ('mock_file.zip', False),
 ])
 def test_bb_file_upload(file_name, expected, initialize_project):
     # TODO: stub test

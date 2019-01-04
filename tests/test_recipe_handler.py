@@ -5,15 +5,12 @@
 from __future__ import print_function, absolute_import
 
 import mock
-import os
-import random
 
 import pytest
 import yaml
 
 from mozbitbar import MozbitbarRecipeException
 from mozbitbar.recipe_handler import Recipe
-from yaml.scanner import ScannerError
 
 
 _default_recipe = {
@@ -114,14 +111,16 @@ def test_locate_recipe(tmpdir, mock_recipe, kwargs, expected):
         MozbitbarRecipeException
     ),
     (
-        [{
-            'project': 'mock',
-            'arguments': {'mock_argument': 'mock'}
-        },
-        {
-            'action': 'mock_action',
-            'arguments': {'mock_argument': 'mock_action_argument'}
-        }],
+        [
+            {
+                'project': 'mock',
+                'arguments': {'mock_argument': 'mock'}
+            },
+            {
+                'action': 'mock_action',
+                'arguments': {'mock_argument': 'mock_action_argument'}
+            }
+        ],
         None.__class__
     ),
 ])
