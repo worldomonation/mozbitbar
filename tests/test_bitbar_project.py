@@ -180,13 +180,14 @@ def test_bb_project_create_unique_name(kwargs, expected):
      {'framework_name': 'mock_unicode_framework', 'framework_id': 2}),
 ])
 def test_bb_project_framework(initialize_project, kwargs, expected):
-    if expected == MozbitbarFrameworkException:
+    if expected is MozbitbarFrameworkException:
         with pytest.raises(MozbitbarFrameworkException):
             initialize_project.set_project_framework(**kwargs)
     else:
         initialize_project.set_project_framework(**kwargs)
         assert initialize_project.framework_id == expected['framework_id']
         assert initialize_project.framework_name == expected['framework_name']
+
 
 # Project config #
 
@@ -209,7 +210,6 @@ def test_bb_project_framework(initialize_project, kwargs, expected):
     )
 ])
 def test_set_project_config_new_config(initialize_project, kwargs, expected):
-
     if expected is TypeError:
         with pytest.raises(TypeError):
             initialize_project.set_project_configs(new_config=kwargs)
