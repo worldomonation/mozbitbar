@@ -21,6 +21,7 @@ from mozbitbar import (
     )
 from testdroid import RequestResponseError
 from yaml.scanner import ScannerError
+from yaml.reader import ReaderError
 
 logger = logging.getLogger('mozbitbar')
 
@@ -50,7 +51,7 @@ class Recipe(object):
 
     @recipe_name.setter
     def recipe_name(self, recipe_name):
-        self.__recipe_name = os.path.basename(recipe_name)
+        self.__recipe_name = recipe_name
 
     @property
     def recipe_path(self):
@@ -105,7 +106,12 @@ class Recipe(object):
     @project_arguments.setter
     def project_arguments(self, project_arguments):
         if not type(project_arguments) is dict:
-            raise TypeError('Project arguments must be of type dict.')
+            msg = 'Project arguments must be of type dict, got {}.'.format(
+                type(project_arguments))
+            raise TypeError(msg)
+        if not bool(project_arguments):
+            msg = 'Project arguments must not be empty.'
+            raise MozbitbarRecipeException(message=msg)
 
         self.__project_arguments = project_arguments
 
@@ -119,9 +125,9 @@ class Recipe(object):
             MozbitbarRecipeException: If path is neither a file in current
                 working directory nor a fully qualified path on local disk.
         """
+        logger.debug('Recipe path: {}'.format(path))
         if os.path.isfile(path):
-            # TODO: refactor this to be more intuitive.
-            self.recipe_name = path
+            self.recipe_name = os.path.basename(path)
             self.recipe_path = path
         else:
             msg = '{name}: recipe not found at: {path}'.format(
@@ -143,13 +149,11 @@ class Recipe(object):
         """
         try:
             with open(self.recipe_path, 'r') as f:
-                self.validate_recipe(yaml.load(f))
-        except ScannerError:
-            msg = '{}: {} is not a valid YAML file.'.format(
-                __name__,
-                self.recipe_path
-            )
+                content = yaml.load(f.read())
+        except (ScannerError, ReaderError):
+            msg = 'Invalid YAML file: {}'.format(self.recipe_path)
             raise MozbitbarRecipeException(message=msg)
+        self.validate_recipe(content)
 
     def validate_recipe(self, recipe):
         """Validates the loaded recipe.
@@ -172,15 +176,13 @@ class Recipe(object):
                 # no further operations can take place
                 self.project = task.get('project')
                 self.project_arguments = task.get('arguments')
+                # remove the project related item from the list
                 recipe.pop(index)
-
                 break
+            else:
+                msg = 'Project specifier missing from recipe.'
+                raise MozbitbarRecipeException(message=msg)
 
-        if not (self.project and self.project_arguments):
-            msg = 'Project specifier and project arguments not set.'
-            raise MozbitbarRecipeException(message=msg)
-
-        # remaining recipe object is the list of Bitbar actions to be run
         self.task_list = recipe
 
 

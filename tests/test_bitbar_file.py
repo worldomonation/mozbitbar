@@ -41,4 +41,5 @@ def test_bb_file_on_bitbar(file_name, expected, initialize_project):
     ('mock_file.zip', False),
 ])
 def test_bb_file_upload(file_name, expected, initialize_project):
-    pass
+    # TODO: stub test
+    assert file_name

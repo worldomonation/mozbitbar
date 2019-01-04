@@ -9,8 +9,8 @@ from mozbitbar import recipe_handler
 from mozbitbar.cli import cli
 
 
-def initialize_logging(args=None):
-    log.setup_logger(args)
+def initialize_logging(args={}):
+    log.setup_logger(**vars(args))
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     # in a taskcluster/treeherder environment, the script will
     # call these methods instead of instead of main().
     args = cli()
-    initialize_logging(vars(args))
+    initialize_logging(args)
     recipe_handler.run_recipe(args.recipe)
 
 
