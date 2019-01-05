@@ -4,10 +4,12 @@
 
 from __future__ import print_function, absolute_import
 
+import random
 import string
 
 import pytest
 
+from mozbitbar import MozbitbarFileException
 from mozbitbar.bitbar_project import BitbarProject
 
 
@@ -43,3 +45,28 @@ def test_bb_file_on_bitbar(file_name, expected, initialize_project):
 def test_bb_file_upload(file_name, expected, initialize_project):
     # TODO: stub test
     assert file_name
+
+
+@pytest.mark.parametrize('path,expected', [
+    (
+        '/mock_path/',
+        MozbitbarFileException
+    ),
+    (
+        'mock_file',
+        ''.join([random.choice(string.lowercase) for _ in range(10)])
+    )
+])
+def test_bb_file_open_file(tmpdir, initialize_project, path, expected):
+    if expected == MozbitbarFileException:
+        with pytest.raises(expected) as exc:
+            initialize_project._open_file(path)
+            assert 'could not be located' in exc.message
+    else:
+        path = tmpdir.mkdir('mock').join(path)
+
+        path.write(expected)
+
+        output = initialize_project._open_file(path.strpath)
+        assert output
+        assert output == expected
