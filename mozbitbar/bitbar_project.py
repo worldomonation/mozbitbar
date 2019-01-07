@@ -635,7 +635,7 @@ class BitbarProject(Configuration):
         for key, filename in kwargs.iteritems():
             file_type, _ = key.split('_')
 
-            if not file_type in ['application', 'test', 'data']:
+            if file_type not in ['application', 'test', 'data']:
                 msg = 'Unsupported file type: {}'.format(file_type)
                 raise MozbitbarFileException(message=msg)
 

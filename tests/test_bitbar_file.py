@@ -100,7 +100,8 @@ def test_bb_file_upload_file(tmpdir, initialize_project, kwargs, expected):
                     path = tmpdir.mkdir('mock').join(kwargs.values()[0])
                     path.write(' ')
 
-                    initialize_project.upload_file(**{kwargs.keys()[0]: path.strpath})
+                    initialize_project.upload_file(
+                        **{kwargs.keys()[0]: path.strpath})
             else:
                 initialize_project.upload_file(**kwargs)
     else:
