@@ -7,10 +7,13 @@ from __future__ import print_function, absolute_import
 import random
 import string
 
+import mock
 import pytest
 
 from mozbitbar import MozbitbarFileException
 from mozbitbar.bitbar_project import BitbarProject
+from testdroid import Testdroid as Bitbar
+from testdroid import RequestResponseError
 
 
 @pytest.fixture()
@@ -79,12 +82,27 @@ def test_bb_file_open_file(tmpdir, initialize_project, path, expected):
     (
         {'application_filename': 'mocked_application_file.apk'},
         None
+    ),
+    (
+        {'application_filename': 'fail_upload.zip'},
+        MozbitbarFileException
     )
 ])
 def test_bb_file_upload_file(tmpdir, initialize_project, kwargs, expected):
     if expected == MozbitbarFileException:
         with pytest.raises(expected):
-            initialize_project.upload_file(**kwargs)
+            if 'fail_upload.zip' in kwargs.values():
+                with mock.patch.object(Bitbar,
+                                       'upload',
+                                       side_effect=RequestResponseError(
+                                           'error uploading',
+                                           404)):
+                    path = tmpdir.mkdir('mock').join(kwargs.values()[0])
+                    path.write(' ')
+
+                    initialize_project.upload_file(**{kwargs.keys()[0]: path.strpath})
+            else:
+                initialize_project.upload_file(**kwargs)
     else:
         path = tmpdir.mkdir('mock').join(kwargs.values()[0])
         path.write(' ')
