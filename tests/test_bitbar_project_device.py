@@ -7,8 +7,6 @@ from __future__ import print_function, absolute_import
 import pytest
 
 
-
-
 @pytest.mark.parametrize('kwargs,expected', [
     (
         1,

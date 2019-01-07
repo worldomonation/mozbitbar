@@ -6,12 +6,10 @@ from __future__ import print_function, absolute_import
 
 import random
 
-import mock
 import pytest
 
 from requests import Response
 
-from mozbitbar.bitbar_project import BitbarProject
 from testdroid import Testdroid
 
 

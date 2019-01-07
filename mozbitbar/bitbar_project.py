@@ -52,11 +52,12 @@ class BitbarProject(Configuration):
             MozbitbarProjectException: If project_status has value other
                 than 'new' or 'existing'.
         """
-        credentials = {key: value for (key, value) in kwargs.iteritems() if 'TESTDROID' in key}
+        credentials = {key: value for (key, value) in kwargs.iteritems()
+                       if 'TESTDROID' in key}
 
         super(BitbarProject, self).__init__(**credentials)
 
-        new_kwargs = dict(set(kwargs.items())^set(credentials.items()))
+        new_kwargs = dict(set(kwargs.items()) ^ set(credentials.items()))
 
         if 'new' in project_status:
             logger.debug('Create new project')
