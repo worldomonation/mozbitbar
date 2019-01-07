@@ -56,7 +56,6 @@ def test_bb_file_open_file(tmpdir, initialize_project, path, expected):
             assert 'could not be located' in exc.message
     else:
         path = tmpdir.mkdir('mock').join(path)
-
         path.write(expected)
 
         output = initialize_project._open_file(path.strpath)
@@ -68,11 +67,26 @@ def test_bb_file_open_file(tmpdir, initialize_project, path, expected):
     (
         {'mock_filename': 'mock_test'},
         MozbitbarFileException
+    ),
+    (
+        {'application_filename': 'mock_path'},
+        MozbitbarFileException
+    ),
+    (
+        {'application_filename': 'mock_file'},
+        None
+    ),
+    (
+        {'application_filename': 'mocked_application_file.apk'},
+        None
     )
 ])
-def test_bb_file_upload_file(initialize_project, kwargs, expected):
+def test_bb_file_upload_file(tmpdir, initialize_project, kwargs, expected):
     if expected == MozbitbarFileException:
         with pytest.raises(expected):
-            initialize_project.upload_file(kwargs)
+            initialize_project.upload_file(**kwargs)
     else:
-        pass
+        path = tmpdir.mkdir('mock').join(kwargs.values()[0])
+        path.write(' ')
+
+        initialize_project.upload_file(**{kwargs.keys()[0]: path.strpath})

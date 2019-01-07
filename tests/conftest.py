@@ -8,6 +8,7 @@ import random
 
 import pytest
 
+from requests import Response
 from testdroid import Testdroid
 
 
@@ -129,9 +130,10 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
-    def upload_file_wrapper(object, path, filename):
-        pass
-        # TODO: stub mock wrapper
+    def upload_wrapper(object, path, filename):
+        res = Response()
+        res.status_code = 200
+        return res
 
     # Config related mocks #
 
@@ -169,4 +171,4 @@ def mock_testdroid_client(monkeypatch):
                         set_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
-    monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)
+    monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)

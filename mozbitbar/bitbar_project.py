@@ -618,7 +618,7 @@ class BitbarProject(Configuration):
         return any([file_list['name'] == filename
                    for file_list in output['data']])
 
-    def upload_file(self, files):
+    def upload_file(self, **kwargs):
         """Uploads file(s) to Bitbar.
 
         Supports upload of multiple files, of all types supported by Bitbar.
@@ -632,7 +632,7 @@ class BitbarProject(Configuration):
                 specified could not be found on disk, or file failed to upload
                 to Bitbar.
         """
-        for key, filename in files.iteritems():
+        for key, filename in kwargs.iteritems():
             file_type, _ = key.split('_')
 
             if not file_type in ['application', 'test', 'data']:
@@ -659,15 +659,11 @@ class BitbarProject(Configuration):
             ]
             api_path = ''.join(api_path_components)
 
-            output = self.client.upload(path=api_path, filename=filename)
-
-            if output.status_code not in range(200, 300):
-                msg = ' '.join([
-                    'Failed to upload file to Bitbar;',
-                    'file type: {}'.format(file_type),
-                    'file name: {}'.format(filename)
-                ])
-                raise MozbitbarFileException(msg)
+            try:
+                self.client.upload(path=api_path, filename=filename)
+            except RequestResponseError as rre:
+                raise MozbitbarFileException(message=rre.args,
+                                             status_code=rre.status_code)
 
     # Device operations #
 
