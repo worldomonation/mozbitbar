@@ -639,6 +639,10 @@ class BitbarProject(Configuration):
                 msg = 'Unsupported file type: {}'.format(file_type)
                 raise MozbitbarFileException(message=msg)
 
+            if not self._file_on_local_disk(filename):
+                msg = 'Failed to locate on disk: {}'.format(filename)
+                raise MozbitbarFileException(path=filename, message=msg)
+
             if self._file_on_bitbar(filename):
                 # skip and go to the next item in the list of files.
                 msg = ', '.join([
@@ -647,10 +651,6 @@ class BitbarProject(Configuration):
                 ])
                 logger.info(msg)
                 continue
-
-            if not self._file_on_local_disk(filename):
-                msg = 'Failed to locate on disk: {}'.format(filename)
-                raise MozbitbarFileException(path=filename, message=msg)
 
             api_path_components = [
                 "users/{user_id}/".format(user_id=self.get_user_id()),
