@@ -52,14 +52,18 @@ class BitbarProject(Configuration):
             MozbitbarProjectException: If project_status has value other
                 than 'new' or 'existing'.
         """
-        super(BitbarProject, self).__init__(**kwargs)
+        credentials = {key: value for (key, value) in kwargs.iteritems() if 'TESTDROID' in key}
+
+        super(BitbarProject, self).__init__(**credentials)
+
+        new_kwargs = dict(set(kwargs.items())^set(credentials.items()))
 
         if 'new' in project_status:
             logger.debug('Create new project')
-            self.create_project(**kwargs)
+            self.create_project(**new_kwargs)
         elif 'existing' in project_status:
             logger.debug('Use existing project')
-            self.use_existing_project(**kwargs)
+            self.use_existing_project(**new_kwargs)
         else:
             msg = 'Invalid project status: {}'.format(project_status)
             raise MozbitbarProjectException(message=msg)
