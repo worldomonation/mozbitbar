@@ -8,10 +8,14 @@ import json
 import os
 import string
 
+import mock
 import pytest
+
 
 from mozbitbar.bitbar_project import BitbarProject
 from mozbitbar import MozbitbarProjectException, MozbitbarFrameworkException
+from testdroid import Testdroid as Bitbar
+from testdroid import RequestResponseError
 
 
 @pytest.fixture()
@@ -150,8 +154,18 @@ def test_bb_project_init_create_new_project(kwargs, expected):
         assert project.project_type == expected['project_type']
 
 
-def test_bb_project_create():
-    pass
+def test_bb_project_create(initialize_project):
+    kwargs = {
+        'project_name': 'mock_test',
+        'project_type': 'mock_type'
+    }
+    with pytest.raises(MozbitbarProjectException):
+        with mock.patch.object(Bitbar,
+                               'create_project',
+                               side_effect=RequestResponseError(
+                                    msg='mock_error', status_code=400)):
+            initialize_project.create_project(**kwargs)
+
 
 # Project Framework #
 

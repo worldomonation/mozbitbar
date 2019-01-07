@@ -304,10 +304,11 @@ class BitbarProject(Configuration):
 
         # TODO: check if project_type specified is valid.
 
-        output = self.client.create_project(project_name, project_type)
-        if 'id' not in output:
-            msg = 'Testdroid response does not contain created project ID.'
-            raise MozbitbarProjectException(message=msg)
+        try:
+            output = self.client.create_project(project_name, project_type)
+        except RequestResponseError as rre:
+            raise MozbitbarProjectException(message=rre.args,
+                                            status_code=rre.status_code)
 
         self._set_project_attributes(output)
 
