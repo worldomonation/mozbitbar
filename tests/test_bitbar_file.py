@@ -18,15 +18,22 @@ from testdroid import RequestResponseError
 
 @pytest.fixture()
 def initialize_project():
-    return BitbarProject('existing', **{'project_name': 'mock_project'})
+    # initialize a dummy project for when the __init__ method is not
+    # under test.
+    kwargs = {
+        'project_name': 'mock_project',
+        'TESTDROID_USERNAME': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_PASSWORD': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_APIKEY': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_URL': 'https://www.mock_test_env_var.com',
+    }
+    return BitbarProject('existing', **kwargs)
 
 
 @pytest.mark.parametrize('file_name,expected', [
-    ('mock_file.zip', False),
-    pytest.param('test_bitbar_file.py', True, marks=pytest.mark.xfail)
+    ('mock_file.zip', False)
 ])
 def test_bb_file_on_local_disk(file_name, expected, initialize_project):
-    # TODO: stub test
     assert initialize_project._file_on_local_disk(file_name) == expected
 
 

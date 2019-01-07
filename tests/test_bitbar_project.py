@@ -18,11 +18,18 @@ from testdroid import Testdroid as Bitbar
 from testdroid import RequestResponseError
 
 
-@pytest.fixture()
+@pytest.fixture
 def initialize_project():
     # initialize a dummy project for when the __init__ method is not
     # under test.
-    return BitbarProject('existing', **{'project_name': 'mock_project'})
+    kwargs = {
+        'project_name': 'mock_project',
+        'TESTDROID_USERNAME': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_PASSWORD': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_APIKEY': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_URL': 'https://www.mock_test_env_var.com',
+    }
+    return BitbarProject('existing', **kwargs)
 
 
 # Existing projects #
