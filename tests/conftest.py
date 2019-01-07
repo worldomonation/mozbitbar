@@ -6,9 +6,12 @@ from __future__ import print_function, absolute_import
 
 import random
 
+import mock
 import pytest
 
 from requests import Response
+
+from mozbitbar.bitbar_project import BitbarProject
 from testdroid import Testdroid
 
 
@@ -75,6 +78,12 @@ def mock_project_config(project_status=None, project_framework_id=None,
 
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
+
+    def init_wrapper(object, **kwargs):
+        object.username = kwargs.get('TESTDROID_USERNAME')
+        object.password = kwargs.get('TESTDROID_PASSWORD')
+        object.api_key = kwargs.get('TESTDROID_APIKEY')
+        object.cloud_url = kwargs.get('TESTDROID_URL')
 
     # Project related mocks #
 
@@ -143,6 +152,26 @@ def mock_testdroid_client(monkeypatch):
     def set_project_config_wrapper(object, project_id, **kwargs):
         return mock_project_config(**kwargs)
 
+    # Device related mocks #
+
+    def get_device_groups_wrapper(object):
+        return [
+            {
+                'displayName': 'mock_device_group',
+                'userId': 8080,
+                'deviceCount': 20,
+                'osType': 'mock_os',
+                'id': 7070
+            },
+            {
+                'displayName': 'second_mock_group',
+                'userId': 8080,
+                'deviceCount': 10,
+                'osType': 'different_mock_os',
+                'id': 7171
+            }
+        ]
+
     # Additional mocks #
 
     def get_me_wrapper(object):
@@ -157,18 +186,34 @@ def mock_testdroid_client(monkeypatch):
 
     # Monkeypatch #
 
+    monkeypatch.setattr(Testdroid, '__init__', init_wrapper)
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_frameworks',
                         get_frameworks_wrapper)
     monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_device_groups',
+                        get_device_groups_wrapper)
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
-    monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
     monkeypatch.setattr(
         Testdroid, 'get_project_config', get_project_config_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_config',
                         set_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
     monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)
+
+
+# @pytest.fixture(autouse=True)
+# def initialize_project():
+#     # with mock.patch.object(Testdroid, '__init__', return_value=None):
+#     kwargs = {
+#         'project_name': 'mock_project',
+#         'TESTDROID_USERNAME': 'MOCK_ENVIRONMENT_VALUE_TEST',
+#         'TESTDROID_PASSWORD': 'MOCK_ENVIRONMENT_VALUE_TEST',
+#         'TESTDROID_APIKEY': 'MOCK_ENVIRONMENT_VALUE_TEST',
+#         'TESTDROID_URL': 'https://www.mock_test_env_var.com',
+#     }
+#     return BitbarProject('existing', **kwargs)
