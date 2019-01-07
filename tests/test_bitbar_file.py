@@ -39,14 +39,6 @@ def test_bb_file_on_bitbar(file_name, expected, initialize_project):
     assert initialize_project._file_on_bitbar(file_name) == expected
 
 
-@pytest.mark.parametrize('file_name,expected', [
-    ('mock_file.zip', False),
-])
-def test_bb_file_upload(file_name, expected, initialize_project):
-    # TODO: stub test
-    assert file_name
-
-
 @pytest.mark.parametrize('path,expected', [
     (
         '/mock_path/',
@@ -70,3 +62,17 @@ def test_bb_file_open_file(tmpdir, initialize_project, path, expected):
         output = initialize_project._open_file(path.strpath)
         assert output
         assert output == expected
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {'mock_filename': 'mock_test'},
+        MozbitbarFileException
+    )
+])
+def test_bb_file_upload_file(initialize_project, kwargs, expected):
+    if expected == MozbitbarFileException:
+        with pytest.raises(expected):
+            initialize_project.upload_file(kwargs)
+    else:
+        pass

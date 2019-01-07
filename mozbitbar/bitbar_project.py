@@ -618,19 +618,26 @@ class BitbarProject(Configuration):
         return any([file_list['name'] == filename
                    for file_list in output['data']])
 
-    def upload_file(self, **kwargs):
+    def upload_file(self, files):
         """Uploads file(s) to Bitbar.
 
         Supports upload of multiple files, of all types supported by Bitbar.
 
         Args:
-            **kwargs: Arbitrary keyword arguments.
+            files (:obj:`dict`): Dictionary of key/value pairs containing the
+                file type and path.
 
         Raises:
-            MozbitbarFileException: If file could not be uploaded to Bitbar.
+            MozbitbarFileException: If file type is unsupported, or file
+                specified could not be found on disk, or file failed to upload
+                to Bitbar.
         """
-        for key, filename in kwargs.iteritems():
+        for key, filename in files.iteritems():
             file_type, _ = key.split('_')
+
+            if not file_type in ['application', 'test', 'data']:
+                msg = 'Unsupported file type: {}'.format(file_type)
+                raise MozbitbarFileException(message=msg)
 
             if self._file_on_bitbar(filename):
                 # skip and go to the next item in the list of files.
