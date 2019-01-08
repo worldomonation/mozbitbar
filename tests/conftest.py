@@ -202,16 +202,3 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
     monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)
-
-
-# @pytest.fixture(autouse=True)
-# def initialize_project():
-#     # with mock.patch.object(Testdroid, '__init__', return_value=None):
-#     kwargs = {
-#         'project_name': 'mock_project',
-#         'TESTDROID_USERNAME': 'MOCK_ENVIRONMENT_VALUE_TEST',
-#         'TESTDROID_PASSWORD': 'MOCK_ENVIRONMENT_VALUE_TEST',
-#         'TESTDROID_APIKEY': 'MOCK_ENVIRONMENT_VALUE_TEST',
-#         'TESTDROID_URL': 'https://www.mock_test_env_var.com',
-#     }
-#     return BitbarProject('existing', **kwargs)
