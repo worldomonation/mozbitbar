@@ -2,29 +2,47 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import json
 import os
 import string
 
+import mock
 import pytest
 
+from mozbitbar import MozbitbarFrameworkException, MozbitbarProjectException
 from mozbitbar.bitbar_project import BitbarProject
-from mozbitbar import MozbitbarProjectException, MozbitbarFrameworkException
+from testdroid import RequestResponseError
+from testdroid import Testdroid as Bitbar
 
 
-@pytest.fixture()
+@pytest.fixture
 def initialize_project():
-    return BitbarProject('existing', **{'project_name': 'mock_project'})
+    # initialize a dummy project for when the __init__ method is not
+    # under test.
+    kwargs = {
+        'project_name': 'mock_project',
+        'TESTDROID_USERNAME': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_PASSWORD': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_APIKEY': 'MOCK_ENVIRONMENT_VALUE_TEST',
+        'TESTDROID_URL': 'https://www.mock_test_env_var.com',
+    }
+    return BitbarProject('existing', **kwargs)
 
 
 # Existing projects #
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-    ({'project_id': 11}, {'id': 11}),
-    ({'project_id': 99}, {'id': 99}),
+    (
+        {'project_id': 11},
+        {'id': 11}
+    ),
+    (
+        {'project_id': 99},
+        {'id': 99}
+    ),
     ({'project_id': 100}, MozbitbarProjectException),
     ({'project_id': 2**32}, MozbitbarProjectException),
     ({'project_id': -1}, MozbitbarProjectException),
@@ -39,8 +57,17 @@ def initialize_project():
     ({'project_name': string.lowercase}, MozbitbarProjectException),
     ({'project_name': 'NULL'}, MozbitbarProjectException),
     ({'project_name': 'None'}, MozbitbarProjectException),
+    (
+        {'project_id': 11, 'project_name': 'mock_project'},
+        {'id': 11, 'name': 'mock_project'}
+    ),
+    (
+        {'project_id': 10000, 'project_name': 'mock_project'},
+        {'id': 10000, 'name': 'yet_another_mock_project'}
+    )
+
 ])
-def test_bb_project_existing(kwargs, expected):
+def test_bb_project_init_existing(kwargs, expected):
     """Ensures BitbarProject is able to retrieve existing project by id
     or name, and process resulting output of the (mocked) call.
 
@@ -58,27 +85,6 @@ def test_bb_project_existing(kwargs, expected):
             project.project_id == expected.get('id') or
             project.project_name == expected.get('name')
         )
-
-
-@pytest.mark.parametrize('kwargs,expected', [
-    (
-        {'project_id': 11, 'project_name': 'mock_project'},
-        {'project_id': 11, 'project_name': 'mock_project'}
-    ),
-    (
-        {'project_id': 10000, 'project_name': 'mock_project'},
-        {'project_id': 10000, 'project_name': 'yet_another_mock_project'}
-    ),
-])
-def test_bb_project_existing_id_and_name(kwargs, expected):
-    """Ensures BitbarProject can accept scenario with both
-    id and name provided. Verifies that existing project selection
-    prioritizes project id over name.
-    """
-    project = BitbarProject('existing', **kwargs)
-    assert project.project_id == expected['project_id']
-    assert project.project_name == expected['project_name']
-
 
 # Project status #
 
@@ -139,7 +145,7 @@ def test_bb_project_status(project_status, expected):
         }
     )
 ])
-def test_bb_project_create_unique_name(kwargs, expected):
+def test_bb_project_init_create_new_project(kwargs, expected):
     """Ensures BitbarProject.create_project() is able to create a project if
     the name is unique. Otherwise, the default behavior is raise an exception,
     unless the permit_duplicate flag is set.
@@ -152,6 +158,19 @@ def test_bb_project_create_unique_name(kwargs, expected):
         assert project.project_id is not None
         assert project.project_name == expected['project_name']
         assert project.project_type == expected['project_type']
+
+
+def test_bb_project_create(initialize_project):
+    kwargs = {
+        'project_name': 'mock_test',
+        'project_type': 'mock_type'
+    }
+    with pytest.raises(MozbitbarProjectException):
+        with mock.patch.object(Bitbar,
+                               'create_project',
+                               side_effect=RequestResponseError(
+                                    msg='mock_error', status_code=400)):
+            initialize_project.create_project(**kwargs)
 
 
 # Project Framework #
@@ -239,3 +258,11 @@ def test_load_project_config(initialize_project, kwargs, expected):
     # clean up temporary file
     if kwargs.get('path'):
         os.remove(kwargs.get('path'))
+
+
+# Other methods #
+
+def test_get_user_id(initialize_project):
+    output = initialize_project.get_user_id()
+    assert output
+    assert type(output) == int

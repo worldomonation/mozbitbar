@@ -52,14 +52,19 @@ class BitbarProject(Configuration):
             MozbitbarProjectException: If project_status has value other
                 than 'new' or 'existing'.
         """
-        super(BitbarProject, self).__init__(**kwargs)
+        credentials = {key: value for (key, value) in kwargs.iteritems()
+                       if 'TESTDROID' in key}
+
+        super(BitbarProject, self).__init__(**credentials)
+
+        new_kwargs = dict(set(kwargs.items()) ^ set(credentials.items()))
 
         if 'new' in project_status:
             logger.debug('Create new project')
-            self.create_project(**kwargs)
+            self.create_project(**new_kwargs)
         elif 'existing' in project_status:
             logger.debug('Use existing project')
-            self.use_existing_project(**kwargs)
+            self.use_existing_project(**new_kwargs)
         else:
             msg = 'Invalid project status: {}'.format(project_status)
             raise MozbitbarProjectException(message=msg)
@@ -304,10 +309,11 @@ class BitbarProject(Configuration):
 
         # TODO: check if project_type specified is valid.
 
-        output = self.client.create_project(project_name, project_type)
-        if 'id' not in output:
-            msg = 'Testdroid response does not contain created project ID.'
-            raise MozbitbarProjectException(message=msg)
+        try:
+            output = self.client.create_project(project_name, project_type)
+        except RequestResponseError as rre:
+            raise MozbitbarProjectException(message=rre.args,
+                                            status_code=rre.status_code)
 
         self._set_project_attributes(output)
 
@@ -623,13 +629,24 @@ class BitbarProject(Configuration):
         Supports upload of multiple files, of all types supported by Bitbar.
 
         Args:
-            **kwargs: Arbitrary keyword arguments.
+            files (:obj:`dict`): Dictionary of key/value pairs containing the
+                file type and path.
 
         Raises:
-            MozbitbarFileException: If file could not be uploaded to Bitbar.
+            MozbitbarFileException: If file type is unsupported, or file
+                specified could not be found on disk, or file failed to upload
+                to Bitbar.
         """
         for key, filename in kwargs.iteritems():
             file_type, _ = key.split('_')
+
+            if file_type not in ['application', 'test', 'data']:
+                msg = 'Unsupported file type: {}'.format(file_type)
+                raise MozbitbarFileException(message=msg)
+
+            if not self._file_on_local_disk(filename):
+                msg = 'Failed to locate on disk: {}'.format(filename)
+                raise MozbitbarFileException(path=filename, message=msg)
 
             if self._file_on_bitbar(filename):
                 # skip and go to the next item in the list of files.
@@ -640,10 +657,6 @@ class BitbarProject(Configuration):
                 logger.info(msg)
                 continue
 
-            if not self._file_on_local_disk(filename):
-                msg = 'Failed to locate on disk: {}'.format(filename)
-                raise MozbitbarFileException(path=filename, message=msg)
-
             api_path_components = [
                 "users/{user_id}/".format(user_id=self.get_user_id()),
                 "projects/{project_id}/".format(project_id=self.project_id),
@@ -651,15 +664,11 @@ class BitbarProject(Configuration):
             ]
             api_path = ''.join(api_path_components)
 
-            output = self.client.upload(path=api_path, filename=filename)
-
-            if output.status_code not in range(200, 300):
-                msg = ' '.join([
-                    'Failed to upload file to Bitbar;',
-                    'file type: {}'.format(file_type),
-                    'file name: {}'.format(filename)
-                ])
-                raise MozbitbarFileException(msg)
+            try:
+                self.client.upload(path=api_path, filename=filename)
+            except RequestResponseError as rre:
+                raise MozbitbarFileException(message=rre.args,
+                                             status_code=rre.status_code)
 
     # Device operations #
 
@@ -699,21 +708,27 @@ class BitbarProject(Configuration):
         Raises:
             MozbitbarDeviceException: If neither id nor name was supplied.
         """
+        if not device_group_id and not device_group_name:
+            msg = 'Neither device_group_name or device_group_id has been \
+                   provided.'
+            raise MozbitbarDeviceException(message=msg)
+
         for device_group in self.get_device_groups():
             # fill out missing parameter so we have both id and name.
-            if device_group_name in device_group['displayName']:
+            if device_group['displayName'] == device_group_name:
                 self.device_group_id = device_group['id']
                 self.device_group_name = device_group_name
                 return
-            elif device_group_id == device_group['id']:
+            elif device_group['id'] == device_group_id:
                 self.device_group_id = device_group_id
                 self.device_group_name = device_group['displayName']
                 return
             else:
-                pass
+                continue
 
-        msg = 'Device group name or device group id \
-                did not match any group on Bitbar'
+        # only incorrect recipes and/or device name/id mismatch leads here.
+        msg = 'Supplied device_group_name or device_group_id \
+                did not match any device group on Bitbar.'
         raise MozbitbarDeviceException(message=msg)
 
     def set_device(self, device_id=None, device_name=None):
@@ -730,6 +745,10 @@ class BitbarProject(Configuration):
             MozbitbarDeviceException: If device_id is not found in list of
                 available device on Bitbar.
         """
+        if not device_id and not device_name:
+            msg = 'Neither device_name or device_id has been provided.'
+            raise MozbitbarDeviceException(message=msg)
+
         for device in self.get_devices():
             if device['id'] == device_id:
                 self.device_id = device_id
@@ -740,7 +759,7 @@ class BitbarProject(Configuration):
                 self.device_name = device_id
                 return
             else:
-                pass
+                continue
 
         msg = 'Device specifier not found on Bitbar: {}'.format(device_id)
         raise MozbitbarDeviceException(message=msg)

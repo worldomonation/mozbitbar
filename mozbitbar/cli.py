@@ -18,12 +18,11 @@ def parse_arguments(args):
     parser.add_argument('-q', '--quiet', action='store_true',
                         help='Disables all output except warning and higher.')
 
-    args, remainder = parser.parse_known_args()
+    args, remainder = parser.parse_known_args(args)
 
     return args, remainder
 
 
 def cli(cli_args=sys.argv[1:]):
     args, _ = parse_arguments(cli_args)
-
     return args

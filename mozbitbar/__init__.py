@@ -51,7 +51,7 @@ class MozbitbarFrameworkException(MozbitbarBaseException):
 
 
 class MozbitbarFileException(MozbitbarBaseException):
-    def __init__(self, path, **kwargs):
+    def __init__(self, path=None, **kwargs):
         """MozbitbarFileException will be raised if errors relating to file
         transactions occur.
         """

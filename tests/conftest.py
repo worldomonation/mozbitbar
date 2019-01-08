@@ -8,6 +8,8 @@ import random
 
 import pytest
 
+from requests import Response
+
 from testdroid import Testdroid
 
 
@@ -75,6 +77,12 @@ def mock_project_config(project_status=None, project_framework_id=None,
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
 
+    def init_wrapper(object, **kwargs):
+        object.username = kwargs.get('username')
+        object.password = kwargs.get('password')
+        object.api_key = kwargs.get('apikey')
+        object.cloud_url = kwargs.get('url')
+
     # Project related mocks #
 
     def create_project_wrapper(object, project_name, project_type):
@@ -129,9 +137,10 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
-    def upload_file_wrapper(object, path, filename):
-        pass
-        # TODO: stub mock wrapper
+    def upload_wrapper(object, path, filename):
+        res = Response()
+        res.status_code = 200
+        return res
 
     # Config related mocks #
 
@@ -140,6 +149,49 @@ def mock_testdroid_client(monkeypatch):
 
     def set_project_config_wrapper(object, project_id, **kwargs):
         return mock_project_config(**kwargs)
+
+    # Device related mocks #
+
+    def get_device_groups_wrapper(object):
+        return {
+            'data': [
+                {
+                    'displayName': 'mock_device_group',
+                    'userId': 8080,
+                    'deviceCount': 20,
+                    'osType': 'mock_os',
+                    'id': 7070
+                },
+                {
+                    'displayName': 'second_mock_group',
+                    'userId': 8080,
+                    'deviceCount': 10,
+                    'osType': 'different_mock_os',
+                    'id': 7171
+                }
+            ]
+        }
+
+    def get_devices_wrapper(object):
+        return {
+            'data': [
+                {
+                    'displayName': 'mock_device_1',
+                    'osType': 'mock_os',
+                    'id': 707,
+                },
+                {
+                    'displayName': 'mock_device_2',
+                    'osType': 'mock_os',
+                    'id': 717,
+                },
+                {
+                    'displayName': 'mock_device_3',
+                    'osType': 'mock_os',
+                    'id': 727,
+                },
+            ]
+        }
 
     # Additional mocks #
 
@@ -155,18 +207,22 @@ def mock_testdroid_client(monkeypatch):
 
     # Monkeypatch #
 
+    monkeypatch.setattr(Testdroid, '__init__', init_wrapper)
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_frameworks',
                         get_frameworks_wrapper)
     monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_devices', get_devices_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_device_groups',
+                        get_device_groups_wrapper)
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
-    monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
     monkeypatch.setattr(
         Testdroid, 'get_project_config', get_project_config_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_config',
                         set_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
-    monkeypatch.setattr(Testdroid, 'upload_file', upload_file_wrapper)
+    monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)
