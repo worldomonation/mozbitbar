@@ -78,10 +78,10 @@ def mock_project_config(project_status=None, project_framework_id=None,
 def mock_testdroid_client(monkeypatch):
 
     def init_wrapper(object, **kwargs):
-        object.username = kwargs.get('TESTDROID_USERNAME')
-        object.password = kwargs.get('TESTDROID_PASSWORD')
-        object.api_key = kwargs.get('TESTDROID_APIKEY')
-        object.cloud_url = kwargs.get('TESTDROID_URL')
+        object.username = kwargs.get('username')
+        object.password = kwargs.get('password')
+        object.api_key = kwargs.get('apikey')
+        object.cloud_url = kwargs.get('url')
 
     # Project related mocks #
 
@@ -153,22 +153,45 @@ def mock_testdroid_client(monkeypatch):
     # Device related mocks #
 
     def get_device_groups_wrapper(object):
-        return [
-            {
-                'displayName': 'mock_device_group',
-                'userId': 8080,
-                'deviceCount': 20,
-                'osType': 'mock_os',
-                'id': 7070
-            },
-            {
-                'displayName': 'second_mock_group',
-                'userId': 8080,
-                'deviceCount': 10,
-                'osType': 'different_mock_os',
-                'id': 7171
-            }
-        ]
+        return {
+            'data': [
+                {
+                    'displayName': 'mock_device_group',
+                    'userId': 8080,
+                    'deviceCount': 20,
+                    'osType': 'mock_os',
+                    'id': 7070
+                },
+                {
+                    'displayName': 'second_mock_group',
+                    'userId': 8080,
+                    'deviceCount': 10,
+                    'osType': 'different_mock_os',
+                    'id': 7171
+                }
+            ]
+        }
+
+    def get_devices_wrapper(object):
+        return {
+            'data': [
+                {
+                    'displayName': 'mock_device_1',
+                    'osType': 'mock_os',
+                    'id': 707,
+                },
+                {
+                    'displayName': 'mock_device_2',
+                    'osType': 'mock_os',
+                    'id': 717,
+                },
+                {
+                    'displayName': 'mock_device_3',
+                    'osType': 'mock_os',
+                    'id': 727,
+                },
+            ]
+        }
 
     # Additional mocks #
 
@@ -189,6 +212,7 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'get_frameworks',
                         get_frameworks_wrapper)
     monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_devices', get_devices_wrapper)
     monkeypatch.setattr(Testdroid, 'get_device_groups',
                         get_device_groups_wrapper)
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)

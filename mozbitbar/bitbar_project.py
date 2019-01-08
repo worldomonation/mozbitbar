@@ -708,21 +708,27 @@ class BitbarProject(Configuration):
         Raises:
             MozbitbarDeviceException: If neither id nor name was supplied.
         """
+        if not device_group_id and not device_group_name:
+            msg = 'Neither device_group_name or device_group_id has been \
+                   provided.'
+            raise MozbitbarDeviceException(message=msg)
+
         for device_group in self.get_device_groups():
             # fill out missing parameter so we have both id and name.
-            if device_group_name in device_group['displayName']:
+            if device_group['displayName'] == device_group_name:
                 self.device_group_id = device_group['id']
                 self.device_group_name = device_group_name
                 return
-            elif device_group_id == device_group['id']:
+            elif device_group['id'] == device_group_id:
                 self.device_group_id = device_group_id
                 self.device_group_name = device_group['displayName']
                 return
             else:
-                pass
+                continue
 
-        msg = 'Device group name or device group id \
-                did not match any group on Bitbar'
+        # only incorrect recipes and/or device name/id mismatch leads here.
+        msg = 'Supplied device_group_name or device_group_id \
+                did not match any device group on Bitbar.'
         raise MozbitbarDeviceException(message=msg)
 
     def set_device(self, device_id=None, device_name=None):
@@ -739,6 +745,7 @@ class BitbarProject(Configuration):
             MozbitbarDeviceException: If device_id is not found in list of
                 available device on Bitbar.
         """
+
         for device in self.get_devices():
             if device['id'] == device_id:
                 self.device_id = device_id
@@ -749,7 +756,7 @@ class BitbarProject(Configuration):
                 self.device_name = device_id
                 return
             else:
-                pass
+                continue
 
         msg = 'Device specifier not found on Bitbar: {}'.format(device_id)
         raise MozbitbarDeviceException(message=msg)
