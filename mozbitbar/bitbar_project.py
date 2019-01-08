@@ -2,22 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import json
 import logging
 import os
 import time
 
-from testdroid import RequestResponseError
-from mozbitbar import (
-    MozbitbarFileException,
-    MozbitbarProjectException,
-    MozbitbarFrameworkException,
-    MozbitbarDeviceException,
-    MozbitbarTestRunException
-)
+from mozbitbar import (MozbitbarDeviceException, MozbitbarFileException,
+                       MozbitbarFrameworkException, MozbitbarProjectException,
+                       MozbitbarTestRunException)
 from mozbitbar.configuration import Configuration
+from testdroid import RequestResponseError
 
 logger = logging.getLogger('mozbitbar')
 
