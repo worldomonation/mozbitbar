@@ -745,6 +745,9 @@ class BitbarProject(Configuration):
             MozbitbarDeviceException: If device_id is not found in list of
                 available device on Bitbar.
         """
+        if not device_id and not device_name:
+            msg = 'Neither device_name or device_id has been provided.'
+            raise MozbitbarDeviceException(message=msg)
 
         for device in self.get_devices():
             if device['id'] == device_id:
