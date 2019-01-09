@@ -9,7 +9,7 @@ import random
 import pytest
 from requests import Response
 
-from testdroid import Testdroid
+from testdroid import RequestResponseError, Testdroid
 
 
 def mock_projects_list():
@@ -53,6 +53,9 @@ def mock_project_template(project_id=None, project_name=None,
 
 def mock_project_config(project_status=None, project_framework_id=None,
                         project_id=None, scheduler=None, **kwargs):
+    """This method allows the mock method to dynamically build the project
+    configuration that is desired, by passing in values where desired.
+    """
     base = {
         'status': project_status or None,
         'frameworkId': project_framework_id or None,
@@ -67,10 +70,44 @@ def mock_project_config(project_status=None, project_framework_id=None,
         ],
         'scheduler': scheduler or 'PARALLEL'
     }
+    # kwargs is to handle values that do not exist in the `base` dictionary,
+    # simulating scenario where user calls Testdroid to set a previously unset
+    # project configuration value.
     if not kwargs:
         return base
     else:
         return dict(base.items() + kwargs.items())
+
+
+def mock_project_parameters(parameter=None):
+    base = [
+        {
+            'key': 'mock_project_parameter_1',
+            'value': 'mock_value_1',
+            'id': 319
+        },
+        {
+            'key': 'mock_project_parameter_2',
+            'value': 'mock_value_2',
+            'id': 320
+        },
+        {
+            'key': 'mock_project_parameter_3',
+            'value': 'mock_value_3',
+            'id': 321
+        }
+    ]
+    if not parameter:
+        return base
+    else:
+        if parameter.get('key') == 'unacceptable_key':
+            raise RequestResponseError(msg='mock', status_code=400)
+        if any(parameter.get('key') in item.get('key') for item in base):
+            raise RequestResponseError(msg='mock', status_code=409)
+        else:
+            parameter['id'] = 330
+            base.append(parameter)
+            return parameter
 
 
 @pytest.fixture(autouse=True)
@@ -149,6 +186,25 @@ def mock_testdroid_client(monkeypatch):
     def set_project_config_wrapper(object, project_id, **kwargs):
         return mock_project_config(**kwargs)
 
+    # Parameter related mocks #
+
+    def set_project_parameters_wrapper(object, project_id, parameters):
+        return mock_project_parameters(parameters)
+
+    def delete_project_parameters_wrapper(object, project_id, parameter_id):
+        parameters = mock_project_parameters()
+        for item in parameters:
+            if item.get('id') == parameter_id:
+                res = Response()
+                res.status_code = 204
+                return res
+        raise RequestResponseError(msg='mock', status_code=404)
+
+    def get_project_parameters_wrapper(object, project_id):
+        return {
+            'data': mock_project_parameters()
+        }
+
     # Device related mocks #
 
     def get_device_groups_wrapper(object):
@@ -208,6 +264,8 @@ def mock_testdroid_client(monkeypatch):
 
     monkeypatch.setattr(Testdroid, '__init__', init_wrapper)
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
+    monkeypatch.setattr(Testdroid, 'delete_project_parameters',
+                        delete_project_parameters_wrapper)
     monkeypatch.setattr(Testdroid, 'get_frameworks',
                         get_frameworks_wrapper)
     monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)
@@ -219,9 +277,13 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
     monkeypatch.setattr(
         Testdroid, 'get_project_config', get_project_config_wrapper)
+    monkeypatch.setattr(
+        Testdroid, 'get_project_parameters', get_project_parameters_wrapper)
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_config',
                         set_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_framework',
                         set_project_framework_wrapper)
+    monkeypatch.setattr(Testdroid, 'set_project_parameters',
+                        set_project_parameters_wrapper)
     monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)

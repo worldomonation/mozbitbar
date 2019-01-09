@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function
 
 import json
-import os
 
 import pytest
 
@@ -38,41 +37,74 @@ def initialize_project():
         {'timeout': 10, 'scheduler': 'SINGLE'},
         {'timeout': 10, 'scheduler': 'SINGLE'}
     ),
-    (
-        'not_a_dict', TypeError
+    pytest.param(
+        'not_a_dict',
+        TypeError,
+        marks=pytest.mark.xfail
     ),
     (
         {'scheduler': 'SINGLE'},
         None
-    )
+    ),
 ])
 def test_set_project_config_new_config(initialize_project, kwargs, expected):
-    if expected is TypeError:
+    if expected == TypeError:
         with pytest.raises(TypeError):
-            initialize_project.set_project_configs(new_config=kwargs)
+            initialize_project.set_project_configs(new_values=kwargs)
     else:
-        initialize_project.set_project_configs(new_config=kwargs)
+        initialize_project.set_project_configs(new_values=kwargs)
 
 
-@pytest.mark.parametrize('kwargs,expected', [
+@pytest.mark.parametrize('path,kwargs,expected', [
     (
-        {'path': 'mock_config.json', 'config': {'mock': True}},
+        '10',
+        {'content': 10},
+        {'content': 10}
+    ),
+])
+def test_set_project_config_path(tmpdir, initialize_project, path, kwargs,
+                                 expected):
+    if path:
+        mock_path = tmpdir.mkdir('mock').join(path)
+    else:
+        mock_path = tmpdir.mkdir('mock').join('default_mock.json')
+
+    mock_path.write(json.dumps(kwargs))
+
+    assert (
+        initialize_project.set_project_configs(path=mock_path.strpath) is None)
+
+
+@pytest.mark.parametrize('path,kwargs,expected', [
+    (
+        'mock_file.json',
+        {'mock': True},
         {'mock': True}
     ),
     (
-        {'config': {"scheduler": "SINGLE", "timeout": 0}},
+        None,
+        {"scheduler": "SINGLE", "timeout": 0},
         {"scheduler": "SINGLE", "timeout": 0}
+    ),
+    (
+        'mock_path',
+        -1,
+        TypeError
     )
 ])
-def test_load_project_config(initialize_project, kwargs, expected):
-    # if kwargs['path'] is defined, it is a temporary file
-    if kwargs.get('path'):
-        with open(kwargs.get('path'), 'w') as temporary_file:
-            json.dump(kwargs.get('config'), temporary_file)
+def test_load_project_config(tmpdir, initialize_project, path, kwargs,
+                             expected):
+    if path:
+        mock_path = tmpdir.mkdir('mock').join(path)
+    else:
+        mock_path = tmpdir.mkdir('mock').join('mocked_test.json')
 
-    # this method does its own assertions
-    initialize_project.set_project_configs(path=kwargs.get('path'))
+    mock_path.write(json.dumps(kwargs))
 
-    # clean up temporary file
-    if kwargs.get('path'):
-        os.remove(kwargs.get('path'))
+    if expected == TypeError:
+        with pytest.raises(TypeError):
+            initialize_project._load_project_config(mock_path.strpath)
+
+    else:
+        assert expected == initialize_project._load_project_config(
+                                                    mock_path.strpath)
