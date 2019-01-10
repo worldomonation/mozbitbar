@@ -786,6 +786,7 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
+        # ensure name is unique
         if not kwargs.get('name'):
             msg = 'Test name is not defined.'
             raise MozbitbarTestRunException(message=msg)
@@ -796,10 +797,12 @@ class BitbarProject(Configuration):
                 test_run_name=kwargs.get('name')
             )
 
+        # ensure project ID is set
         if not hasattr(self, 'project_id'):
             msg = 'Project ID is not set.'
             raise MozbitbarProjectException(message=msg)
 
+        # ensure at least one of device_id or device_group_id is set
         if hasattr(self, 'device_group_id'):
             kwargs['device_group_id'] = self.device_group_id
         elif hasattr(self, 'device_id'):
@@ -811,6 +814,15 @@ class BitbarProject(Configuration):
         self.test_run_id = self.client.start_test_run(self.project_id,
                                                       **kwargs)
         self.test_run_name = kwargs.get('name')
+
+    def configure_and_start_test_run(self, **kwargs):
+        if not hasattr(self, 'project_id'):
+            msg = 'Project ID is not set.'
+            raise MozbitbarProjectException(message=msg)
+
+
+        pass
+
 
     def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.
