@@ -819,10 +819,7 @@ class BitbarProject(Configuration):
         if not hasattr(self, 'project_id'):
             msg = 'Project ID is not set.'
             raise MozbitbarProjectException(message=msg)
-
-
         pass
-
 
     def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.
