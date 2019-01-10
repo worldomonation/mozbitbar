@@ -44,10 +44,14 @@ def initialize_project():
         {'framework_name': 'mock_framework', 'framework_id': 1},
         {'framework_name': 'mock_framework', 'framework_id': 1}
     ),
-    ({'framework_name': u'mock_framework', 'framework_id': 1}, {
-     'framework_name': 'mock_framework', 'framework_id': 1}),
-    ({'framework_name': 'mock_unicode_framework'},
-     {'framework_name': 'mock_unicode_framework', 'framework_id': 2}),
+    (
+        {'framework_name': u'mock_framework', 'framework_id': 1},
+        {'framework_name': 'mock_framework', 'framework_id': 1}
+    ),
+    (
+        {'framework_name': 'mock_unicode_framework'},
+        {'framework_name': 'mock_unicode_framework', 'framework_id': 2}
+    )
 ])
 def test_bb_project_framework(initialize_project, kwargs, expected):
     if expected is MozbitbarFrameworkException:

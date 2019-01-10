@@ -63,7 +63,7 @@ def test_bb_file_open_file(tmpdir, initialize_project, path, expected):
     if expected == MozbitbarFileException:
         with pytest.raises(expected) as exc:
             initialize_project._open_file(path)
-            assert 'could not be located' in exc.message
+        assert 'could not be located' in exc.value.message
     else:
         path = tmpdir.mkdir('mock').join(path)
         path.write(expected)

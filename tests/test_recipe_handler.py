@@ -54,7 +54,7 @@ def test_locate_recipe(tmpdir, mock_recipe, kwargs, expected):
     if issubclass(expected, Exception):
         with pytest.raises(expected) as mre:
             mock_recipe.locate_recipe(kwargs.get('file_name'))
-            assert 'recipe not found' in mre.message
+        assert 'recipe not found' in mre.value.message
     else:
         mock_file_name = kwargs.get('file_name') or 'mock_recipe.yaml'
         path = tmpdir.mkdir('mock').join(mock_file_name)
@@ -167,7 +167,7 @@ def test_load_recipe_from_yaml(tmpdir, mock_recipe, kwargs, expected):
         if issubclass(expected, Exception):
             with pytest.raises(expected) as exc:
                 mock_recipe.load_recipe_from_yaml()
-                assert 'Invalid YAML file' in exc.message
+            assert 'Invalid YAML file' in exc.value.message
         else:
             mock_recipe.load_recipe_from_yaml()
 
@@ -175,25 +175,35 @@ def test_load_recipe_from_yaml(tmpdir, mock_recipe, kwargs, expected):
 @pytest.mark.parametrize('kwargs,expected', [
     (
         {},
-        (TypeError, 'Recipe task list must be of type list.')
+        (
+            TypeError,
+            'Recipe task list must be of type list.'
+        )
     ),
     (
         ['action', 'mock'],
-        (TypeError, 'Recipe action must be of type dict.')
+        (
+            TypeError,
+            'Recipe action must be of type dict.'
+        )
     ),
     (
-        [{
-            'argument': 'mock_argument'
-        }],
+        [
+            {
+                'argument': 'mock_argument'
+            }
+        ],
         (
             MozbitbarRecipeException,
             'Recipe action must contain key value: action.'
         )
     ),
     (
-        [{
-            'action': 'mock_action'
-        }],
+        [
+            {
+                'action': 'mock_action'
+            }
+        ],
         (
             MozbitbarRecipeException,
             'Recipe action must contain key value: arguments'
@@ -203,7 +213,7 @@ def test_load_recipe_from_yaml(tmpdir, mock_recipe, kwargs, expected):
 def test_property_task_list(mock_recipe, kwargs, expected):
     with pytest.raises(expected[0]) as exc:
         mock_recipe.task_list = kwargs
-        assert expected[1] in exc.message
+    assert expected[1] in (exc.value.args or exc.value.message)
 
 
 @pytest.mark.parametrize('kwargs,expected', [

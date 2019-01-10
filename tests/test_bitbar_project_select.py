@@ -4,14 +4,12 @@
 
 from __future__ import absolute_import, print_function
 
-import json
-import os
 import string
 
 import mock
 import pytest
 
-from mozbitbar import MozbitbarFrameworkException, MozbitbarProjectException
+from mozbitbar import MozbitbarProjectException
 from mozbitbar.bitbar_project import BitbarProject
 from testdroid import RequestResponseError
 from testdroid import Testdroid as Bitbar
@@ -85,6 +83,7 @@ def test_bb_project_init_existing(kwargs, expected):
             project.project_id == expected.get('id') or
             project.project_name == expected.get('name')
         )
+
 
 # Project status #
 
@@ -173,94 +172,26 @@ def test_bb_project_create(initialize_project):
             initialize_project.create_project(**kwargs)
 
 
-# Project Framework #
+# Project ID Property #
 
 
-@pytest.mark.parametrize('kwargs,expected', [
-    (
-        {'framework_id': -1},
-        MozbitbarFrameworkException
-    ),
-    (
-        {'framework_id': 1},
-        {'framework_name': 'mock_framework', 'framework_id': 1}
-    ),
-    (
-        {'framework_name': 'mock_framework'},
-        {'framework_name': 'mock_framework', 'framework_id': 1}
-    ),
-    (
-        {'framework_name': 'mock_framework', 'framework_id': 1},
-        {'framework_name': 'mock_framework', 'framework_id': 1}
-    ),
-    ({'framework_name': u'mock_framework', 'framework_id': 1}, {
-     'framework_name': 'mock_framework', 'framework_id': 1}),
-    ({'framework_name': 'mock_unicode_framework'},
-     {'framework_name': 'mock_unicode_framework', 'framework_id': 2}),
+@pytest.mark.parametrize('project_id,expected', [
+    (1, 1),
+    ('1', ValueError),
+    (-1, -1),
+    ({}, ValueError)
 ])
-def test_bb_project_framework(initialize_project, kwargs, expected):
-    if expected is MozbitbarFrameworkException:
-        with pytest.raises(MozbitbarFrameworkException):
-            initialize_project.set_project_framework(**kwargs)
+def test_bb_project_id(initialize_project, project_id, expected):
+    if expected == ValueError:
+        with pytest.raises(expected):
+            initialize_project.project_id = project_id
     else:
-        initialize_project.set_project_framework(**kwargs)
-        assert initialize_project.framework_id == expected['framework_id']
-        assert initialize_project.framework_name == expected['framework_name']
-
-
-# Project config #
-
-
-@pytest.mark.parametrize('kwargs,expected', [
-    (
-        {'timeout': 10},
-        {'timeout': 10}
-    ),
-    (
-        {'timeout': 10, 'scheduler': 'SINGLE'},
-        {'timeout': 10, 'scheduler': 'SINGLE'}
-    ),
-    (
-        'not_a_dict', TypeError
-    ),
-    (
-        {'scheduler': 'SINGLE'},
-        None
-    )
-])
-def test_set_project_config_new_config(initialize_project, kwargs, expected):
-    if expected is TypeError:
-        with pytest.raises(TypeError):
-            initialize_project.set_project_configs(new_config=kwargs)
-    else:
-        initialize_project.set_project_configs(new_config=kwargs)
-
-
-@pytest.mark.parametrize('kwargs,expected', [
-    (
-        {'path': 'mock_config.json', 'config': {'mock': True}},
-        {'mock': True}
-    ),
-    (
-        {'config': {"scheduler": "SINGLE", "timeout": 0}},
-        {"scheduler": "SINGLE", "timeout": 0}
-    )
-])
-def test_load_project_config(initialize_project, kwargs, expected):
-    # if kwargs['path'] is defined, it is a temporary file
-    if kwargs.get('path'):
-        with open(kwargs.get('path'), 'w') as temporary_file:
-            json.dump(kwargs.get('config'), temporary_file)
-
-    # this method does its own assertions
-    initialize_project.set_project_configs(path=kwargs.get('path'))
-
-    # clean up temporary file
-    if kwargs.get('path'):
-        os.remove(kwargs.get('path'))
+        initialize_project.project_id = project_id
+        assert initialize_project.project_id == expected
 
 
 # Other methods #
+
 
 def test_get_user_id(initialize_project):
     output = initialize_project.get_user_id()
