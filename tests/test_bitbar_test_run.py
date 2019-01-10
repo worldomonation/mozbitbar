@@ -6,8 +6,7 @@ from __future__ import absolute_import, print_function
 
 import pytest
 
-from mozbitbar import (MozbitbarDeviceException, MozbitbarProjectException,
-                       MozbitbarTestRunException)
+from mozbitbar import MozbitbarDeviceException, MozbitbarTestRunException
 from mozbitbar.bitbar_project import BitbarProject
 
 
@@ -115,7 +114,6 @@ def test_get_test_run(initialize_project, kwargs, expected):
         None,
         MozbitbarDeviceException
     )
-
 ])
 def test_start_test_run(initialize_project, kwargs, attribute, exception):
     if attribute:
