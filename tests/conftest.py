@@ -288,6 +288,11 @@ def mock_testdroid_client(monkeypatch):
                 return item
         raise RequestResponseError(msg='mock', status_code=404)
 
+    def start_test_run_wrapper(object, project_id, device_group_id=None,
+                               device_model_ids=None, name=None,
+                               additional_params={}):
+        return 220
+
     # Additional mocks #
 
     def get_me_wrapper(object):
@@ -329,4 +334,5 @@ def mock_testdroid_client(monkeypatch):
                         set_project_framework_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_parameters',
                         set_project_parameters_wrapper)
+    monkeypatch.setattr(Testdroid, 'start_test_run', start_test_run_wrapper)
     monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)
