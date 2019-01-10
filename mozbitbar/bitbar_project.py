@@ -86,7 +86,7 @@ class BitbarProject(Configuration):
     @project_id.setter
     def project_id(self, project_id):
         if type(project_id) is not int:
-            raise ValueError('{}: invalid project_id type:'.format(__name__) +
+            raise ValueError('{}: invalid project_id type: '.format(__name__) +
                              'expected int, received {}'.format(
                                  type(project_id)))
         self.__project_id = project_id
@@ -786,25 +786,31 @@ class BitbarProject(Configuration):
         Raises:
             RequestResponseError: If Testdroid responds with an error.
         """
+        if not kwargs.get('name'):
+            msg = 'Test name is not defined.'
+            raise MozbitbarTestRunException(message=msg)
         if not self._is_test_name_unique(kwargs.get('name')):
-            msg = 'Test name is not unique'
+            msg = 'Test name is not unique.'
             raise MozbitbarTestRunException(
                 message=msg,
                 test_run_name=kwargs.get('name')
             )
 
-        if not self.project_id:
-            msg = 'Project ID is not set'
+        if not hasattr(self, 'project_id'):
+            msg = 'Project ID is not set.'
             raise MozbitbarProjectException(message=msg)
 
-        if not (self.device_group_id or self.device_id):
-            msg = 'Device or device group id is not set'
+        if hasattr(self, 'device_group_id'):
+            kwargs['device_group_id'] = self.device_group_id
+        elif hasattr(self, 'device_id'):
+            kwargs['device_model_ids'] = self.device_id
+        else:
+            msg = 'Device or device group id is not set.'
             raise MozbitbarDeviceException(message=msg)
 
         self.test_run_id = self.client.start_test_run(self.project_id,
-                                                      self.device_group_id,
                                                       **kwargs)
-        self.test_run_name = self.get_test_run(self.test_run_id)['displayName']
+        self.test_run_name = kwargs.get('name')
 
     def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.
@@ -833,6 +839,7 @@ class BitbarProject(Configuration):
             for test_run in test_runs['data']:
                 if test_run_name in test_run.values():
                     test_run_id = test_run['id']
+                    break
 
         if not test_run_id or type(test_run_id) is not int:
             msg = 'Test Run ID is not integer.'
