@@ -196,7 +196,7 @@ class BitbarProject(Configuration):
 
     @device_id.setter
     def device_id(self, id):
-        self.__device_id = id
+        self.__device_id = int(id)
 
     # Additional Methods #
 
@@ -566,14 +566,10 @@ class BitbarProject(Configuration):
             logger.info(msg)
             return
 
-        try:
-            self.client.delete_project_parameters(
-                self.project_id,
-                sanitized_parameter_id
-            )
-        except RequestResponseError as rre:
-            raise MozbitbarProjectException(message=rre.args,
-                                            status_code=rre.status_code)
+        self.client.delete_project_parameters(
+            self.project_id,
+            sanitized_parameter_id
+        )
 
     def get_project_parameter_id(self, parameter_name):
         """Returns the parameter_id value.
@@ -834,14 +830,18 @@ class BitbarProject(Configuration):
         """
         if test_run_name:
             test_runs = self.client.get_project_test_runs(self.project_id)
-            for test_run in test_runs:
-                if test_run_name in test_run:
+            for test_run in test_runs['data']:
+                if test_run_name in test_run.values():
                     test_run_id = test_run['id']
+
+        if not test_run_id or type(test_run_id) is not int:
+            msg = 'Test Run ID is not integer.'
+            raise MozbitbarTestRunException(message=msg)
 
         try:
             output = self.client.get_test_run(self.project_id, test_run_id)
         except RequestResponseError as rre:
-            raise MozbitbarTestRunException(message=rre.message,
+            raise MozbitbarTestRunException(message=rre.args,
                                             status_code=rre.status_code)
 
         return output

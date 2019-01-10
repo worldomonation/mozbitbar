@@ -110,9 +110,35 @@ def mock_project_parameters(parameter=None):
             return parameter
 
 
+def mock_test_runs():
+    return {
+        'data': [
+            {
+                'number': 8,
+                'id': 757,
+                'displayName': 'mock_test_run_1'
+            },
+            {
+                'number': 9,
+                'id': 767,
+                'displayName': 'mock_test_run_2'
+            },
+            {
+                'number': 10,
+                'id': 777,
+                'displayName': 'mock_test_run_3'
+            },
+        ]
+    }
+
+
 @pytest.fixture(autouse=True)
 def mock_testdroid_client(monkeypatch):
+    """Mocks essentially all of the Testdroid methods used by Mozbitbar.
 
+    These mocked methods are meant to replace the Testdroid calls to the live
+    API when running tests.
+    """
     def init_wrapper(object, **kwargs):
         object.username = kwargs.get('username')
         object.password = kwargs.get('password')
@@ -248,6 +274,20 @@ def mock_testdroid_client(monkeypatch):
             ]
         }
 
+    # Test Run mocks #
+
+    def get_project_test_runs_wrapper(object, project_id):
+        return mock_test_runs()
+
+    def get_test_run_wrapper(object, project_id, test_run_id):
+        if type(test_run_id) is not int:
+            raise RequestResponseError(msg='', status_code=400)
+        output = mock_test_runs()['data']
+        for item in output:
+            if item['id'] == test_run_id:
+                return item
+        raise RequestResponseError(msg='mock', status_code=404)
+
     # Additional mocks #
 
     def get_me_wrapper(object):
@@ -266,6 +306,8 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'create_project', create_project_wrapper)
     monkeypatch.setattr(Testdroid, 'delete_project_parameters',
                         delete_project_parameters_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_project_test_runs',
+                        get_project_test_runs_wrapper)
     monkeypatch.setattr(Testdroid, 'get_frameworks',
                         get_frameworks_wrapper)
     monkeypatch.setattr(Testdroid, 'get_input_files', get_input_files_wrapper)
@@ -280,6 +322,7 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(
         Testdroid, 'get_project_parameters', get_project_parameters_wrapper)
     monkeypatch.setattr(Testdroid, 'get_token', get_token_wrapper)
+    monkeypatch.setattr(Testdroid, 'get_test_run', get_test_run_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_config',
                         set_project_config_wrapper)
     monkeypatch.setattr(Testdroid, 'set_project_framework',
