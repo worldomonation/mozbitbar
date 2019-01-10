@@ -84,6 +84,7 @@ def test_bb_project_init_existing(kwargs, expected):
             project.project_name == expected.get('name')
         )
 
+
 # Project status #
 
 
@@ -171,7 +172,26 @@ def test_bb_project_create(initialize_project):
             initialize_project.create_project(**kwargs)
 
 
+# Project ID Property #
+
+
+@pytest.mark.parametrize('project_id,expected', [
+    (1, 1),
+    ('1', ValueError),
+    (-1, -1),
+    ({}, ValueError)
+])
+def test_bb_project_id(initialize_project, project_id, expected):
+    if expected == ValueError:
+        with pytest.raises(expected):
+            initialize_project.project_id = project_id
+    else:
+        initialize_project.project_id = project_id
+        assert initialize_project.project_id == expected
+
+
 # Other methods #
+
 
 def test_get_user_id(initialize_project):
     output = initialize_project.get_user_id()

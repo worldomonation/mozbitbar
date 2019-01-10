@@ -87,3 +87,49 @@ def test_set_device(initialize_project, kwargs, expected):
         initialize_project.set_device(**kwargs)
         initialize_project.device_d = expected.get('device_group_id')
         initialize_project.device_name = expected.get('device_group_name')
+
+
+@pytest.mark.parametrize('device_id,expected', [
+    (1, 1),
+    ('1', 1),
+    (-1, -1),
+    ({}, TypeError),
+    ([], TypeError)
+])
+def test_device_id(initialize_project, device_id, expected):
+    if expected == TypeError:
+        with pytest.raises(expected):
+            initialize_project.device_id = device_id
+    else:
+        initialize_project.device_id = device_id
+        assert initialize_project.device_id == expected
+
+
+@pytest.mark.parametrize('device_group_id,expected', [
+    (1, 1),
+    ('1', 1),
+    (-1, -1),
+    ({}, TypeError)
+])
+def test_device_group_id(initialize_project, device_group_id, expected):
+    if expected == TypeError:
+        with pytest.raises(expected):
+            initialize_project.device_group_id = device_group_id
+    else:
+        initialize_project.device_group_id = device_group_id
+        assert initialize_project.device_group_id == expected
+
+
+@pytest.mark.parametrize('device_group_name,expected', [
+    (1, '1'),
+    (-1, '-1'),
+    ({}, '{}'),
+    ('string', 'string')
+])
+def test_device_group_name(initialize_project, device_group_name, expected):
+    if expected == TypeError:
+        with pytest.raises(expected):
+            initialize_project.device_group_name = device_group_name
+    else:
+        initialize_project.device_group_name = device_group_name
+        assert initialize_project.device_group_name == expected
