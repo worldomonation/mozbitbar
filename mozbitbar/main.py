@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function
 
 from mozbitbar import log, recipe_handler
 from mozbitbar.cli import cli
+from mozbitbar.generate_and_run_recipe import run
 
 
 def initialize_logging(args={}):
@@ -18,6 +19,7 @@ def main():
     # call these methods instead of instead of main().
     args = cli()
     initialize_logging(args)
+    run(args)
     recipe_handler.run_recipe(args.recipe)
 
 

@@ -572,8 +572,8 @@ class BitbarProject(Configuration):
                 parameter_to_delete)
 
         if sanitized_parameter_id is None:
-            # if user-supplied parameter name or id is not in fact set for the
-            # project on Bitbar, skip the deletion process.
+            # if user specified a parameter name or id that does not exist,
+            # inform and skip the deletion process
             msg = ', '.join([
                 'Parameter: {} is not set for project'.format(
                     parameter_to_delete),
