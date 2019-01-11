@@ -9,6 +9,8 @@ import logging
 import os
 import time
 
+from uuid import uuid4
+
 from mozbitbar import (MozbitbarDeviceException, MozbitbarFileException,
                        MozbitbarFrameworkException, MozbitbarProjectException,
                        MozbitbarTestRunException)
@@ -48,11 +50,20 @@ class BitbarProject(Configuration):
             MozbitbarProjectException: If project_status has value other
                 than 'new' or 'existing'.
         """
+        # all keys that are credentials-related are shoved into a new dict
         credentials = {key: value for (key, value) in kwargs.iteritems()
                        if 'TESTDROID' in key}
 
         super(BitbarProject, self).__init__(**credentials)
 
+        self.__device_group_id = None
+        self.__device_group_name = None
+        self.__device_id = None
+        self.device_name = None
+        self.__framework_id = None
+        self.__framework_name = None
+
+        # new dict with credentails-related keys removed using intersect
         new_kwargs = dict(set(kwargs.items()) ^ set(credentials.items()))
 
         if 'new' in project_status:
@@ -207,9 +218,14 @@ class BitbarProject(Configuration):
             response (:obj:`dict`): Response from Bitbar represented as
                 dictionary of strings.
         """
-        self.project_id = response['id']
-        self.project_name = response['name']
-        self.project_type = response['type']
+        try:
+            self.project_id = response['id']
+            self.project_name = response['name']
+            self.project_type = response['type']
+        except KeyError:
+            msg = 'Testdroid responded with unexpected output when \
+                   querying project.'
+            raise MozbitbarProjectException(message=msg)
 
     def get_user_id(self):
         """Retrieves the user id for the currently authenticated user.
@@ -722,7 +738,7 @@ class BitbarProject(Configuration):
                 did not match any device group on Bitbar.'
         raise MozbitbarDeviceException(message=msg)
 
-    def set_device(self, device_id=None, device_name=None):
+    def set_device(self, device_name=None, device_id=None):
         """Sets the device using the device_id.
 
         Accepts either a device name or device id.
@@ -777,40 +793,73 @@ class BitbarProject(Configuration):
         """Starts a test run with parameters provided from the recipe.
 
         This method is a wrapper around the Testdroid implementation with
-        additional operations. Parameters to this method should mirror that of
-        the Testdroid implementation.
+        additional operations and verifications. As a standalone-capable
+        method, it is possible to call this method using an instance of
+        BitbarProject object without its project, device or framework
+        attributes already set. In such usage, it is expected that user will
+        provide the minimum viable attributes from the recipe.
+
+        If this method is invoked from an instance of BitbarProject that has
+        project, device and framework attributes set, it will simply pass such
+        attributes to the Testdroid method.
 
         Args:
             **kwargs: Arbitrary keyword arguments.
 
         Raises:
+            MozbitbarTestRunException: If a non-unique test run name is
+                supplied.
             RequestResponseError: If Testdroid responds with an error.
         """
-        if not kwargs.get('name'):
-            msg = 'Test name is not defined.'
-            raise MozbitbarTestRunException(message=msg)
-        if not self._is_test_name_unique(kwargs.get('name')):
+        if not self.project_id:
+            project_id = kwargs.pop('project_id', None)
+            if project_id:
+                self.use_existing_project(project_id=project_id)
+
+        if not self.device_group_id or not self.device_group_name:
+            device_group_id = kwargs.pop('device_group_id', None)
+            device_group_name = kwargs.pop('device_group_name', None)
+            if device_group_id or device_group_name:
+                self.set_device_group(device_group_name, device_group_id)
+
+        if not self.device_id or not self.device_name:
+            device_id = kwargs.pop('device_id', None)
+            device_name = kwargs.pop('device_name', None)
+            if device_id or device_name:
+                self.set_device(device_name, device_id)
+
+        test_name = kwargs.pop('name', None)
+        if not test_name:
+            logger.warning('Test name was not defined in recipe. \
+                            A test name has been automatically generated \
+                            using UUID.')
+            test_name = str(uuid4())
+
+        if not self._is_test_name_unique(test_name):
             msg = 'Test name is not unique.'
             raise MozbitbarTestRunException(
                 message=msg,
-                test_run_name=kwargs.get('name')
+                test_run_name=test_name
             )
 
-        if not hasattr(self, 'project_id'):
-            msg = 'Project ID is not set.'
-            raise MozbitbarProjectException(message=msg)
+        additional_params = {}
+        if kwargs.get('additional_params', False):
+            additional_params = kwargs.pop('additional_params')
 
-        if hasattr(self, 'device_group_id'):
-            kwargs['device_group_id'] = self.device_group_id
-        elif hasattr(self, 'device_id'):
-            kwargs['device_model_ids'] = self.device_id
-        else:
-            msg = 'Device or device group id is not set.'
-            raise MozbitbarDeviceException(message=msg)
+        output = self.client.start_test_run(
+            project_id=self.project_id,
+            device_group_id=self.device_group_id,
+            device_model_ids=self.device_id,
+            name=test_name,
+            additional_params=additional_params
+        )
 
-        self.test_run_id = self.client.start_test_run(self.project_id,
-                                                      **kwargs)
-        self.test_run_name = kwargs.get('name')
+        if not output:
+            msg = 'test'
+            raise MozbitbarTestRunException(message=msg)
+
+        self.test_run_id = output
+        self.test_run_name = test_name
 
     def get_test_run(self, test_run_id=None, test_run_name=None):
         """Returns the test run details.

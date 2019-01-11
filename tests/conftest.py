@@ -291,7 +291,10 @@ def mock_testdroid_client(monkeypatch):
     def start_test_run_wrapper(object, project_id, device_group_id=None,
                                device_model_ids=None, name=None,
                                additional_params={}):
-        return 220
+        if not device_group_id and not device_model_ids:
+            return
+        else:
+            return 220
 
     # Additional mocks #
 

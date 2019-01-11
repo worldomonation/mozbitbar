@@ -1,0 +1,12 @@
+- project: existing
+  arguments:
+    project_id: 231942
+    project_name: test_project_1
+- action: start_test_run
+  arguments:
+    name: test_136
+    device_group_name: Edwin_Test
+- action: notify_test_run_complete
+  arguments:
+    interval: 2
+    timeout: 90

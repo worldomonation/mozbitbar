@@ -112,7 +112,22 @@ def test_get_test_run(initialize_project, kwargs, expected):
     (
         {'name': 'unique_mock_test_run'},
         None,
-        MozbitbarDeviceException
+        MozbitbarTestRunException
+    ),
+    (
+        {'device_group_name': 'mock_device_group'},
+        None,
+        None
+    ),
+    (
+        {'device_id': 727},
+        None,
+        None
+    ),
+    (
+        {'device_id': 717, 'additional_params': {'test_param': 'mock_value'}},
+        None,
+        None
     )
 ])
 def test_start_test_run(initialize_project, kwargs, attribute, exception):
@@ -121,11 +136,12 @@ def test_start_test_run(initialize_project, kwargs, attribute, exception):
         # attributes for test execution.
         for key, value in attribute.iteritems():
             setattr(initialize_project, key, value)
-    if exception in [MozbitbarTestRunException, MozbitbarDeviceException]:
+    if exception in [MozbitbarTestRunException, MozbitbarDeviceException,
+                     MozbitbarTestRunException]:
         with pytest.raises(exception):
             initialize_project.start_test_run(**kwargs)
     else:
         initialize_project.start_test_run(**kwargs)
         assert initialize_project.test_run_id is not None
         assert type(initialize_project.test_run_id) is int
-        assert initialize_project.test_run_name == kwargs.get('name')
+        assert initialize_project.test_run_name is not None
