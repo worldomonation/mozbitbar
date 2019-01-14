@@ -197,17 +197,6 @@ def test_load_recipe_from_yaml(tmpdir, mock_recipe, kwargs, expected):
             MozbitbarRecipeException,
             'Recipe action must contain key value: action.'
         )
-    ),
-    (
-        [
-            {
-                'action': 'mock_action'
-            }
-        ],
-        (
-            MozbitbarRecipeException,
-            'Recipe action must contain key value: arguments'
-        )
     )
 ])
 def test_property_task_list(mock_recipe, kwargs, expected):

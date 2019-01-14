@@ -88,9 +88,6 @@ class Recipe(object):
             if 'action' not in action:
                 msg = 'Recipe action must contain key value: action.'
                 raise MozbitbarRecipeException(message=msg)
-            if 'arguments' not in action:
-                msg = 'Recipe action must contain key value: arguments.'
-                raise MozbitbarRecipeException(message=msg)
         self.__task_list = task_list
 
     @property
@@ -231,7 +228,7 @@ def run_recipe(recipe_name):
     logger.info('Start executing Bitbar tasks defined in recipe...')
     for task in recipe.task_list:
         action = task.pop('action')
-        arguments = task.pop('arguments')
+        arguments = task.pop('arguments', {})
         logger.debug(' '.join(['Action to run:', action]))
 
         func = getattr(bitbar_project, action, None)
