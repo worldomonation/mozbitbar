@@ -88,9 +88,6 @@ class Recipe(object):
             if 'action' not in action:
                 msg = 'Recipe action must contain key value: action.'
                 raise MozbitbarRecipeException(message=msg)
-            if 'arguments' not in action:
-                msg = 'Recipe action must contain key value: arguments.'
-                raise MozbitbarRecipeException(message=msg)
         self.__task_list = task_list
 
     @property
