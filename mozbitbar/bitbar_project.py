@@ -549,8 +549,10 @@ class BitbarProject(Configuration):
                     logger.info(', '.join([''.join(rre.args), 'skipping..']))
                 else:
                     logger.critical('Testdroid responded with an error')
-                    raise MozbitbarProjectException(message=rre.args,
-                                                    status_code=rre.status_code)
+                    raise MozbitbarProjectException(
+                        message=rre.args,
+                        status_code=rre.status_code
+                    )
 
     def delete_project_parameter(self, parameter_to_delete):
         """Deletes a single project parameter from the project.
