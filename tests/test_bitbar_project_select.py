@@ -34,36 +34,94 @@ def initialize_project():
 
 @pytest.mark.parametrize('kwargs,expected', [
     (
-        {'project_id': 11},
-        {'id': 11}
+        {
+            'project_id': 11
+        },
+        {
+            'id': 11,
+            'name': 'mock_project'
+        }
     ),
     (
-        {'project_id': 99},
-        {'id': 99}
-    ),
-    ({'project_id': 100}, MozbitbarProjectException),
-    ({'project_id': 2**32}, MozbitbarProjectException),
-    ({'project_id': -1}, MozbitbarProjectException),
-    (
-        {'project_name': 'mock_project'},
-        {'name': 'mock_project', 'id': 1}
+        {
+            'project_id': 99
+        },
+        {
+            'id': 99,
+            'name': 'another_mock_project'
+        }
     ),
     (
-        {'project_name': 'another_mock_project'},
-        {'name': 'another_mock_project', 'id': 99}
-    ),
-    ({'project_name': string.lowercase}, MozbitbarProjectException),
-    ({'project_name': 'NULL'}, MozbitbarProjectException),
-    ({'project_name': 'None'}, MozbitbarProjectException),
-    (
-        {'project_id': 11, 'project_name': 'mock_project'},
-        {'id': 11, 'name': 'mock_project'}
+        {
+            'project_id': 2**32
+        },
+        MozbitbarProjectException
     ),
     (
-        {'project_id': 10000, 'project_name': 'mock_project'},
-        {'id': 10000, 'name': 'yet_another_mock_project'}
+        {
+            'project_id': -1
+        },
+        MozbitbarProjectException
+    ),
+    (
+        {
+            'project_name': 'mock_project'
+        },
+        {
+            'id': 11,
+            'name': 'mock_project'
+        }
+    ),
+    (
+        {
+            'project_name': 'another_mock_project'
+        },
+        {
+            'name': 'another_mock_project',
+            'id': 99
+        }
+    ),
+    (
+        {
+            'project_name': string.lowercase
+        },
+        MozbitbarProjectException
+    ),
+    (
+        {
+            'project_name': 'None'
+        },
+        MozbitbarProjectException
+    ),
+    (
+        {
+            'project_name': 'mock_project_4'
+        },
+        {
+            'id': 99999,
+            'name': 'mock_project_4',
+        }
+    ),
+    (
+        {
+            'project_id': 11,
+            'project_name': 'mock_project'
+        },
+        {
+            'id': 11,
+            'name': 'mock_project'
+        }
+    ),
+    (
+        {
+            'project_id': 11,
+            'project_name': 'yet_another_mock_project'
+        },
+        {
+            'id': 10000,
+            'name': 'yet_another_mock_project'
+        }
     )
-
 ])
 def test_bb_project_init_existing(kwargs, expected):
     """Ensures BitbarProject is able to retrieve existing project by id
@@ -79,10 +137,10 @@ def test_bb_project_init_existing(kwargs, expected):
 
     else:
         project = BitbarProject('existing', **kwargs)
-        assert (
-            project.project_id == expected.get('id') or
-            project.project_name == expected.get('name')
-        )
+        if expected.get('id'):
+            assert project.project_id == expected.get('id')
+        if expected.get('project_name'):
+            assert project.project_name == expected.get('name')
 
 
 # Project status #
