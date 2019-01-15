@@ -38,7 +38,8 @@ class Recipe(object):
                 to be loaded.
         """
         self.locate_recipe(recipe_name)
-        self.load_recipe_from_yaml()
+        content = self.load_recipe_from_yaml()
+        self.validate_recipe(content)
 
     @property
     def recipe_name(self):
@@ -146,11 +147,10 @@ class Recipe(object):
         """
         try:
             with open(self.recipe_path, 'r') as f:
-                content = yaml.load(f.read())
+                return yaml.load(f.read())
         except (ScannerError, ReaderError):
             msg = 'Invalid YAML file: {}'.format(self.recipe_path)
             raise MozbitbarRecipeException(message=msg)
-        self.validate_recipe(content)
 
     def validate_recipe(self, recipe):
         """Validates the loaded recipe.
