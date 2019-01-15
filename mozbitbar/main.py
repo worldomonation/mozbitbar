@@ -4,12 +4,9 @@
 
 from __future__ import absolute_import, print_function
 
-from mozbitbar import log, recipe_handler
+from mozbitbar.recipe_handler import run_recipe
+from mozbitbar.log import setup_logger
 from mozbitbar.cli import cli
-
-
-def initialize_logging(args={}):
-    log.setup_logger(**vars(args))
 
 
 def main():
@@ -17,8 +14,8 @@ def main():
     # in a taskcluster/treeherder environment, the script will
     # call these methods instead of instead of main().
     args = cli()
-    initialize_logging(args)
-    recipe_handler.run_recipe(args.recipe)
+    setup_logger(**vars(args))
+    run_recipe(args.recipe)
 
 
 if __name__ == '__main__':
