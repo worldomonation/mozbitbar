@@ -18,23 +18,30 @@ def mock_projects_list():
             {
                 'id': 11,
                 'name': 'mock_project',
-                        'type': 'mock_type',
-                        'osType': 'mock_type',
-                        'frameworkId': 99
+                'type': 'mock_type',
+                'osType': 'mock_type',
+                'frameworkId': 99
             },
             {
                 'id': 99,
                 'name': 'another_mock_project',
-                        'type': 'second_mock_type',
-                        'osType': 'second_mock_type',
-                        'frameworkId': 88
+                'type': 'second_mock_type',
+                'osType': 'second_mock_type',
+                'frameworkId': 88
             },
             {
                 'id': 10000,
                 'name': 'yet_another_mock_project',
-                        'type': 'third_mock_type',
-                        'osType': 'third_mock_type',
-                        'frameworkId': 12345
+                'type': 'third_mock_type',
+                'osType': 'third_mock_type',
+                'frameworkId': 12345
+            },
+            {
+                'id': 99999,
+                'name': u'mock_project_4',
+                'type': u'fourth_mock_type',
+                'osType': u'fourth_mock_type',
+                'frameworkId': 12345
             },
         ]
     }

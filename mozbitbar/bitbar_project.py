@@ -333,39 +333,48 @@ class BitbarProject(Configuration):
         """Retrieve existing Bitbar project details.
 
         Acceptable project identifiers are either one of project_name or
-        project_id. If both are provided, the id is prioritized due to its
-        guaranteed uniqueness.
+        project_id. If both are provided, the project_name is prioritized
+        according to Mozilla.
 
         Args:
-            id (int): Integer ID of the project.
-            name (str): String representation of the project name.
+            id (int, optional): Integer ID of the project.
+            name (str, optional): String representation of the project name.
 
         Raises:
             MozbitbarProjectException: If neither project_id nor
-                project_name map to an existing project on Bitbar.
+                project_name were supplied, or neither values map to
+                an existing project on Bitbar.
         """
-        available_projects = self.get_projects()
-        for project in available_projects:
-            if (project_id and project_name is None or
-                    project_id and project_name):
-                if project_id is project['id']:
-                    project_name = project['name']
-                    break
-
-            elif project_name and project_id is None:
-                if project_name is project['name']:
-                    project_id = project['id']
-                    break
-
-        if (project_id and project_name) is None:
-            msg = '{}: project_name: {}, project_id: {} '.format(
-                __name__,
-                project_name,
-                project_id
-            ) + 'not found on Bitbar'
+        if not project_name and not project_id:
+            msg = 'Provide one of: project_name, project_id'
             raise MozbitbarProjectException(message=msg)
 
-        self._set_project_attributes(project)
+        available_projects = self.get_projects()
+
+        name_match_index = [index for index, project in enumerate(
+            available_projects) if str(project['name']) == project_name]
+        id_match_index = [index for index, project in enumerate(
+            available_projects) if int(project['id']) is project_id]
+
+        intersect = set(name_match_index) & set(id_match_index)
+
+        if len(intersect) == 1:
+            # unequivocally matching one unique project
+            self._set_project_attributes(available_projects[intersect.pop()])
+        elif len(name_match_index) == 1:
+            # name matched but id did not
+            self._set_project_attributes(
+                available_projects[name_match_index.pop()])
+        elif len(id_match_index) == 1:
+            # name matched but id did not
+            self._set_project_attributes(
+                available_projects[id_match_index.pop()])
+        else:
+            # nothing matched, or more than one match was found; either way,
+            # unacceptable outcome.
+            msg = 'Supplied project_id and/or project_name did not correspond \
+                   to one unique project.'
+            raise MozbitbarProjectException(message=msg)
 
     def get_project_configs(self):
         return self.client.get_project_config(self.project_id)
