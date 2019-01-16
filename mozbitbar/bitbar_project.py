@@ -726,41 +726,41 @@ class BitbarProject(Configuration):
         """
         return self.client.get_devices()['data']
 
-    def set_device_group(self, device_group_name=None, device_group_id=None):
+    def set_device_group(self, group):
         """Sets the project's device group to be used for test runs.
 
-        Supports referencing device groups by both name and id. This method
-        will attempt to find a match for whichever parameter that is supplied.
+        Supports referencing device groups on Bitbar by name and id. This
+        method will attempt to find a match for whichever value is supplied.
 
         Args:
-            name (str, optional): Device group name in string.
-            id (int, optional): Device group id in integer.
+            group (int, str): Device group identifier. Supports both numerical
+                id and string name.
 
         Raises:
-            MozbitbarDeviceException: If neither id nor name was supplied.
+            MozbitbarDeviceException: If supplied values do not match any
+                device groups, or the parameter value was unexpected.
         """
-        if not device_group_id and not device_group_name:
-            msg = 'Neither device_group_name or device_group_id has been \
-                   provided.'
+        try:
+            _group = int(group)
+        except TypeError:
+            msg = 'Unexpected parameter value.'
+            raise MozbitbarDeviceException(message=msg)
+        except ValueError:
+            _group = str(group)
+
+        device_groups = self.get_device_groups()
+
+        try:
+            match = [device_group for device_group in device_groups
+                     if _group == device_group['id']
+                     or _group == str(device_group['displayName'])].pop()
+        except IndexError:
+            msg = 'Supplied device_group_name or device_group_id \
+                   did not match any device group on Bitbar.'
             raise MozbitbarDeviceException(message=msg)
 
-        for device_group in self.get_device_groups():
-            # fill out missing parameter so we have both id and name.
-            if device_group['displayName'] == device_group_name:
-                self.device_group_id = device_group['id']
-                self.device_group_name = device_group_name
-                return
-            elif device_group['id'] == device_group_id:
-                self.device_group_id = device_group_id
-                self.device_group_name = device_group['displayName']
-                return
-            else:
-                continue
-
-        # only incorrect recipes and/or device name/id mismatch leads here.
-        msg = 'Supplied device_group_name or device_group_id \
-                did not match any device group on Bitbar.'
-        raise MozbitbarDeviceException(message=msg)
+        self.device_group_id = match['id']
+        self.device_group_name = str(match['displayName'])
 
     def set_device(self, device_name=None, device_id=None):
         """Sets the device using the device_id.
@@ -841,10 +841,9 @@ class BitbarProject(Configuration):
                 self.use_existing_project(project_id=project_id)
 
         if not self.device_group_id or not self.device_group_name:
-            device_group_id = kwargs.pop('device_group_id', None)
-            device_group_name = kwargs.pop('device_group_name', None)
-            if device_group_id or device_group_name:
-                self.set_device_group(device_group_name, device_group_id)
+            group = kwargs.pop('group', None)
+            if group:
+                self.set_device_group(group)
 
         if not self.device_id or not self.device_name:
             device_id = kwargs.pop('device_id', None)
