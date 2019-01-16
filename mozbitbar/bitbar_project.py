@@ -755,20 +755,20 @@ class BitbarProject(Configuration):
                      if _group == device_group['id']
                      or _group == str(device_group['displayName'])].pop()
         except IndexError:
-            msg = 'Supplied device_group_name or device_group_id \
+            msg = 'Supplied device group name or device group id \
                    did not match any device group on Bitbar.'
             raise MozbitbarDeviceException(message=msg)
 
         self.device_group_id = match['id']
         self.device_group_name = str(match['displayName'])
 
-    def set_device(self, device_name=None, device_id=None):
+    def set_device(self, device):
         """Sets the device using the device_id.
 
         Accepts either a device name or device id.
 
         Args:
-            device_id (int, str): Device specifier to be used to set the
+            device (int, str): Device specifier to be used to set the
                 device_id attribute. Could be the device name (str) or
                 device id (int).
 
@@ -776,24 +776,27 @@ class BitbarProject(Configuration):
             MozbitbarDeviceException: If device_id is not found in list of
                 available device on Bitbar.
         """
-        if not device_id and not device_name:
-            msg = 'Neither device_name or device_id has been provided.'
+        try:
+            _device = int(device)
+        except TypeError:
+            msg = 'Unexpected parameter value.'
+            raise MozbitbarDeviceException(message=msg)
+        except ValueError:
+            _device = str(device)
+
+        devices = self.get_devices()
+
+        try:
+            match = [device for device in devices
+                     if _device == device['id']
+                     or _device == str(device['displayName'])].pop()
+        except IndexError:
+            msg = 'Supplied device name or device id did not match \
+                   any device group on Bitbar.'
             raise MozbitbarDeviceException(message=msg)
 
-        for device in self.get_devices():
-            if device['id'] == device_id:
-                self.device_id = device_id
-                self.device_name = device['displayName']
-                return
-            elif device['displayName'] == device_name:
-                self.device_id = device['id']
-                self.device_name = device_id
-                return
-            else:
-                continue
-
-        msg = 'Device specifier not found on Bitbar: {}'.format(device_id)
-        raise MozbitbarDeviceException(message=msg)
+        self.device_id = match['id']
+        self.device_name = str(match['displayName'])
 
     # Test Run operations #
 

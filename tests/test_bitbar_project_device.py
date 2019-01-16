@@ -59,24 +59,24 @@ def test_set_device_group(initialize_project, kwargs, expected):
 
 @pytest.mark.parametrize('kwargs,expected', [
     (
-        {'device_id': 707},
+        {'device': 707},
         {'device_id': 707, 'device_name': 'mock_device_1'}
     ),
     (
-        {},
-        MozbitbarDeviceException
-    ),
-    (
-        {'device_name': 'mock_device_2'},
+        {'device': 'mock_device_2'},
         {'device_name': 'mock_device_group', 'device_id': 717}
     ),
     (
-        {'device_name': 'no_group', 'device_id': -1},
+        {'device': 'should_not_match_any_group'},
         MozbitbarDeviceException
     ),
     (
-        {'device_name': 'mock_device_3'},
+        {'device': 'mock_device_3'},
         {'device_name': 'mock_device_3', 'device_group_id': 727},
+    ),
+    (
+        {'device': None},
+        MozbitbarDeviceException
     )
 ])
 def test_set_device(initialize_project, kwargs, expected):
