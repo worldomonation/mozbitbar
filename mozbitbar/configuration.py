@@ -2,13 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import logging
 import os
+import sys
 
-from mozbitbar import MozbitbarCredentialException
-from testdroid import Testdroid, RequestResponseError
+from testdroid import RequestResponseError, Testdroid
+
+try:
+    from mozbitbar import MozbitbarCredentialException
+except ImportError:
+    sys.path.append(os.path.dirname(__file__))
+    from __init__ import MozbitbarCredentialException
+
 
 logger = logging.getLogger('mozbitbar')
 

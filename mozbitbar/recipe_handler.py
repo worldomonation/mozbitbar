@@ -2,26 +2,45 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import logging
 import os
 import sys
-import yaml
 
-from mozbitbar.bitbar_project import BitbarProject
-from mozbitbar import (
-    MozbitbarRecipeException,
-    MozbitbarProjectException,
-    MozbitbarFrameworkException,
-    MozbitbarCredentialException,
-    MozbitbarOperationNotImplementedException,
-    MozbitbarDeviceException,
-    MozbitbarTestRunException
-    )
-from testdroid import RequestResponseError
-from yaml.scanner import ScannerError
+import yaml
 from yaml.reader import ReaderError
+from yaml.scanner import ScannerError
+
+from testdroid import RequestResponseError
+
+try:
+    from mozbitbar.bitbar_project import BitbarProject
+except ImportError:
+    sys.path.append(os.path.dirname(__file__))
+    from bitbar_project import BitbarProject
+
+try:
+    from mozbitbar import (
+        MozbitbarRecipeException,
+        MozbitbarProjectException,
+        MozbitbarFrameworkException,
+        MozbitbarCredentialException,
+        MozbitbarOperationNotImplementedException,
+        MozbitbarDeviceException,
+        MozbitbarTestRunException
+    )
+except ImportError:
+    from __init__ import (
+        MozbitbarRecipeException,
+        MozbitbarProjectException,
+        MozbitbarFrameworkException,
+        MozbitbarCredentialException,
+        MozbitbarOperationNotImplementedException,
+        MozbitbarDeviceException,
+        MozbitbarTestRunException
+    )
+
 
 logger = logging.getLogger('mozbitbar')
 
