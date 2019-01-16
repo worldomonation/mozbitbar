@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function
 
 import logging
 import os
-import sys
 
 from testdroid import RequestResponseError, Testdroid
 
