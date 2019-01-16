@@ -4,15 +4,11 @@
 
 from __future__ import absolute_import, print_function
 
-import os
-import sys
-
 try:
     from mozbitbar.recipe_handler import run_recipe
     from mozbitbar.log import setup_logger
     from mozbitbar.cli import cli
 except ImportError:
-    sys.path.append(os.path.dirname(__file__))
     from recipe_handler import run_recipe
     from log import setup_logger
     from cli import cli

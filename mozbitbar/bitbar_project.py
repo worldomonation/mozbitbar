@@ -8,9 +8,9 @@ import json
 import logging
 import os
 import time
-import sys
-
 from uuid import uuid4
+
+from testdroid import RequestResponseError
 
 try:
     from mozbitbar import (MozbitbarDeviceException, MozbitbarFileException,
@@ -18,7 +18,6 @@ try:
                            MozbitbarProjectException,
                            MozbitbarTestRunException)
 except ImportError:
-    sys.path.append(os.path.dirname(__file__))
     from __init__ import (MozbitbarDeviceException, MozbitbarFileException,
                           MozbitbarFrameworkException,
                           MozbitbarProjectException,
@@ -28,7 +27,6 @@ try:
 except ImportError:
     from configuration import Configuration
 
-from testdroid import RequestResponseError
 
 logger = logging.getLogger('mozbitbar')
 

@@ -6,14 +6,12 @@ from __future__ import absolute_import, print_function
 
 import logging
 import os
-import sys
 
 from testdroid import RequestResponseError, Testdroid
 
 try:
     from mozbitbar import MozbitbarCredentialException
 except ImportError:
-    sys.path.append(os.path.dirname(__file__))
     from __init__ import MozbitbarCredentialException
 
 
