@@ -17,7 +17,6 @@ from testdroid import RequestResponseError
 try:
     from mozbitbar.bitbar_project import BitbarProject
 except ImportError:
-    sys.path.append(os.path.dirname(__file__))
     from bitbar_project import BitbarProject
 
 try:
