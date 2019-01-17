@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 from mozbitbar import MozbitbarRecipeException
-from mozbitbar.recipe_handler import Recipe
+from mozbitbar.recipe import Recipe
 
 
 _default_recipe = {
