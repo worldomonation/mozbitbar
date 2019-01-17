@@ -322,12 +322,9 @@ class BitbarProject(Configuration):
         """
         if not permit_duplicate:
             existing_projects = self.get_projects()
-            if any([project['name'] == project_name
+            if any([project_name == str(project['name'])
                    for project in existing_projects]):
-                msg = '{}: project_name: {} already exists'.format(
-                    __name__,
-                    project_name
-                )
+                msg = 'Project name already exists: {}'.format(project_name)
                 raise MozbitbarProjectException(message=msg)
 
         # TODO: check if project_type specified is valid.
@@ -465,7 +462,7 @@ class BitbarProject(Configuration):
 
         return opened_file
 
-    def set_project_framework(self, framework_name=None, framework_id=None):
+    def set_project_framework(self, framework):
         """Sets the project framework using either integer id or name.
 
         This method prioritizes the usage of framework name if both id and
@@ -483,30 +480,33 @@ class BitbarProject(Configuration):
                 provided does not match any existing frameworks on Bitbar.
             RequestResponseError: If Testdroid responds with an error.
         """
-        # looks redundant, except Python 2 has strings and then Unicode strings
-        if framework_id:
-            framework_id = int(framework_id)
-        if framework_name:
-            framework_name = str(framework_name)
+        try:
+            _framework = int(framework)
+        except TypeError:
+            msg = 'Unexpected parameter value.'
+            raise MozbitbarDeviceException(message=msg)
+        except ValueError:
+            _framework = str(framework)
 
         available_frameworks = self.get_project_frameworks()
-
-        for framework in available_frameworks:
-            if framework.get('name') == framework_name:
-                framework_id = framework.get('id')
-                break
-            elif framework.get('id') == framework_id:
-                framework_name = framework.get('name')
-                break
-
-        if not (framework_id and framework_name):
-            msg = 'Framework ID and/or name was invalid.'
+        try:
+            match = [
+                fw for fw in available_frameworks
+                if _framework == str(fw['name']) or _framework == fw['id']
+            ].pop()
+        except IndexError:
+            msg = 'Supplied framework name or framework id \
+                   did not match any device group on Bitbar.'
             raise MozbitbarFrameworkException(message=msg)
 
-        self.client.set_project_framework(self.project_id, framework_id)
+        try:
+            self.client.set_project_framework(self.project_id, match['id'])
+        except RequestResponseError as rre:
+            raise MozbitbarDeviceException(message=rre.args,
+                                           status_code=rre.status_code)
 
-        self.framework_id = framework_id
-        self.framework_name = framework_name
+        self.framework_id = match['id']
+        self.framework_name = match['name']
 
     def get_project_frameworks(self):
         """Returns list of project frameworks available to the user.

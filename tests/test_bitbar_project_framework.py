@@ -29,27 +29,27 @@ def initialize_project():
 
 @pytest.mark.parametrize('kwargs,expected', [
     (
-        {'framework_id': -1},
+        {'framework': -1},
         MozbitbarFrameworkException
     ),
     (
-        {'framework_id': 1},
+        {'framework': 'should_not_match_anything'},
+        MozbitbarFrameworkException
+    ),
+    (
+        {'framework': 1},
         {'framework_name': 'mock_framework', 'framework_id': 1}
     ),
     (
-        {'framework_name': 'mock_framework'},
+        {'framework': 'mock_framework'},
         {'framework_name': 'mock_framework', 'framework_id': 1}
     ),
     (
-        {'framework_name': 'mock_framework', 'framework_id': 1},
+        {'framework': u'mock_framework'},
         {'framework_name': 'mock_framework', 'framework_id': 1}
     ),
     (
-        {'framework_name': u'mock_framework', 'framework_id': 1},
-        {'framework_name': 'mock_framework', 'framework_id': 1}
-    ),
-    (
-        {'framework_name': 'mock_unicode_framework'},
+        {'framework': 'mock_unicode_framework'},
         {'framework_name': 'mock_unicode_framework', 'framework_id': 2}
     )
 ])
