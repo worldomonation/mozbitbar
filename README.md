@@ -34,6 +34,26 @@ $ export PYTHONPATH=.
 $ python mozbitbar/main.py --recipe <full_path_to_recipe>
 ```
 
+### credentials
+
+A valid set of credentials is required to use Mozbitbar. These are supplied from Bitbar.
+
+Mozbitbar supports two methods of setting user credentials.
+
+**Environment Variables** (preferred):
+
+Upon invocation, mozbitbar will search through user's environment variables and attempt to set required credentials. For more information on how to format the environment variables, please refer to [Bitbar Official Documentation](https://github.com/bitbar/testdroid-api-client-python).
+
+The minimum required set of credentials are:
+
+````
+((`username` and `password`) or (`apikey`)) and (`url`)
+````
+
+**Keyword Arguments**:
+
+This is an insecure method as it requires sensitive credentials to be written in the recipe. However, this may be a useful method if the recipe is generated on the fly and/or is never committed to a repository.
+
 ## Usage
 
 Define a recipe under `mozbitbar/recipes` directory.
