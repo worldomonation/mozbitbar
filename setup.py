@@ -26,6 +26,7 @@ DEPENDENCIES = [
     'pytest',
     'pyyaml',
     'testdroid',
+    'pytest-cov'
 ]
 
 setup(
