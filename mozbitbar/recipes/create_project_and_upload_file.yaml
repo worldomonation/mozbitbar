@@ -5,7 +5,7 @@
     permit_duplicate: True
 - action: set_project_framework
   arguments:
-    framework_name: Mozilla test
+    framework: Mozilla test
 - action: upload_file
   arguments:
     test_filename: /Users/egao/Downloads/dummy-test.zip
