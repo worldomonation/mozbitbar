@@ -23,7 +23,7 @@ with open(os.path.join(os.path.dirname(
 DEPENDENCIES = [
     'flake8',
     'mock',
-    'pytest',
+    'pytest >= 3.9.0',
     'pyyaml',
     'testdroid',
     'pytest-cov'
