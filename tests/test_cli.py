@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import pytest
 
-from mozbitbar.cli import parse_arguments, cli
+import mozbitbar.cli as cli
 
 
 @pytest.mark.parametrize('kwargs,expected', [
@@ -28,7 +28,7 @@ from mozbitbar.cli import parse_arguments, cli
     )
 ])
 def test_parse_arguments(kwargs, expected):
-    args, _ = parse_arguments(kwargs)
+    args, _ = cli.parse_arguments(kwargs)
 
     assert args
     for key, value in expected.iteritems():
@@ -42,8 +42,22 @@ def test_parse_arguments(kwargs, expected):
     )
 ])
 def test_cli(kwargs, expected):
-    args = cli(kwargs)
+    args = cli.cli(kwargs)
 
     assert args
     for key, value in expected.iteritems():
             assert getattr(args, key) == value
+
+
+@pytest.mark.parametrize('parser_options', [
+    (
+        '-r', '-v', '-q', '-c'
+    ),
+    (
+        '--recipe', '--verbose', '--quiet', '--credential'
+    )
+])
+def test_get_parser(parser_options):
+    parser = cli.get_parser()
+    for option in parser_options:
+        assert option in parser._option_string_actions.keys()
