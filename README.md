@@ -72,3 +72,31 @@ Following the `arguments` subcommand is the list of arguments to be passed into 
 ## Other Notes
 
 It is _highly_ recommended to use a virtual environment with Mozbitbar.
+
+## Tests
+
+Tests are written using `pytest` framework, in addition to specific components from the built-in `unittest` framework.
+
+Pytest permits a concise, power yet easy-to-read test framework, and its features such as `parametrize` and `monkeypatching` are heavily utilized.
+
+Unittest offers the built-in `mock` feature to patch some objects on an ad-hoc basis.
+
+### running tests
+
+Invoke tests as follows:
+
+````
+$ pytest
+````
+
+For additional parameters that pytest supports, please refer to the pytest usage guide.
+
+### coverage tool
+
+Coverage tool is available once the following command is run:
+
+````
+$ pytest --cov-report html --cov=mozbitbar tests/
+````
+
+Once all tests complete and are passing, an HTML-formatted report is available to view at `mozbitbar/htmlcov/index.html`.
