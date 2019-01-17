@@ -533,16 +533,13 @@ class BitbarProject(Configuration):
         Args:
             parameters (:obj:`list` of :obj:`dict`): List of project parameters
                 to be set for the current project.
-            force_overwrite (bool, optional): True if project parameters are
-                to be overwritten. False by default.
+            force_overwrite (bool, optional): True if existing project
+                parameters are to be overwritten. False by default.
 
         Raises:
-            RequestResponseError: If Testdroid responds with an error.
+            MozbitbarProjectException: If Testdroid responds with an error
+                when setting the project parameter.
         """
-        if not parameters:
-            logger.info('No project parameters supplied.')
-            return
-
         if force_overwrite:
             for parameter in parameters:
                 # delete existing project parameters that match the key values
@@ -557,9 +554,8 @@ class BitbarProject(Configuration):
                 if rre.status_code == 409:
                     # not an error per se, just means there exists already a
                     # parameter with the given key name.
-                    logger.info(', '.join([''.join(rre.args), 'skipping..']))
+                    logger.debug(', '.join([''.join(rre.args), 'skipping..']))
                 else:
-                    logger.critical('Testdroid responded with an error')
                     raise MozbitbarProjectException(
                         message=rre.args,
                         status_code=rre.status_code
@@ -593,7 +589,12 @@ class BitbarProject(Configuration):
             sanitized_parameter_id = self.get_project_parameter_id(
                 parameter_to_delete)
 
-        if sanitized_parameter_id is None:
+        if sanitized_parameter_id:
+            self.client.delete_project_parameters(
+                self.project_id,
+                sanitized_parameter_id
+            )
+        else:
             # if user specified a parameter name or id that does not exist,
             # inform and skip the deletion process
             msg = ', '.join([
@@ -604,16 +605,11 @@ class BitbarProject(Configuration):
             logger.info(msg)
             return
 
-        self.client.delete_project_parameters(
-            self.project_id,
-            sanitized_parameter_id
-        )
-
     def get_project_parameter_id(self, parameter_name):
-        """Returns the parameter_id value.
+        """Converts parameter_name to parameter_id.
 
-        This method will convert the string representation of the
-        project parameter name to an integer id.
+        This method will accept the the string representation of the
+        project parameter name, and attempt to convert that to an parameter id.
 
         Args:
             parameter_name (str): Parameter name in string format, to convert
@@ -627,6 +623,7 @@ class BitbarProject(Configuration):
             RequestResponseError: If Testdroid responds with an error.
         """
         output = self.client.get_project_parameters(self.project_id)
+
         for parameter in output['data']:
             if parameter_name == parameter['key']:
                 return parameter['id']
