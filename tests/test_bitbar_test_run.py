@@ -115,17 +115,17 @@ def test_get_test_run(initialize_project, kwargs, expected):
         MozbitbarTestRunException
     ),
     (
-        {'device_group_name': 'mock_device_group'},
+        {'group': 'mock_device_group'},
         None,
         None
     ),
     (
-        {'device_id': 727},
+        {'device': 727},
         None,
         None
     ),
     (
-        {'device_id': 717, 'additional_params': {'test_param': 'mock_value'}},
+        {'device': 717, 'additional_params': {'test_param': 'mock_value'}},
         None,
         None
     )

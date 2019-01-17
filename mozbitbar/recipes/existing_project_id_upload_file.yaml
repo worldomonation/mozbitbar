@@ -37,7 +37,7 @@
     force_overwrite: False
 - action: set_device_group
   arguments:
-    device_group_name: Edwin_Test
+    group: Edwin_Test
 - action: start_test_run
   arguments:
     name: test_137

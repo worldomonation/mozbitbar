@@ -26,24 +26,24 @@ def initialize_project():
 
 @pytest.mark.parametrize('kwargs,expected', [
     (
-        {'device_group_id': 7070},
+        {'group': 7070},
         {'device_group_id': 7070, 'device_group_name': 'mock_device_group'}
     ),
     (
-        {},
-        MozbitbarDeviceException
-    ),
-    (
-        {'device_group_name': 'mock_device_group'},
+        {'group': 'mock_device_group'},
         {'device_group_name': 'mock_device_group', 'device_group_id': 7070}
     ),
     (
-        {'device_group_name': 'no_group', 'device_group_id': -1},
+        {'group': 'should_not_match_group'},
         MozbitbarDeviceException
     ),
     (
-        {'device_group_name': 'second_mock_group'},
+        {'group': 'second_mock_group'},
         {'device_group_name': 'second_mock_group', 'device_group_id': 7171},
+    ),
+    (
+        {'group': None},
+        MozbitbarDeviceException
     )
 ])
 def test_set_device_group(initialize_project, kwargs, expected):
@@ -59,24 +59,24 @@ def test_set_device_group(initialize_project, kwargs, expected):
 
 @pytest.mark.parametrize('kwargs,expected', [
     (
-        {'device_id': 707},
+        {'device': 707},
         {'device_id': 707, 'device_name': 'mock_device_1'}
     ),
     (
-        {},
-        MozbitbarDeviceException
-    ),
-    (
-        {'device_name': 'mock_device_2'},
+        {'device': 'mock_device_2'},
         {'device_name': 'mock_device_group', 'device_id': 717}
     ),
     (
-        {'device_name': 'no_group', 'device_id': -1},
+        {'device': 'should_not_match_any_group'},
         MozbitbarDeviceException
     ),
     (
-        {'device_name': 'mock_device_3'},
+        {'device': 'mock_device_3'},
         {'device_name': 'mock_device_3', 'device_group_id': 727},
+    ),
+    (
+        {'device': None},
+        MozbitbarDeviceException
     )
 ])
 def test_set_device(initialize_project, kwargs, expected):

@@ -4,8 +4,8 @@
     project_name: test_project_1
 - action: start_test_run
   arguments:
-    name: test_136
-    device_group_name: Edwin_Test
+    name: test_138
+    group: Edwin_Test
 - action: notify_test_run_complete
   arguments:
     interval: 2
