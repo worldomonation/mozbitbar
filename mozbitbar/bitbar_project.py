@@ -362,7 +362,7 @@ class BitbarProject(Configuration):
         name_match_index = [index for index, project in enumerate(
             available_projects) if str(project['name']) == project_name]
         id_match_index = [index for index, project in enumerate(
-            available_projects) if int(project['id']) is project_id]
+            available_projects) if int(project['id']) == project_id]
 
         intersect = set(name_match_index) & set(id_match_index)
 
