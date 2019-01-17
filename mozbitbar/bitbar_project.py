@@ -327,7 +327,6 @@ class BitbarProject(Configuration):
                 msg = 'Project name already exists: {}'.format(project_name)
                 raise MozbitbarProjectException(message=msg)
 
-
         # TODO: check if project_type specified is valid.
 
         try:
@@ -493,7 +492,7 @@ class BitbarProject(Configuration):
         try:
             match = [
                 fw for fw in available_frameworks
-                    if _framework == str(fw['name']) or _framework == fw['id']
+                if _framework == str(fw['name']) or _framework == fw['id']
             ].pop()
         except IndexError:
             msg = 'Supplied framework name or framework id \
