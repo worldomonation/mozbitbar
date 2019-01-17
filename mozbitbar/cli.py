@@ -8,15 +8,23 @@ import sys
 from argparse import ArgumentParser
 
 
-def parse_arguments(args):
-    parser = ArgumentParser('Runs Testdroid tasks.')
-    parser.add_argument('-r', '--recipe',
-                        help='Specifies a recipe to load from disk.')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='Enables debugging output.')
-    parser.add_argument('-q', '--quiet', action='store_true',
-                        help='Disables all output except warning and higher.')
+_parser = None
 
+def get_parser():
+    global _parser
+
+    if _parser is None:
+        _parser = ArgumentParser(description='Runs Testdroid tasks.')
+        _parser.add_argument('-r', '--recipe',
+                            help='Specifies a recipe to load from disk.')
+        _parser.add_argument('-v', '--verbose', action='store_true',
+                            help='Enables debugging output.')
+        _parser.add_argument('-q', '--quiet', action='store_true',
+                            help='Disables all output except warning and higher.')
+    return _parser
+
+def parse_arguments(args):
+    parser = get_parser()
     args, remainder = parser.parse_known_args(args)
 
     return args, remainder
