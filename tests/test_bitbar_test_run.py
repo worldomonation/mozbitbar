@@ -120,12 +120,12 @@ def test_get_test_run(initialize_project, kwargs, expected):
         None
     ),
     (
-        {'device_id': 727},
+        {'device': 727},
         None,
         None
     ),
     (
-        {'device_id': 717, 'additional_params': {'test_param': 'mock_value'}},
+        {'device': 717, 'additional_params': {'test_param': 'mock_value'}},
         None,
         None
     )

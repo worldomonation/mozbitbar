@@ -787,9 +787,9 @@ class BitbarProject(Configuration):
         devices = self.get_devices()
 
         try:
-            match = [device for device in devices
-                     if _device == device['id']
-                     or _device == str(device['displayName'])].pop()
+            match = [d for d in devices
+                     if _device == d['id']
+                     or _device == str(d['displayName'])].pop()
         except IndexError:
             msg = 'Supplied device name or device id did not match \
                    any device group on Bitbar.'
@@ -844,15 +844,12 @@ class BitbarProject(Configuration):
                 self.use_existing_project(project_id=project_id)
 
         if not self.device_group_id or not self.device_group_name:
-            group = kwargs.pop('group', None)
-            if group:
-                self.set_device_group(group)
+            if kwargs.get('group'):
+                self.set_device_group(kwargs.pop('group'))
 
         if not self.device_id or not self.device_name:
-            device_id = kwargs.pop('device_id', None)
-            device_name = kwargs.pop('device_name', None)
-            if device_id or device_name:
-                self.set_device(device_name, device_id)
+            if kwargs.get('device'):
+                self.set_device(kwargs.pop('device'))
 
         test_name = kwargs.pop('name', None)
         if not test_name:
