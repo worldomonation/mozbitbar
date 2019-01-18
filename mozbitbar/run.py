@@ -29,7 +29,6 @@ try:
         MozbitbarFileException,
         MozbitbarTestRunException,
         MozbitbarDeviceException,
-        MozbitbarOperationNotImplementedException,
     )
 except ImportError:
     from __init__ import (
@@ -40,7 +39,6 @@ except ImportError:
         MozbitbarFileException,
         MozbitbarTestRunException,
         MozbitbarDeviceException,
-        MozbitbarOperationNotImplementedException,
     )
 
 logger = logging.getLogger('mozbitbar')
