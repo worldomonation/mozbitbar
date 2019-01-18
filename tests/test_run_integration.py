@@ -7,61 +7,124 @@ from __future__ import absolute_import, print_function
 import pytest
 import yaml
 
-from mozbitbar.recipe import Recipe
+from mozbitbar import (MozbitbarDeviceException,
+                       MozbitbarOperationNotImplementedException,
+                       MozbitbarProjectException)
 from mozbitbar.run import run_recipe
 from tests.test_run import _default_recipe
 
 # Integration test - tests the entire workflow after CLI parsing #
 
 
-@pytest.mark.parametrize('test_recipe', [
-    [
-        {
-            'action': 'set_device',
-            'arguments': {
-                'device': 'mock_device_3'
+@pytest.mark.parametrize('test_recipe,expected', [
+    (
+        # set device and framework by id
+        [
+            {
+                'action': 'set_device',
+                'arguments': {
+                    'device': 717
+                }
+            },
+            {
+                'action': 'set_project_framework',
+                'arguments': {
+                    'framework': 2
+                }
+            },
+            {
+                'action': 'start_test_run',
+                'arguments': {
+                    'name': 'should_successfully_run_test'
+                }
             }
-        },
-        {
-            'action': 'set_project_framework',
-            'arguments': {
-                'framework': 2
+        ],
+        None
+    ),
+    (
+        # set device group and framework by name
+        [
+            {
+                'action': 'set_device_group',
+                'arguments': {
+                    'group': 'second_mock_group'
+                }
+            },
+            {
+                'action': 'set_project_framework',
+                'arguments': {
+                    'framework': 'mock_framework'
+                }
+            },
+            {
+                'action': 'start_test_run',
+                'arguments': {
+                    'name': 'should_successfully_run_test'
+                }
             }
-        },
-        {
-            'action': 'start_test_run',
-            'arguments': {
-                'name': 'should_successfully_run_test'
+        ],
+        None
+    ),
+    (
+        # action that does not exist
+        [
+            {
+                'action': 'nonexistent_action',
+                'arguments': {
+                    'invalid_argument': 'invalid_argument_value'
+                }
             }
-        }
-    ],
-    [
-        {
-            'action': 'set_device_group',
-            'arguments': {
-                'group': 'second_mock_group'
+        ],
+        MozbitbarOperationNotImplementedException
+    ),
+    (
+        # no action list - will not run anything
+        [],
+        None
+    ),
+    (
+        # set_device action raises an exception
+        [
+            {
+                'action': 'set_device',
+                'arguments': {
+                    'device': 'non_existent_device'
+                }
             }
-        },
-        {
-            'action': 'set_project_framework',
-            'arguments': {
-                'framework': 'mock_framework'
+        ],
+        MozbitbarDeviceException
+    ),
+    (
+        # set_project_parameters returns RequestResponseError,
+        # which then raises MozbitbarProjectException
+        [
+            {
+                'action': 'set_project_parameters',
+                'arguments': {
+                    'parameters': [
+                        {
+                            'key': 'unacceptable_key',
+                            'value': 'unacceptable_value'
+                        }
+                    ]
+                }
             }
-        },
-        {
-            'action': 'start_test_run',
-            'arguments': {
-                'name': 'should_successfully_run_test'
-            }
-        }
-    ],
+        ],
+        MozbitbarProjectException
+    )
 ])
-def test_run_recipe(tmpdir, test_recipe):
+def test_integration_recipe(tmpdir, test_recipe, expected):
     _integration_test_recipe = _default_recipe[:]
     _integration_test_recipe.extend(test_recipe)
 
     recipe_name = 'mock_recipe.yaml'
     path = tmpdir.mkdir('mock').join(recipe_name)
     path.write(yaml.dump(_integration_test_recipe))
-
-    run_recipe(path.strpath)
+    if type(expected) == type:
+        # exceptions evaluate to `type`
+        with pytest.raises(expected) as ex:
+            run_recipe(path.strpath)
+        assert expected == ex.type
+        assert ex.tb is not None
+    else:
+        run_recipe(path.strpath)

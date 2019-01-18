@@ -22,18 +22,24 @@ except ImportError:
 
 try:
     from mozbitbar import (
-        MozbitbarBaseException,
         MozbitbarRecipeException,
         MozbitbarProjectException,
         MozbitbarCredentialException,
+        MozbitbarFrameworkException,
+        MozbitbarFileException,
+        MozbitbarTestRunException,
+        MozbitbarDeviceException,
         MozbitbarOperationNotImplementedException,
     )
 except ImportError:
     from __init__ import (
-        MozbitbarBaseException,
         MozbitbarRecipeException,
         MozbitbarProjectException,
         MozbitbarCredentialException,
+        MozbitbarFrameworkException,
+        MozbitbarFileException,
+        MozbitbarTestRunException,
+        MozbitbarDeviceException,
         MozbitbarOperationNotImplementedException,
     )
 
@@ -105,15 +111,22 @@ def run_recipe(recipe_name):
                 print('Status code: ', rre.status_code)
                 print(rre.message)
                 sys.exit(1)
-            except MozbitbarBaseException:
-                logger.info('Encountered an exception while executing task: \
-                             {}'.format(action))
+            except (MozbitbarCredentialException,
+                    MozbitbarProjectException,
+                    MozbitbarFrameworkException,
+                    MozbitbarFileException,
+                    MozbitbarDeviceException,
+                    MozbitbarTestRunException):
+                # If there's a better way to catch multiple exceptions derived
+                # from the same base class - I'd like to know.
+                logger.critical('Encountered an exception while executing task: \
+                                {}'.format(action))
                 tb = traceback.extract_stack()
-                logger.info('Exception details: {}'.format(
-                    "".join(traceback.format_list(tb)[:-1]))
-                )
+                logger.critical('Exception details: {}'.format(
+                                "".join(traceback.format_list(tb)[:-1])))
                 sys.exit(1)
         else:
             msg = 'Specified action not implemented in BitbarProject: \
                    {}'.format(action)
-            raise MozbitbarOperationNotImplementedException(message=msg)
+            logger.critical(msg)
+            sys.exit(1)
