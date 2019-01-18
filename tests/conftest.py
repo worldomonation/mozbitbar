@@ -47,6 +47,27 @@ def mock_projects_list():
     }
 
 
+def mock_device_groups_list():
+    return {
+        'data': [
+            {
+                'displayName': 'mock_device_group',
+                'userId': 8080,
+                'deviceCount': 20,
+                'osType': 'mock_os',
+                'id': 7070
+            },
+            {
+                'displayName': 'second_mock_group',
+                'userId': 8080,
+                'deviceCount': 10,
+                'osType': 'different_mock_os',
+                'id': 7171
+            }
+        ]
+    }
+
+
 def mock_project_template(project_id=None, project_name=None,
                           project_type=None, project_framework_id=None):
     return {
@@ -241,24 +262,7 @@ def mock_testdroid_client(monkeypatch):
     # Device related mocks #
 
     def get_device_groups_wrapper(object):
-        return {
-            'data': [
-                {
-                    'displayName': 'mock_device_group',
-                    'userId': 8080,
-                    'deviceCount': 20,
-                    'osType': 'mock_os',
-                    'id': 7070
-                },
-                {
-                    'displayName': 'second_mock_group',
-                    'userId': 8080,
-                    'deviceCount': 10,
-                    'osType': 'different_mock_os',
-                    'id': 7171
-                }
-            ]
-        }
+        return mock_device_groups_list()
 
     def get_devices_wrapper(object):
         return {
