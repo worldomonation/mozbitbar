@@ -104,6 +104,7 @@ def run_recipe(recipe_name):
                 logger.info('Testdroid raised an exception:')
                 print('Status code: ', rre.status_code)
                 print(rre.message)
+                sys.exit(1)
             except MozbitbarBaseException:
                 logger.info('Encountered an exception while executing task: \
                              {}'.format(action))
@@ -111,7 +112,6 @@ def run_recipe(recipe_name):
                 logger.info('Exception details: {}'.format(
                     "".join(traceback.format_list(tb)[:-1]))
                 )
-            finally:
                 sys.exit(1)
         else:
             msg = 'Specified action not implemented in BitbarProject: \
