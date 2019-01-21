@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function
 
 import logging
 import sys
-import traceback
 
 from testdroid import RequestResponseError
 
@@ -117,14 +116,16 @@ def run_recipe(recipe_name):
                     MozbitbarTestRunException):
                 # If there's a better way to catch multiple exceptions derived
                 # from the same base class - I'd like to know.
-                logger.critical('Encountered an exception while executing task: \
-                                {}'.format(action))
-                tb = traceback.extract_stack()
-                logger.critical('Exception details: {}'.format(
-                                "".join(traceback.format_list(tb)[:-1])))
+                msg = ' '.join([
+                    'Encountered exception when executing task: ',
+                    '{}'.format(action)
+                ])
+                logger.exception(msg)
                 sys.exit(1)
         else:
-            msg = 'Specified action not implemented in BitbarProject: \
-                   {}'.format(action)
+            msg = ' '.join([
+                'Specified action not implemented:',
+                '{}'.format(action)
+            ])
             logger.critical(msg)
             sys.exit(1)

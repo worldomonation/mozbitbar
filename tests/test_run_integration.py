@@ -7,9 +7,6 @@ from __future__ import absolute_import, print_function
 import pytest
 import yaml
 
-from mozbitbar import (MozbitbarDeviceException,
-                       MozbitbarOperationNotImplementedException,
-                       MozbitbarProjectException)
 from mozbitbar.run import run_recipe
 from tests.test_run import _default_recipe
 
@@ -66,7 +63,7 @@ from tests.test_run import _default_recipe
         None
     ),
     (
-        # action that does not exist
+        # action that does not exist - resulting in SystemExit
         [
             {
                 'action': 'nonexistent_action',
@@ -75,7 +72,7 @@ from tests.test_run import _default_recipe
                 }
             }
         ],
-        MozbitbarOperationNotImplementedException
+        SystemExit
     ),
     (
         # no action list - will not run anything
@@ -83,7 +80,7 @@ from tests.test_run import _default_recipe
         None
     ),
     (
-        # set_device action raises an exception
+        # set_device action raises an exception resulting in SystemExit
         [
             {
                 'action': 'set_device',
@@ -92,11 +89,11 @@ from tests.test_run import _default_recipe
                 }
             }
         ],
-        MozbitbarDeviceException
+        SystemExit
     ),
     (
-        # set_project_parameters returns RequestResponseError,
-        # which then raises MozbitbarProjectException
+        # set_project_parameters returns RequestResponseError re-raised as
+        # MozbitbarProjectException resulting in SystemExit
         [
             {
                 'action': 'set_project_parameters',
@@ -110,7 +107,7 @@ from tests.test_run import _default_recipe
                 }
             }
         ],
-        MozbitbarProjectException
+        SystemExit
     )
 ])
 def test_integration_recipe(tmpdir, test_recipe, expected):
