@@ -44,6 +44,23 @@ logger = logging.getLogger('mozbitbar')
 
 
 def initialize_recipe(recipe_name):
+    """Initializes the Recipe object.
+
+    Given a path to the recipe file, this method will initialize and return
+    an instance of the Recipe object, containing within it required project
+    parameters for interacton with Bitbar. Also contained within this object
+    is the internal representation of the tasks to be executed.
+
+    Args:
+        recipe_name (str): Path to the recipe.
+
+    Returns:
+        :obj:`Recipe`: An instance of a recipe to be executed.
+
+    Raises:
+        SystemExit: If path to the recipe is invalid, or the recipe is
+            not compliant.
+    """
     logger.info('Recipe object initialization...')
     try:
         logger.info('Recipe object successfully initialized.')
@@ -54,6 +71,19 @@ def initialize_recipe(recipe_name):
 
 
 def initialize_bitbar(recipe):
+    """Initializes the Bitbar Project object.
+
+    Given a valid recipe, this method will instantiate and return an instance
+    of the BitbarProject object, used to interact with Bitbar and execute
+    actions.
+
+    Args:
+        recipe (:obj:`Recipe`): An instance of a Recipe object.
+
+    Raises:
+        SystemExit: If provided Recipe object contains invalid project
+            parameters, or Testdroid credentials were missing or invalid.
+    """
     logger.info('Bitbar project initialization...')
     try:
         logger.info('Bitbar project object successfully initialized.')
@@ -65,23 +95,25 @@ def initialize_bitbar(recipe):
 
 
 def run_recipe(recipe_name):
-    """Executes actions in a recipe.
+    """Executes all actions defined in a recipe.
 
-    Initializes an instance of a Recipe object to hold recipe-related data.
+    This method will first initialize an instance of a Recipe object to
+    hold recipe-related data.
 
     Subsequently an instance of a BitbarProject object is initialized which
     will hold data related to a Bitbar project.
 
-    If both objects pass validation, the recipe is executed sequentially from
-    beginning.
+    If both objects pass validation, the recipe is executed in sequential
+    order.
 
     Args:
         recipe_name (str): Either a fully qualified path, or base name of the
             recipe to be run.
 
     Raises:
-        MozbitbarOperationNotImplementedException: If recipe specified an
-            action that is not implemented in BitbarProject.
+        SystemExit: If recipe specified an action that is not implemented,
+            or any other errors were encountered while actions were being
+            executed.
     """
     # example implementation showing how the process may look like.
     # using the recipe, this method will parse actions that need to be done,
