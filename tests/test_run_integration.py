@@ -9,6 +9,7 @@ import yaml
 
 from mozbitbar.run import run_recipe
 from tests.test_run import _default_recipe
+from argparse import Namespace
 
 # Integration test - tests the entire workflow after CLI parsing #
 
@@ -120,8 +121,8 @@ def test_integration_recipe(tmpdir, test_recipe, expected):
     if type(expected) == type:
         # exceptions evaluate to `type`
         with pytest.raises(expected) as ex:
-            run_recipe(path.strpath)
+            run_recipe(path.strpath, Namespace(credentials=None))
         assert expected == ex.type
         assert ex.tb is not None
     else:
-        run_recipe(path.strpath)
+        run_recipe(path.strpath, Namespace(credentials=None))
