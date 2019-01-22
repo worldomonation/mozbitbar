@@ -172,11 +172,16 @@ def mock_project_parameters(parameter=None):
         }
     ]
     if not parameter:
-        return base
+        # behave like returning existing list of parameters
+        return {
+            'data': base
+        }
     else:
         if parameter.get('key') == 'unacceptable_key':
+            # specific unacceptable key to trigger a HTTP 400
             raise RequestResponseError(msg='mock', status_code=400)
         if any(parameter.get('key') in item.get('key') for item in base):
+            # simulate Testdroid HTTP 409 behavior for existing keys
             raise RequestResponseError(msg='mock', status_code=409)
         else:
             parameter['id'] = 330
@@ -266,18 +271,18 @@ def mock_testdroid_client(monkeypatch):
         return mock_project_parameters(parameters)
 
     def delete_project_parameters_wrapper(object, project_id, parameter_id):
-        parameters = mock_project_parameters()
+        parameters = mock_project_parameters()['data']
         for item in parameters:
             if item.get('id') == parameter_id:
+                # if parameter_id is in list of all project parameters,
+                # Testdroid returns a Response(204) object.
                 res = Response()
                 res.status_code = 204
                 return res
         raise RequestResponseError(msg='mock', status_code=404)
 
     def get_project_parameters_wrapper(object, project_id):
-        return {
-            'data': mock_project_parameters()
-        }
+        return mock_project_parameters()
 
     # Device related mocks #
 
