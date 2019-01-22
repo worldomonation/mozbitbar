@@ -24,7 +24,7 @@ def get_parser():
         _parser.add_argument('-q', '--quiet', action='store_true',
                              help='Disables all output except warning and \
                              higher.')
-        _parser.add_argument('-c', '--credential', action='store',
+        _parser.add_argument('-c', '--credentials', action='store',
                              help='Load Testdroid credentials from a file.')
     return _parser
 

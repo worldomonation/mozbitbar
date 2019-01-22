@@ -34,6 +34,10 @@ from mozbitbar import MozbitbarRecipeException
     (
         ['-v'],
         MozbitbarRecipeException
+    ),
+    (
+        ['-r', 'mock_recipe_file' ,'-c', 'temp_file.yaml'],
+        {'credentials': 'temp_file.yaml', 'recipe': 'mock_recipe_file'}
     )
 ])
 def test_cli(kwargs, expected):
@@ -53,7 +57,7 @@ def test_cli(kwargs, expected):
         '-r', '-v', '-q', '-c'
     ),
     (
-        '--recipe', '--verbose', '--quiet', '--credential'
+        '--recipe', '--verbose', '--quiet', '--credentials'
     )
 ])
 def test_get_parser(parser_options):

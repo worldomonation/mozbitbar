@@ -7,6 +7,8 @@ from __future__ import absolute_import, print_function
 import logging
 import sys
 
+import yaml
+
 from testdroid import RequestResponseError
 
 try:
@@ -40,6 +42,7 @@ except ImportError:
         MozbitbarDeviceException,
     )
 
+
 logger = logging.getLogger('mozbitbar')
 
 
@@ -70,7 +73,7 @@ def initialize_recipe(recipe_name):
         sys.exit(1)
 
 
-def initialize_bitbar(recipe):
+def initialize_bitbar(recipe, credentials=None):
     """Initializes the Bitbar Project object.
 
     Given a valid recipe, this method will instantiate and return an instance
@@ -84,6 +87,13 @@ def initialize_bitbar(recipe):
         SystemExit: If provided Recipe object contains invalid project
             parameters, or Testdroid credentials were missing or invalid.
     """
+    if credentials:
+        logger.info('Credential file specified.')
+        with open(credentials, 'r') as f:
+            loaded_credentials = yaml.load(f.read())
+        for c in loaded_credentials:
+            recipe.project_arguments.update(c)
+
     logger.info('Bitbar project initialization...')
     try:
         logger.info('Bitbar project object successfully initialized.')
@@ -94,7 +104,7 @@ def initialize_bitbar(recipe):
         sys.exit(1)
 
 
-def run_recipe(recipe_name):
+def run_recipe(recipe_name, args):
     """Executes all actions defined in a recipe.
 
     This method will first initialize an instance of a Recipe object to
@@ -123,7 +133,7 @@ def run_recipe(recipe_name):
     # this method will execute each action automatically.
     recipe = initialize_recipe(recipe_name)
 
-    bitbar_project = initialize_bitbar(recipe)
+    bitbar_project = initialize_bitbar(recipe, args.credentials)
 
     logger.info('Start executing Bitbar tasks defined in recipe...')
     for task in recipe.task_list:
