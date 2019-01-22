@@ -20,7 +20,7 @@ def main():
     # call these methods instead of instead of main().
     args = cli()
     setup_logger(**vars(args))
-    run_recipe(args.recipe)
+    run_recipe(args.recipe, args)
 
 
 if __name__ == '__main__':
