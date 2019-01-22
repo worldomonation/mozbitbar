@@ -90,20 +90,6 @@ def mock_devices_list():
     }
 
 
-def mock_project_template(project_id=None, project_name=None,
-                          project_type=None, project_framework_id=None):
-    """This method is meant to simulate the user creating a new project, or
-    a new project
-    """
-    return {
-        'id': project_id or random.randint(11, 20),
-        'name': project_name or 'mock_project',
-        'type': project_type or 'mock_type',
-        'osType': 'mock_type',
-        'frameworkId': 99 or project_framework_id,
-    }
-
-
 def mock_project_config(project_status=None, project_framework_id=None,
                         project_id=None, scheduler=None, **kwargs):
     """This method allows the mock method to dynamically build the project
@@ -201,8 +187,13 @@ def mock_testdroid_client(monkeypatch):
     # Project related mocks #
 
     def create_project_wrapper(object, project_name, project_type):
-        return mock_project_template(project_name=project_name,
-                                     project_type=project_type)
+        return {
+            'id': random.randint(100, 200),
+            'name': project_name or 'mock_project',
+            'type': project_type or 'mock_type',
+            'osType': 'mock_type',
+            'frameworkId': 99,
+        }
 
     def get_projects_wrapper(object):
         return mock_projects_list()
