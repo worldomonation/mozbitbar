@@ -36,7 +36,7 @@ from mozbitbar import MozbitbarRecipeException
         MozbitbarRecipeException
     ),
     (
-        ['-r', 'mock_recipe_file' ,'-c', 'temp_file.yaml'],
+        ['-r', 'mock_recipe_file', '-c', 'temp_file.yaml'],
         {'credentials': 'temp_file.yaml', 'recipe': 'mock_recipe_file'}
     )
 ])
