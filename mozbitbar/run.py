@@ -155,13 +155,13 @@ def run_recipe(recipe_name, args):
                     MozbitbarFrameworkException,
                     MozbitbarFileException,
                     MozbitbarDeviceException,
-                    MozbitbarTestRunException):
+                    MozbitbarTestRunException) as exc:
                 # If there's a better way to catch multiple exceptions derived
                 # from the same base class - I'd like to know.
                 msg = ' '.join([
-                    'Encountered exception when executing task: ',
-                    '{}'.format(action)
+                    'Failure at task:', '{}'.format(action)
                 ])
+                logger.error(exc.message)
                 logger.exception(msg)
                 sys.exit(1)
         else:
