@@ -90,6 +90,41 @@ def mock_devices_list():
     }
 
 
+def mock_framework_list():
+    return {
+        'data': [
+            {
+                'id': 1,
+                'name': 'mock_framework'
+            },
+            {
+                'id': 100,
+                'name': 'another_mock_framework'
+            },
+            {
+                'id': 2,
+                'name': u'mock_unicode_framework'
+            }
+        ]
+    }
+
+
+def mock_input_files_list():
+    return {
+        'data': [
+            {
+                'name': 'mock_file.zip'
+            },
+            {
+                'name': 'mocked_application_file.apk'
+            },
+            {
+                'name': u'mocked_unicode_file.apk'
+            }
+        ]
+    }
+
+
 def mock_project_config(project_status=None, project_framework_id=None,
                         project_id=None, scheduler=None, **kwargs):
     """This method allows the mock method to dynamically build the project
@@ -205,39 +240,12 @@ def mock_testdroid_client(monkeypatch):
     # Framework related mocks #
 
     def get_frameworks_wrapper(object):
-        return {
-            'data': [
-                {
-                    'id': 1,
-                    'name': 'mock_framework'
-                },
-                {
-                    'id': 100,
-                    'name': 'another_mock_framework'
-                },
-                {
-                    'id': 2,
-                    'name': u'mock_unicode_framework'
-                }
-            ]
-        }
+        return mock_framework_list()
 
     # File related mocks #
 
     def get_input_files_wrapper(object):
-        return {
-            'data': [
-                {
-                    'name': 'mock_file.zip'
-                },
-                {
-                    'name': 'mocked_application_file.apk'
-                },
-                {
-                    'name': u'mocked_unicode_file.apk'
-                }
-            ]
-        }
+        return mock_input_files_list()
 
     def upload_wrapper(object, path, filename):
         res = Response()
