@@ -7,6 +7,8 @@ from __future__ import absolute_import, print_function
 import sys
 from argparse import ArgumentParser
 
+from mozbitbar import MozbitbarRecipeException
+
 _parser = None
 
 
@@ -27,13 +29,12 @@ def get_parser():
     return _parser
 
 
-def parse_arguments(args):
-    parser = get_parser()
-    args, remainder = parser.parse_known_args(args)
-
-    return args, remainder
-
-
 def cli(cli_args=sys.argv[1:]):
-    args, _ = parse_arguments(cli_args)
+    parser = get_parser()
+    args, _ = parser.parse_known_args(cli_args)
+
+    if not args.recipe:
+        msg = 'Recipe must be defined.'
+        raise MozbitbarRecipeException(message=msg)
+
     return args
