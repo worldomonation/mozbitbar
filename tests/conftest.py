@@ -92,6 +92,9 @@ def mock_devices_list():
 
 def mock_project_template(project_id=None, project_name=None,
                           project_type=None, project_framework_id=None):
+    """This method is meant to simulate the user creating a new project, or
+    a new project
+    """
     return {
         'id': project_id or random.randint(11, 20),
         'name': project_name or 'mock_project',
@@ -200,10 +203,6 @@ def mock_testdroid_client(monkeypatch):
     def create_project_wrapper(object, project_name, project_type):
         return mock_project_template(project_name=project_name,
                                      project_type=project_type)
-
-    def get_project_wrapper(object, project_id):
-        # returns a single project, don't mistake with projects!
-        return mock_project_template(project_id=project_id)
 
     def get_projects_wrapper(object):
         return mock_projects_list()
@@ -338,7 +337,6 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'get_device_groups',
                         get_device_groups_wrapper)
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
-    monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
     monkeypatch.setattr(
         Testdroid, 'get_project_config', get_project_config_wrapper)
