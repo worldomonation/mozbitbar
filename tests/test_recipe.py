@@ -227,7 +227,7 @@ def test_property_task_list(mock_recipe, kwargs, expected):
 ])
 def test_init(tmpdir, kwargs, expected):
     path = tmpdir.mkdir('mock').join('mock_recipe.yaml')
-    content = kwargs or _default_recipe
+    content = kwargs
     path.write(yaml.dump(content))
 
     if issubclass(expected, Exception):
