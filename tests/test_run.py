@@ -5,17 +5,9 @@
 from __future__ import absolute_import, print_function
 
 import pytest
-import yaml
 
 from mozbitbar.recipe import Recipe
 from mozbitbar.run import initialize_bitbar, initialize_recipe
-
-
-# def write_tmp_recipe(tmpdir, recipe):
-#     recipe_name = 'mock_recipe.yaml'
-#     path = tmpdir.mkdir('mock').join(recipe_name)
-#     path.write(yaml.dump(recipe))
-#     return path
 
 
 @pytest.mark.parametrize('additional_actions,expected', [
@@ -49,7 +41,8 @@ from mozbitbar.run import initialize_bitbar, initialize_recipe
         }
     ),
 ])
-def test_initialize_recipe(write_tmp_recipe, base_recipe, additional_actions, expected):
+def test_initialize_recipe(write_tmp_recipe, base_recipe, additional_actions,
+                           expected):
     if additional_actions:
         base_recipe.append(additional_actions)
 
