@@ -253,9 +253,12 @@ def mock_testdroid_client(monkeypatch):
         return mock_input_files_list()
 
     def upload_wrapper(object, path, filename):
-        res = Response()
-        res.status_code = 200
-        return res
+        if filename == 'fail_upload.zip':
+            raise RequestResponseError(msg='error uploading', status_code=404)
+        else:
+            res = Response()
+            res.status_code = 200
+            return res
 
     # Config related mocks #
 
@@ -356,3 +359,14 @@ def mock_testdroid_client(monkeypatch):
                         set_project_parameters_wrapper)
     monkeypatch.setattr(Testdroid, 'start_test_run', start_test_run_wrapper)
     monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)
+
+
+@pytest.fixture
+def base_recipe():
+    return [{
+        'project': 'existing',
+        'arguments': {
+            'project_id': 11,
+            'project_name': 'mock_project'
+        }
+    }]
