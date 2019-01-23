@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 import random
 
 import pytest
+import yaml
 from requests import Response
 
 from testdroid import RequestResponseError, Testdroid
@@ -370,3 +371,13 @@ def base_recipe():
             'project_name': 'mock_project'
         }
     }]
+
+
+@pytest.fixture
+def write_tmp_recipe(tmpdir):
+    def write_tmp_recipe_with_arguments(recipe, recipe_name=None):
+        recipe_name = recipe_name or 'mock_recipe.yaml'
+        path = tmpdir.mkdir('mock').join(recipe_name)
+        path.write(yaml.dump(recipe))
+        return path
+    return write_tmp_recipe_with_arguments
