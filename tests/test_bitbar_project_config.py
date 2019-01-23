@@ -55,24 +55,19 @@ def test_set_project_config_new_config(initialize_project, kwargs, expected):
         initialize_project.set_project_configs(new_values=kwargs)
 
 
-@pytest.mark.parametrize('path,kwargs,expected', [
+@pytest.mark.parametrize('mock_path,kwargs,expected', [
     (
         '10',
         {'content': 10},
         {'content': 10}
     ),
 ])
-def test_set_project_config_path(tmpdir, initialize_project, path, kwargs,
-                                 expected):
-    if path:
-        mock_path = tmpdir.mkdir('mock').join(path)
-    else:
-        mock_path = tmpdir.mkdir('mock').join('default_mock.json')
-
-    mock_path.write(json.dumps(kwargs))
+def test_set_project_config_path(write_tmp_file, initialize_project, mock_path,
+                                 kwargs, expected):
+    path = write_tmp_file(kwargs, fmt='json', file_path=mock_path)
 
     assert (
-        initialize_project.set_project_configs(path=mock_path.strpath) is None)
+        initialize_project.set_project_configs(path=path.strpath) is None)
 
 
 @pytest.mark.parametrize('mock_path,kwargs,expected', [
