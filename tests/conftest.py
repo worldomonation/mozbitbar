@@ -4,9 +4,11 @@
 
 from __future__ import absolute_import, print_function
 
+import json
 import random
 
 import pytest
+import yaml
 from requests import Response
 
 from testdroid import RequestResponseError, Testdroid
@@ -90,14 +92,38 @@ def mock_devices_list():
     }
 
 
-def mock_project_template(project_id=None, project_name=None,
-                          project_type=None, project_framework_id=None):
+def mock_framework_list():
     return {
-        'id': project_id or random.randint(11, 20),
-        'name': project_name or 'mock_project',
-        'type': project_type or 'mock_type',
-        'osType': 'mock_type',
-        'frameworkId': 99 or project_framework_id,
+        'data': [
+            {
+                'id': 1,
+                'name': 'mock_framework'
+            },
+            {
+                'id': 100,
+                'name': 'another_mock_framework'
+            },
+            {
+                'id': 2,
+                'name': u'mock_unicode_framework'
+            }
+        ]
+    }
+
+
+def mock_input_files_list():
+    return {
+        'data': [
+            {
+                'name': 'mock_file.zip'
+            },
+            {
+                'name': 'mocked_application_file.apk'
+            },
+            {
+                'name': u'mocked_unicode_file.apk'
+            }
+        ]
     }
 
 
@@ -148,11 +174,16 @@ def mock_project_parameters(parameter=None):
         }
     ]
     if not parameter:
-        return base
+        # behave like returning existing list of parameters
+        return {
+            'data': base
+        }
     else:
         if parameter.get('key') == 'unacceptable_key':
+            # specific unacceptable key to trigger a HTTP 400
             raise RequestResponseError(msg='mock', status_code=400)
         if any(parameter.get('key') in item.get('key') for item in base):
+            # simulate Testdroid HTTP 409 behavior for existing keys
             raise RequestResponseError(msg='mock', status_code=409)
         else:
             parameter['id'] = 330
@@ -198,12 +229,13 @@ def mock_testdroid_client(monkeypatch):
     # Project related mocks #
 
     def create_project_wrapper(object, project_name, project_type):
-        return mock_project_template(project_name=project_name,
-                                     project_type=project_type)
-
-    def get_project_wrapper(object, project_id):
-        # returns a single project, don't mistake with projects!
-        return mock_project_template(project_id=project_id)
+        return {
+            'id': random.randint(100, 200),
+            'name': project_name or 'mock_project',
+            'type': project_type or 'mock_type',
+            'osType': 'mock_type',
+            'frameworkId': 99,
+        }
 
     def get_projects_wrapper(object):
         return mock_projects_list()
@@ -215,44 +247,20 @@ def mock_testdroid_client(monkeypatch):
     # Framework related mocks #
 
     def get_frameworks_wrapper(object):
-        return {
-            'data': [
-                {
-                    'id': 1,
-                    'name': 'mock_framework'
-                },
-                {
-                    'id': 100,
-                    'name': 'another_mock_framework'
-                },
-                {
-                    'id': 2,
-                    'name': u'mock_unicode_framework'
-                }
-            ]
-        }
+        return mock_framework_list()
 
     # File related mocks #
 
     def get_input_files_wrapper(object):
-        return {
-            'data': [
-                {
-                    'name': 'mock_file.zip'
-                },
-                {
-                    'name': 'mocked_application_file.apk'
-                },
-                {
-                    'name': u'mocked_unicode_file.apk'
-                }
-            ]
-        }
+        return mock_input_files_list()
 
     def upload_wrapper(object, path, filename):
-        res = Response()
-        res.status_code = 200
-        return res
+        if filename == 'fail_upload.zip':
+            raise RequestResponseError(msg='error uploading', status_code=404)
+        else:
+            res = Response()
+            res.status_code = 200
+            return res
 
     # Config related mocks #
 
@@ -268,18 +276,18 @@ def mock_testdroid_client(monkeypatch):
         return mock_project_parameters(parameters)
 
     def delete_project_parameters_wrapper(object, project_id, parameter_id):
-        parameters = mock_project_parameters()
+        parameters = mock_project_parameters()['data']
         for item in parameters:
             if item.get('id') == parameter_id:
+                # if parameter_id is in list of all project parameters,
+                # Testdroid returns a Response(204) object.
                 res = Response()
                 res.status_code = 204
                 return res
         raise RequestResponseError(msg='mock', status_code=404)
 
     def get_project_parameters_wrapper(object, project_id):
-        return {
-            'data': mock_project_parameters()
-        }
+        return mock_project_parameters()
 
     # Device related mocks #
 
@@ -338,7 +346,6 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'get_device_groups',
                         get_device_groups_wrapper)
     monkeypatch.setattr(Testdroid, 'get_me', get_me_wrapper)
-    monkeypatch.setattr(Testdroid, 'get_project', get_project_wrapper)
     monkeypatch.setattr(Testdroid, 'get_projects', get_projects_wrapper)
     monkeypatch.setattr(
         Testdroid, 'get_project_config', get_project_config_wrapper)
@@ -354,3 +361,30 @@ def mock_testdroid_client(monkeypatch):
                         set_project_parameters_wrapper)
     monkeypatch.setattr(Testdroid, 'start_test_run', start_test_run_wrapper)
     monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)
+
+
+@pytest.fixture(scope='function')
+def base_recipe():
+    return [{
+        'project': 'existing',
+        'arguments': {
+            'project_id': 11,
+            'project_name': 'mock_project'
+        }
+    }]
+
+
+@pytest.fixture
+def write_tmp_file(tmpdir):
+    def write_tmp_file_with_arguments(content, fmt='yaml', file_path=None):
+        file_name = file_path or 'mock_recipe.yaml'
+        path = tmpdir.mkdir('mock').join(file_name)
+
+        if fmt == 'yaml':
+            path.write(yaml.dump(content))
+        elif fmt == 'json':
+            path.write(json.dumps(content))
+        elif fmt == 'none':
+            path.write(content)
+        return path
+    return write_tmp_file_with_arguments

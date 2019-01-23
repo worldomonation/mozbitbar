@@ -4,8 +4,6 @@
 
 from __future__ import absolute_import, print_function
 
-import json
-
 import pytest
 
 from mozbitbar.bitbar_project import BitbarProject
@@ -55,34 +53,29 @@ def test_set_project_config_new_config(initialize_project, kwargs, expected):
         initialize_project.set_project_configs(new_values=kwargs)
 
 
-@pytest.mark.parametrize('path,kwargs,expected', [
+@pytest.mark.parametrize('mock_path,kwargs,expected', [
     (
         '10',
         {'content': 10},
         {'content': 10}
     ),
 ])
-def test_set_project_config_path(tmpdir, initialize_project, path, kwargs,
-                                 expected):
-    if path:
-        mock_path = tmpdir.mkdir('mock').join(path)
-    else:
-        mock_path = tmpdir.mkdir('mock').join('default_mock.json')
-
-    mock_path.write(json.dumps(kwargs))
+def test_set_project_config_path(write_tmp_file, initialize_project, mock_path,
+                                 kwargs, expected):
+    path = write_tmp_file(kwargs, fmt='json', file_path=mock_path)
 
     assert (
-        initialize_project.set_project_configs(path=mock_path.strpath) is None)
+        initialize_project.set_project_configs(path=path.strpath) is None)
 
 
-@pytest.mark.parametrize('path,kwargs,expected', [
+@pytest.mark.parametrize('mock_path,kwargs,expected', [
     (
         'mock_file.json',
         {'mock': True},
         {'mock': True}
     ),
     (
-        None,
+        'valid_mock_path.json',
         {"scheduler": "SINGLE", "timeout": 0},
         {"scheduler": "SINGLE", "timeout": 0}
     ),
@@ -92,19 +85,14 @@ def test_set_project_config_path(tmpdir, initialize_project, path, kwargs,
         TypeError
     )
 ])
-def test_load_project_config(tmpdir, initialize_project, path, kwargs,
-                             expected):
-    if path:
-        mock_path = tmpdir.mkdir('mock').join(path)
-    else:
-        mock_path = tmpdir.mkdir('mock').join('mocked_test.json')
-
-    mock_path.write(json.dumps(kwargs))
+def test_load_project_config(write_tmp_file, initialize_project, mock_path,
+                             kwargs, expected):
+    path = write_tmp_file(kwargs, fmt='json', file_path=mock_path)
 
     if expected == TypeError:
         with pytest.raises(TypeError):
-            initialize_project._load_project_config(mock_path.strpath)
+            initialize_project._load_project_config(path.strpath)
 
     else:
         assert expected == initialize_project._load_project_config(
-                                                    mock_path.strpath)
+                                                    path.strpath)

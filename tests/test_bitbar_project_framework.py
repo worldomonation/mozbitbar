@@ -24,9 +24,6 @@ def initialize_project():
     return BitbarProject('existing', **kwargs)
 
 
-# Project Framework #
-
-
 @pytest.mark.parametrize('kwargs,expected', [
     (
         {'framework': -1},
