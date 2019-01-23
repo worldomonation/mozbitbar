@@ -100,7 +100,7 @@ def test_bb_file_open_file(tmpdir, initialize_project, path, expected):
     )
 ])
 def test_bb_file_upload_file(tmpdir, initialize_project, kwargs, expected):
-    if expected == MozbitbarFileException:
+    if type(expected) == type:
         with pytest.raises(expected):
             initialize_project.upload_file(**kwargs)
     else:

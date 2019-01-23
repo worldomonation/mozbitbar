@@ -361,7 +361,7 @@ def mock_testdroid_client(monkeypatch):
     monkeypatch.setattr(Testdroid, 'upload', upload_wrapper)
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def base_recipe():
     return [{
         'project': 'existing',

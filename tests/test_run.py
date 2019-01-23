@@ -20,15 +20,6 @@ _default_recipe = [{
     }
 }]
 
-_recipe_with_action = _default_recipe[:]
-mock_action = {
-    'action': 'mock_action',
-    'arguments': {
-        'mock_argument': 'mock_value'
-    }
-}
-_recipe_with_action.append(mock_action)
-
 
 def write_tmp_recipe(tmpdir, recipe):
     recipe_name = 'mock_recipe.yaml'
@@ -37,9 +28,9 @@ def write_tmp_recipe(tmpdir, recipe):
     return path
 
 
-@pytest.mark.parametrize('recipe,expected', [
+@pytest.mark.parametrize('additional_actions,expected', [
     (
-        _default_recipe,
+        None,
         {
             'task_list': [],
             'project': 'existing',
@@ -50,7 +41,12 @@ def write_tmp_recipe(tmpdir, recipe):
         }
     ),
     (
-        _recipe_with_action,
+        {
+            'action': 'mock_action',
+            'arguments': {
+                'mock_argument': 'mock_value'
+            }
+        },
         {
             'task_list': [
                 {
@@ -63,21 +59,17 @@ def write_tmp_recipe(tmpdir, recipe):
         }
     ),
 ])
-def test_initialize_recipe(tmpdir, recipe, expected):
-    path = write_tmp_recipe(tmpdir, recipe)
+def test_initialize_recipe(tmpdir, base_recipe, additional_actions, expected):
+    if additional_actions:
+        base_recipe.append(additional_actions)
+
+    path = write_tmp_recipe(tmpdir, base_recipe)
     obj = initialize_recipe(path.strpath)
     for key, value in expected.iteritems():
         assert getattr(obj, key) == value
 
 
-@pytest.mark.parametrize('recipe,expected', [
-    (
-        _default_recipe,
-        {
-            'project_name': 'mock_project',
-            'project_id': 11,
-        }
-    ),
+@pytest.mark.parametrize('recipe_under_test,expected', [
     (
         [{
             'project': 'existing',
@@ -91,10 +83,8 @@ def test_initialize_recipe(tmpdir, recipe, expected):
         }
     )
 ])
-def test_initialize_bitbar(tmpdir, recipe, expected):
-    recipe_name = 'mock_recipe.yaml'
-    path = tmpdir.mkdir('mock').join(recipe_name)
-    path.write(yaml.dump(recipe))
+def test_initialize_bitbar(tmpdir, recipe_under_test, expected):
+    path = write_tmp_recipe(tmpdir, recipe_under_test)
 
     obj = initialize_bitbar(Recipe(path.strpath))
     for key, value in expected.iteritems():

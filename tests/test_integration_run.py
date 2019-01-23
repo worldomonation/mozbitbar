@@ -8,7 +8,6 @@ import pytest
 import yaml
 
 from mozbitbar.run import run_recipe
-from tests.test_run import _default_recipe
 from argparse import Namespace
 
 # Integration test - tests the entire workflow after CLI parsing #
@@ -111,13 +110,13 @@ from argparse import Namespace
         SystemExit
     )
 ])
-def test_integration_recipe(tmpdir, test_recipe, expected):
-    _integration_test_recipe = _default_recipe[:]
-    _integration_test_recipe.extend(test_recipe)
+def test_integration_recipe(tmpdir, base_recipe, test_recipe, expected):
+    base_recipe.extend(test_recipe)
 
     recipe_name = 'mock_recipe.yaml'
     path = tmpdir.mkdir('mock').join(recipe_name)
-    path.write(yaml.dump(_integration_test_recipe))
+    path.write(yaml.dump(base_recipe))
+
     if type(expected) == type:
         # exceptions evaluate to `type`
         with pytest.raises(expected) as ex:

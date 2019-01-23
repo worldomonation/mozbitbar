@@ -13,15 +13,6 @@ from mozbitbar import MozbitbarRecipeException
 from mozbitbar.recipe import Recipe
 
 
-_default_recipe = {
-    'project': 'existing',
-    'arguments': {
-        'project_id': 10101010,
-        'project_name': 'mock_project'
-    }
-}
-
-
 @pytest.fixture(autouse=True)
 def mock_recipe_object():
     with mock.patch.object(Recipe, '__init__', return_value=None):
