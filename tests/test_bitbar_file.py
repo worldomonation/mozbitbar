@@ -62,14 +62,14 @@ def test_bb_file_on_bitbar(file_name, expected, initialize_project):
         ''.join([random.choice(string.lowercase) for _ in range(10)])
     )
 ])
-def test_bb_file_open_file(tmpdir, initialize_project, file_name, expected):
+def test_bb_file_open_file(write_tmp_file, initialize_project, file_name,
+                           expected):
     if expected == MozbitbarFileException:
         with pytest.raises(expected) as exc:
             initialize_project._open_file(file_name)
         assert 'could not be located' in exc.value.message
     else:
-        path = tmpdir.mkdir('mock').join(file_name)
-        path.write(expected)
+        path = write_tmp_file(expected, fmt='none', file_path=file_name)
 
         output = initialize_project._open_file(path.strpath)
         assert output
