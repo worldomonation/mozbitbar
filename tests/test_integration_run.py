@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function
 
 import pytest
-import yaml
 
 from mozbitbar.run import run_recipe
 from argparse import Namespace
@@ -110,12 +109,12 @@ from argparse import Namespace
         SystemExit
     )
 ])
-def test_integration_recipe(tmpdir, base_recipe, test_recipe, expected):
+def test_integration_recipe(write_tmp_file, base_recipe, test_recipe,
+                            expected):
+    # generate recipe under test
     base_recipe.extend(test_recipe)
 
-    recipe_name = 'mock_recipe.yaml'
-    path = tmpdir.mkdir('mock').join(recipe_name)
-    path.write(yaml.dump(base_recipe))
+    path = write_tmp_file(base_recipe)
 
     if type(expected) == type:
         # exceptions evaluate to `type`
