@@ -7,7 +7,6 @@ from __future__ import print_function, absolute_import
 import mock
 
 import pytest
-import yaml
 
 from mozbitbar import MozbitbarRecipeException
 from mozbitbar.recipe import Recipe
@@ -41,7 +40,7 @@ def mock_recipe_object():
         MozbitbarRecipeException
     ),
 ])
-def test_locate_recipe(tmpdir, base_recipe, mock_recipe_object, kwargs,
+def test_locate_recipe(write_tmp_file, base_recipe, mock_recipe_object, kwargs,
                        expected):
     if type(expected) == type:
         with pytest.raises(expected) as mre:
@@ -49,11 +48,10 @@ def test_locate_recipe(tmpdir, base_recipe, mock_recipe_object, kwargs,
         assert 'recipe not found' in mre.value.message
     else:
         mock_file_name = kwargs.get('file_name') or 'mock_recipe.yaml'
-        path = tmpdir.mkdir('mock').join(mock_file_name)
-
-        path.write(yaml.dump(base_recipe))
+        path = write_tmp_file(base_recipe, file_path=mock_file_name)
 
         mock_recipe_object.locate_recipe(path.strpath)
+
         assert mock_recipe_object.recipe_path == path.strpath
         assert mock_recipe_object.recipe_name == path.basename
 
@@ -146,7 +144,7 @@ def test_validate_recipe(tmpdir, mock_recipe_object, test_recipe, expected):
 @pytest.mark.parametrize('filename,content,expected', [
     (
         'mock_file.mock',
-        None,
+        '`invalid_yaml_text',
         MozbitbarRecipeException
     ),
     (
@@ -160,14 +158,13 @@ def test_validate_recipe(tmpdir, mock_recipe_object, test_recipe, expected):
         None
     )
 ])
-def test_load_recipe_from_yaml(tmpdir, mock_recipe_object, filename, content,
-                               expected):
+def test_load_recipe_from_yaml(write_tmp_file, mock_recipe_object, filename,
+                               content, expected):
     with mock.patch.object(Recipe, 'validate_recipe', return_value=None):
         mock_file_name = filename or 'mock_recipe.yaml'
-        path = tmpdir.mkdir('mock').join(mock_file_name)
 
-        content = content or '`invalid_yaml_text'
-        path.write(content)
+        # set up mock recipe and set the path of Recipe
+        path = write_tmp_file(content, fmt='none', file_path=mock_file_name)
         mock_recipe_object.recipe_path = path.strpath
 
         if type(expected) == type:
@@ -211,7 +208,7 @@ def test_property_task_list(mock_recipe_object, kwargs, expected):
     assert expected[1] in (exc.value.args or exc.value.message)
 
 
-@pytest.mark.parametrize('kwargs,expected', [
+@pytest.mark.parametrize('content,expected', [
     (
         [{
             'project': 'mock',
@@ -221,7 +218,7 @@ def test_property_task_list(mock_recipe_object, kwargs, expected):
             'action': 'mock_action',
             'arguments': {'mock_argument': 'mock_action_argument'}
         }],
-        None.__class__
+        None
     ),
     (
         [{
@@ -231,12 +228,10 @@ def test_property_task_list(mock_recipe_object, kwargs, expected):
         MozbitbarRecipeException
     )
 ])
-def test_init(tmpdir, kwargs, expected):
-    path = tmpdir.mkdir('mock').join('mock_recipe.yaml')
-    content = kwargs
-    path.write(yaml.dump(content))
+def test_init(write_tmp_file, content, expected):
+    path = write_tmp_file(content)
 
-    if issubclass(expected, Exception):
+    if type(expected) == type:
         with pytest.raises(expected):
             recipe_object = Recipe(path.strpath)
     else:

@@ -384,5 +384,7 @@ def write_tmp_file(tmpdir):
             path.write(yaml.dump(content))
         elif fmt == 'json':
             path.write(json.dumps(content))
+        elif fmt == 'none':
+            path.write(content)
         return path
     return write_tmp_file_with_arguments
