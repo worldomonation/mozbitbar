@@ -41,12 +41,12 @@ from mozbitbar.run import initialize_bitbar, initialize_recipe
         }
     ),
 ])
-def test_initialize_recipe(write_tmp_recipe, base_recipe, additional_actions,
+def test_initialize_recipe(write_tmp_file, base_recipe, additional_actions,
                            expected):
     if additional_actions:
         base_recipe.append(additional_actions)
 
-    path = write_tmp_recipe(base_recipe)
+    path = write_tmp_file(base_recipe)
     obj = initialize_recipe(path.strpath)
     for key, value in expected.iteritems():
         assert getattr(obj, key) == value
@@ -66,8 +66,8 @@ def test_initialize_recipe(write_tmp_recipe, base_recipe, additional_actions,
         }
     )
 ])
-def test_initialize_bitbar(write_tmp_recipe, recipe_under_test, expected):
-    path = write_tmp_recipe(recipe_under_test)
+def test_initialize_bitbar(write_tmp_file, recipe_under_test, expected):
+    path = write_tmp_file(recipe_under_test)
 
     obj = initialize_bitbar(Recipe(path.strpath))
     for key, value in expected.iteritems():

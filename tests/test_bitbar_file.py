@@ -31,10 +31,10 @@ def initialize_project():
     ('mock_file.zip', False),
     ('mock_file.apk', True)
 ])
-def test_bb_file_on_local_disk(write_tmp_recipe, file_name, expected,
+def test_bb_file_on_local_disk(write_tmp_file, file_name, expected,
                                initialize_project):
     if expected:
-        path = write_tmp_recipe(' ')
+        path = write_tmp_file(' ')
         file_name = path.strpath
 
     assert initialize_project._file_on_local_disk(file_name) == expected
@@ -103,13 +103,13 @@ def test_bb_file_open_file(tmpdir, initialize_project, file_name, expected):
         MozbitbarFileException
     )
 ])
-def test_bb_file_upload_file(write_tmp_recipe, initialize_project,
+def test_bb_file_upload_file(write_tmp_file, initialize_project,
                              kwargs, expected):
     if type(expected) == type:
         with pytest.raises(expected):
             initialize_project.upload_file(**kwargs)
     else:
         file_type, file_name = kwargs.popitem()
-        path = write_tmp_recipe(' ', file_name)
+        path = write_tmp_file(' ', file_path=file_name)
 
         initialize_project.upload_file(**{file_type: path.strpath})

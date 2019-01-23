@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function
 
+import json
 import random
 
 import pytest
@@ -374,10 +375,14 @@ def base_recipe():
 
 
 @pytest.fixture
-def write_tmp_recipe(tmpdir):
-    def write_tmp_recipe_with_arguments(recipe, recipe_name=None):
-        recipe_name = recipe_name or 'mock_recipe.yaml'
-        path = tmpdir.mkdir('mock').join(recipe_name)
-        path.write(yaml.dump(recipe))
+def write_tmp_file(tmpdir):
+    def write_tmp_file_with_arguments(content, fmt='yaml', file_path=None):
+        file_name = file_path or 'mock_recipe.yaml'
+        path = tmpdir.mkdir('mock').join(file_name)
+
+        if fmt == 'yaml':
+            path.write(yaml.dump(content))
+        elif fmt == 'json':
+            path.write(json.dumps(content))
         return path
-    return write_tmp_recipe_with_arguments
+    return write_tmp_file_with_arguments
